@@ -1,0 +1,5 @@
+U001|1234|Juan Perez|21|Ingenieria de Sistemas
+U002|abcd|Maria Lopez|22|Ingenieria Industrial
+U003|pass2024|Carlos Ramirez|20|Ingenieria Civil
+U004|qwerty|Ana Torres|23|Ingenieria Electronica
+U005|admin123|Luis Gomez|24|Ingenieria Mecanica

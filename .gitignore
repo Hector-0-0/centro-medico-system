@@ -1,0 +1,28 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.list
+
+# Spring Boot
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Node.js / React
+node_modules/
+build/
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
