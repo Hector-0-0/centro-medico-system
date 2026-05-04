@@ -72,7 +72,10 @@ public class DashboardPanel extends javax.swing.JPanel {
         tbl_horarios.getTableHeader().setReorderingAllowed(false);
 
         scrl_horarios.setViewportView(tbl_horarios);
-
+        btn_agendar.addActionListener(e->{
+            NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true);
+            dialogNuevaCita.setVisible(true);
+        });
         // Layout principal: título / subtítulo / filtros / tabla / botón
         this.setLayout(new net.miginfocom.swing.MigLayout(
                 "fill, insets 24", "[grow]", "[]4[]12[]12[grow]16[]"));
