@@ -36,16 +36,40 @@ public class DashboardPanel extends javax.swing.JPanel {
         }
 
         // Convertir lista a matriz (lo que pide la tabla)
-        String[][] datosTabla = new String[listaDatos.size()][7];
+        String[][] datosTabla = new String[listaDatos.size()][6];
 
         for (int i = 0; i < listaDatos.size(); i++) {
-            datosTabla[i] = listaDatos.get(i);
+            String[] filaT = listaDatos.get(i);
+            for(int j = 0; j < 6; j++){
+                if(j==5){
+                    if(filaT[j+2].equals("1")){
+                        datosTabla[i][j] = "Disponible";
+                    }
+                    else{
+                        datosTabla[i][j] = "Ocupado";
+                    }
+                }
+                else{
+                datosTabla[i][j] = filaT[j+2];
+                }
+            }
         }
 
         // Crear modelo con datos reales
         tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
                 datosTabla,
-                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }));
+                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }
+        ){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        }); 
+        for (int i = 0; i < tbl_horarios.getColumnCount(); i++) {
+            tbl_horarios.getColumnModel().getColumn(i).setResizable(false);
+        }
+        tbl_horarios.setColumnSelectionAllowed(false);
+        tbl_horarios.getTableHeader().setReorderingAllowed(false);
 
         scrl_horarios.setViewportView(tbl_horarios);
 
@@ -63,7 +87,7 @@ public class DashboardPanel extends javax.swing.JPanel {
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         lbl_titulo = new javax.swing.JLabel();
@@ -95,92 +119,106 @@ public class DashboardPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout pnl_filtrosLayout = new javax.swing.GroupLayout(pnl_filtros);
         pnl_filtros.setLayout(pnl_filtrosLayout);
         pnl_filtrosLayout.setHorizontalGroup(
-                pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(pnl_filtrosLayout.createSequentialGroup()
-                                .addContainerGap(27, Short.MAX_VALUE)
-                                .addGroup(pnl_filtrosLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout
-                                                .createSequentialGroup()
-                                                .addComponent(btn_disponibles, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addContainerGap())
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                                pnl_filtrosLayout.createSequentialGroup()
-                                                        .addComponent(btn_ocupados)
-                                                        .addGap(32, 32, 32))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                                pnl_filtrosLayout.createSequentialGroup()
-                                                        .addComponent(btn_todos)
-                                                        .addGap(38, 38, 38)))));
+            pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnl_filtrosLayout.createSequentialGroup()
+                .addContainerGap(27, Short.MAX_VALUE)
+                .addGroup(pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
+                        .addComponent(btn_disponibles, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
+                        .addComponent(btn_ocupados)
+                        .addGap(32, 32, 32))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
+                        .addComponent(btn_todos)
+                        .addGap(38, 38, 38))))
+        );
         pnl_filtrosLayout.setVerticalGroup(
-                pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(pnl_filtrosLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(btn_todos, javax.swing.GroupLayout.PREFERRED_SIZE, 22,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_disponibles)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_ocupados)
-                                .addContainerGap(34, Short.MAX_VALUE)));
+            pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnl_filtrosLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(btn_todos, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btn_disponibles)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btn_ocupados)
+                .addContainerGap(34, Short.MAX_VALUE))
+        );
 
-        
-        btn_agendar.setText("Agendar Cita");
-        btn_agendar.addActionListener(e -> {
-            NuevaCitaDialog dialog = new NuevaCitaDialog(null, true);
-            dialog.setVisible(true);
+        tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
         });
+        tbl_horarios.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        scrl_horarios.setViewportView(tbl_horarios);
+        if (tbl_horarios.getColumnModel().getColumnCount() > 0) {
+            tbl_horarios.getColumnModel().getColumn(0).setResizable(false);
+            tbl_horarios.getColumnModel().getColumn(1).setResizable(false);
+            tbl_horarios.getColumnModel().getColumn(2).setResizable(false);
+            tbl_horarios.getColumnModel().getColumn(3).setResizable(false);
+            tbl_horarios.getColumnModel().getColumn(4).setResizable(false);
+            tbl_horarios.getColumnModel().getColumn(5).setResizable(false);
+        }
+
+        btn_agendar.setText("Agendar Cita");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(36, 36, 36)
-                                                .addComponent(lbl_titulo))
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(67, 67, 67)
-                                                .addGroup(layout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addComponent(lbl_subtitulo)
-                                                        .addGroup(layout.createSequentialGroup()
-                                                                .addGap(6, 6, 6)
-                                                                .addComponent(pnl_filtros,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(8, 8, 8)
-                                                .addComponent(btn_agendar)
-                                                .addGap(18, 18, 18)
-                                                .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addContainerGap(125, Short.MAX_VALUE)));
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(36, 36, 36)
+                        .addComponent(lbl_titulo))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(67, 67, 67)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lbl_subtitulo)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
+                                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(8, 8, 8)
+                        .addComponent(btn_agendar)
+                        .addGap(18, 18, 18)
+                        .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(125, Short.MAX_VALUE))
+        );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGap(31, 31, 31)
-                                .addComponent(lbl_titulo)
-                                .addGap(18, 18, 18)
-                                .addComponent(lbl_subtitulo)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addContainerGap())
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(btn_agendar)
-                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        Short.MAX_VALUE)))));
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(31, 31, 31)
+                .addComponent(lbl_titulo)
+                .addGap(18, 18, 18)
+                .addComponent(lbl_subtitulo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btn_agendar)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
