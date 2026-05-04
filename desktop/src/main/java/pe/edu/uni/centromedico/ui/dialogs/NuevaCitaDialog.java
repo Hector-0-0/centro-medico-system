@@ -35,6 +35,9 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         javax.swing.JTextField txtPaciente = new javax.swing.JTextField();
         panelFormulario.add(txtPaciente, "growx");
         javax.swing.JButton btnBuscarPaciente = new javax.swing.JButton("Buscar");
+        btnBuscarPaciente.addActionListener(e->{
+            
+        });
         panelFormulario.add(btnBuscarPaciente, "wrap");
         panelFormulario.add(new javax.swing.JLabel("✓Paciente:"), "growx, wrap");
         panelFormulario.add(new javax.swing.JLabel("Especialidad"), "growx");

@@ -24,6 +24,31 @@ public class DashboardPanel extends javax.swing.JPanel {
         scrl_horarios.setBorder(
                 javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232, 221, 216)));
 
+        InputStream data_doctor = getClass().getResourceAsStream("/data/data_doctor.txt");
+        ArrayList<String[]> listaDatos = new ArrayList<>();
+
+        try (Scanner myreader = new Scanner(data_doctor)) {
+            while (myreader.hasNextLine()) {
+                String data = myreader.nextLine();
+                String[] data_split = data.split("\\|");
+                listaDatos.add(data_split);
+            }
+        }
+
+        // Convertir lista a matriz (lo que pide la tabla)
+        String[][] datosTabla = new String[listaDatos.size()][7];
+
+        for (int i = 0; i < listaDatos.size(); i++) {
+            datosTabla[i] = listaDatos.get(i);
+        }
+
+        // Crear modelo con datos reales
+        tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
+                datosTabla,
+                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }));
+
+        scrl_horarios.setViewportView(tbl_horarios);
+
         // Layout principal: título / subtítulo / filtros / tabla / botón
         this.setLayout(new net.miginfocom.swing.MigLayout(
                 "fill, insets 24", "[grow]", "[]4[]12[]12[grow]16[]"));
@@ -33,6 +58,7 @@ public class DashboardPanel extends javax.swing.JPanel {
         this.add(pnl_filtros, "wrap");
         this.add(scrl_horarios, "grow, wrap");
         this.add(btn_agendar, "right, h 44!, w 200!");
+
     }
 
     @SuppressWarnings("unchecked")
@@ -99,31 +125,7 @@ public class DashboardPanel extends javax.swing.JPanel {
                                 .addComponent(btn_ocupados)
                                 .addContainerGap(34, Short.MAX_VALUE)));
 
-        InputStream data_doctor = getClass().getResourceAsStream("/data/data_doctor.txt");
-        ArrayList<String[]> listaDatos = new ArrayList<>();
-
-        try (Scanner myreader = new Scanner(data_doctor)) {
-            while (myreader.hasNextLine()) {
-                String data = myreader.nextLine();
-                String[] data_split = data.split("\\|");
-                listaDatos.add(data_split);
-            }
-        }
-
-        // Convertir lista a matriz (lo que pide la tabla)
-        String[][] datosTabla = new String[listaDatos.size()][6];
-
-        for (int i = 0; i < listaDatos.size(); i++) {
-            datosTabla[i] = listaDatos.get(i);
-        }
-
-        // Crear modelo con datos reales
-        tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
-                datosTabla,
-                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }));
-
-        scrl_horarios.setViewportView(tbl_horarios);
-
+        
         btn_agendar.setText("Agendar Cita");
         btn_agendar.addActionListener(e -> {
             NuevaCitaDialog dialog = new NuevaCitaDialog(null, true);
