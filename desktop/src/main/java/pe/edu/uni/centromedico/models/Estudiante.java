@@ -1,6 +1,9 @@
 package pe.edu.uni.centromedico.models;
 
-public class Estudiante {
+public class Estudiante extends Persona {
     public int age; 
-    public String name,codigo,password,especialidad;  
+    public String especialidad;  
+    public Estudiante() {
+        this.rol = "PACIENTE";
+    }
 }

@@ -136,6 +136,13 @@ public class Sidebar extends javax.swing.JPanel {
                 btnSalirMouseExited(evt);
             }
         });
+        btnSalir.addActionListener(e->{
+            pe.edu.uni.centromedico.ui.frames.MainFrame mf = pe.edu.uni.centromedico.ui.frames.MainFrame.getInstance();
+            if (mf != null) {
+                mf.dispose();
+                new pe.edu.uni.centromedico.ui.frames.LoginFrame().setVisible(true);
+            }
+        }); 
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);

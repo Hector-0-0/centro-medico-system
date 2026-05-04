@@ -18,6 +18,31 @@ public class NuevoPacienteDialog extends javax.swing.JDialog {
         /**
          * Creates new form NuevoPacienteDialog
          */
+        //la rueda ya giro 
+        //⣿⣿⣿⣿⣿⣿⣽⣂⣠⣲⣶⣾⣿⡿⠛⢿⣿⣿⣿⣷⣄⡈⢰⣎⠺⡻⣿⣿⣿⣿
+        //⣿⣿⣿⣿⣫⣋⢀⣾⣿⣿⠛⢻⣿⣷⣶⣾⣿⡟⠉⣿⣿⣷⣌⠈⣦⢈⢿⣿⣿⣿
+        //⣿⣿⣿⢻⠁⢠⣿⣿⣿⣿⣶⣾⢻⣿⣿⣿⣝⣿⣶⣿⣿⣿⣿⢾⢘⣂⠘⣿⣿⣿
+        //⣿⣿⡿⡦⠊⣿⣿⣿⠿⢿⣿⢻⣿⠍⠓⢻⣿⣷⣿⡟⠛⣿⣿⣧⢋⠃⠡⡸⣿⣿
+        //⣿⣿⡇⣇⢲⣿⣿⣿⣤⢴⣿⣼⡿⣦⣄⣼⣿⣟⣿⣷⣤⣿⣿⣿⡜⠇⠀⢹⣿⣿
+        //⣿⣿⣷⣍⠀⣿⣿⣿⣿⣿⠟⢻⣦⣟⣻⣛⣿⣽⠛⢿⣿⣿⣿⡿⡿⠀⢱‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ​
+        //⣿⣿⣦⡈⠈⡒⠰⢝⠻⣿⣿⢿⡋⠈⢘⢀⠀⢑⣼⢄⣯⣾⣿⡿⢏⢭⣖⠀⣼⣿
+        //⡏⠹⡿⠿⢮⡈⣩⣉⠂⣠⣌⢃⡖⡄⡀⠀⠓⠈⢅⣙⠽⠮⢕⣤⣠⠅⣢⣾⠟⢸
+        //⡏⠈⢀⡁⣠⢍⢤⢄⣤⣄⢀⡈⠀⢀⠃⢀⡾⠀⢈⣤⠠⢀⡉⣀⠄⡻⠋⡊⠄⢸
+        //⣿⣷⣤⡄⡋⢝⡀⠉⠖⠫⠚⠑⠧⡗⢢⠸⠠⢞⠅⠉⢆⠩⠍⢂⡈⠥⠌⡠⢁⣼
+        //⣿⠿⠉⠀⠈⠢⡀⠉⡁⠔⡍⣵⢀⣀⣧⠸⡅⣀⢮⡍⣢⡑⠰⠎⠀⣀⠨⠄⠙⢿
+        //⣿⠕⠠⠀⠁⠀⠈⠛⢀⣀⠧⠾⣞⡗⡆⣜⡿⢯⡎⠀⡀⡀⠲⠛⠁⠀⠀⠀⠀⢸
+        //⡧⡄⡐⠀⠀⠀⠀⠈⡁⠻⢦⡀⠩⢳⡹⠋⡱⠙⠁⣜⠐⠃⠂⠀⠀⠠⡀⢀⢀⢸
+        //⡇⠠⠌⠥⠈⢹⠀⠀⠈⠐⣠⡉⠕⡣⢁⡈⠠⠒⢘⣁⡀⠀⠀⠔⡀⡒⡂⡓⠄⢹
+        //⡇⢀⠀⠀⠔⣙⢪⠀⠀⠀⣿⠛⣽⡞⠶⠶⠗⣾⡏⠉⡇⠀⠈⠾⣍⣀⠀⠀⡀⢸
+        //⡇⠀⠀⣠⣾⣿⠀⢳⢄⡂⠉⠀⠇⠙⢣⡭⠊⠸⠃⠀⠀⡀⢐⡅⢁⣷⠄⠀⠠⢸
+        //⡇⢰⣮⣿⣿⣿⡧⠈⣄⡈⠑⠦⠄⠴⠚⢇⠴⠖⠄⠀⢒⠗⠁⠀⣾⣿⣧⡀⢘⢸
+        //⡷⣵⣿⣿⣿⣿⣿⣄⠈⢝⢆⣀⡀⡀⣀⢃⠀⢀⢀⣠⢾⡎⣠⣾⣿⣿⣿⣿⣝⣸
+        //⣿⣿⣿⣿⣿⣿⣿⣿⡕⡊⢄⠆⢄⠀⢰⡆⠀⠀⡧⠋⢰⢂⣾⣿⣿⣿⣿⣿⣿⢹
+        //⣿⣿⣿⣿⣿⣿⣿⣿⡟⡐⣀⠐⢂⡠⠥⠬⢄⡀⠢⠀⡤⢿⣿⣿⣿⣿⣿⣿⣿⣿⣼
+        //⣿⣿⣿⣿⣿⣿⣿⡏⠁⠦⣌⣍⣎⣱⡉⠉⣨⣿⣶⠔⣨⠞⣿⣿⣿⣿⣿⣿⣿⣿
+        //⣿⣿⣿⣿⣿⣿⣿⣿⣮⣀⢠⣨⣀⢋⠁⢼⡔⣀⠨⣞⣵⣾⣿⣿⣿⣿⣿⣿⣿⣿
+        //⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣮⣿⡀⠄⣀⣿⣷⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+        //xd no lo borres p
         public NuevoPacienteDialog(java.awt.Frame parent, boolean modal) {
                 super(parent, modal);
                 initComponents();
@@ -83,6 +108,8 @@ public class NuevoPacienteDialog extends javax.swing.JDialog {
                 javax.swing.JScrollPane scrollAlergias = new javax.swing.JScrollPane(txtAlergias);
                 panelFormulario.add(scrollAlergias, "span 2, growx, h 70!");
 
+                        //llamen a Dios, claude se quedo sin tokens
+                        
                 panelFooter.removeAll();
 
                 panelFooter.setLayout(

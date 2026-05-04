@@ -1,2 +1,1 @@
 ADM001|adm123|Administrador General|ADMIN
-FAR001|far123|Juan Farmacéutico|FARMACIA

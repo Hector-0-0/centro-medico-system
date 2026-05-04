@@ -1,5 +1,7 @@
 package pe.edu.uni.centromedico.ui.frames;
-
+import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
+import pe.edu.uni.centromedico.service.BuscarPersona;
+import pe.edu.uni.centromedico.models.Persona;
     public class LoginFrame extends javax.swing.JFrame {
 
         private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(LoginFrame.class.getName());
@@ -64,47 +66,19 @@ package pe.edu.uni.centromedico.ui.frames;
             btnIngresar.addActionListener(e -> {
                 String codigo   = txtUsuario.getText().trim();
                 String password = new String(txtPassword.getPassword()).trim();
+                BuscarPersona buscador = new BuscarPersona();
+                Persona persona = buscador.buscarPersonaPorCodigo(codigo);
 
-                // Buscar en data_estudiante.txt (formato: codigo|pass|nombre|edad|carrera)
-                String[] datosEstudiante = buscarEnTxt("/data/data_estudiante.txt", codigo, password);
-                if (datosEstudiante != null) {
+                if (persona != null && persona.getPassword().equals(password)) {
                     dispose();
                     new pe.edu.uni.centromedico.ui.frames.MainFrame(
-                        datosEstudiante[2], "PACIENTE").setVisible(true);
-                    return;
-                }
-
-                // Buscar en data_doctor.txt (formato: especialidad|nombre|dia|consultorio|disponible)
-                // ← el doctor no tiene código propio aún, adapta según tu .txt
-                // Por ahora, código hardcodeado de prueba:
-                if (codigo.equals("MED001") && password.equals("med123")) {
-                    dispose();
-                    new pe.edu.uni.centromedico.ui.frames.MainFrame(
-                        "Dr. Carlos Medina", "MEDICO").setVisible(true);
-                    return;
-                }
-
-                // Buscar admin
-                if (codigo.equals("ADM001") && password.equals("adm123")) {
-                    dispose();
-                    new pe.edu.uni.centromedico.ui.frames.MainFrame(
-                        "Administrador", "ADMIN").setVisible(true);
-                    return;
-                }
-
-                // Buscar farmacia
-                if (codigo.equals("FAR001") && password.equals("far123")) {
-                    dispose();
-                    new pe.edu.uni.centromedico.ui.frames.MainFrame(
-                        "Farmacéutico", "FARMACIA").setVisible(true);
+                        persona.getName(), persona.rol).setVisible(true);
                     return;
                 }
 
                 // Si no encontró nada:
-                javax.swing.JOptionPane.showMessageDialog(this,
-                    "Código o contraseña incorrectos.",
-                    "Error de acceso",
-                    javax.swing.JOptionPane.ERROR_MESSAGE);
+                ErrorDialog error = new ErrorDialog(this,true, "Código o contraseña incorrectos.");
+                error.setVisible(true);
             });
         }
 
