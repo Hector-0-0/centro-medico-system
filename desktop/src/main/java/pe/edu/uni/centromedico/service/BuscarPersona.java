@@ -8,7 +8,7 @@ public class BuscarPersona {
     public BuscarPersona() {
         // Constructor vacío
     }
-    private Estudiante buscarEstudiantePorCodigo(String codigo) {
+    public Estudiante buscarEstudiantePorCodigo(String codigo) {
         Estudiante estudiante=new Estudiante(); 
         InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_estudiante.txt");
         try(Scanner myreader = new Scanner(data_datosTXT)){
@@ -27,7 +27,7 @@ public class BuscarPersona {
         }
         return estudiante;
     }
-    private Doctor buscarDoctorPorCodigo(String codigo) {
+    public Doctor buscarDoctorPorCodigo(String codigo) {
         Doctor doctor=new Doctor(); 
         InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_doctor.txt");
         try(Scanner myreader = new Scanner(data_datosTXT)){
@@ -45,7 +45,7 @@ public class BuscarPersona {
         }
         return doctor;
     }
-    private Admin buscarAdminPorCodigo(String codigo) {
+    public Admin buscarAdminPorCodigo(String codigo) {
         Admin admin=new Admin(); 
         InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_admin.txt");
         try(Scanner myreader = new Scanner(data_datosTXT)){
@@ -62,7 +62,7 @@ public class BuscarPersona {
         }
         return admin;
     }
-    private Farmacia buscarFarmaciaPorCodigo(String codigo) {
+    public Farmacia buscarFarmaciaPorCodigo(String codigo) {
         Farmacia farmacia=new Farmacia(); 
         InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_farmacia.txt");
         try(Scanner myreader = new Scanner(data_datosTXT)){
