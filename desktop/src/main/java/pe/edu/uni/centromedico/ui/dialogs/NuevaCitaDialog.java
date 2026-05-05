@@ -4,14 +4,21 @@
  */
 package pe.edu.uni.centromedico.ui.dialogs;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
+import javax.print.Doc;
+
+import java.io.IOException;
 import pe.edu.uni.centromedico.service.BuscarPersona;
-import pe.edu.uni.centromedico.models.Persona;
+import pe.edu.uni.centromedico.models.*;
 import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
 
 /**
@@ -47,8 +54,8 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         javax.swing.JLabel lblPaciente = new javax.swing.JLabel("✓Paciente: ");
         panelFormulario.add(lblPaciente, "growx, wrap");
         btnBuscarPaciente.addActionListener(e -> {
-            BuscarPersona buscador = new BuscarPersona();
             Persona persona = new Persona();
+            BuscarPersona buscador = new BuscarPersona();
             persona = buscador.buscarEstudiantePorCodigo(txtPaciente.getText());
             if (persona.getName() != null) {
                 lblPaciente.setText("✓Paciente: " + persona.getName());
@@ -167,11 +174,32 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         btnGuardar.setForeground(java.awt.Color.WHITE);
         btnGuardar.addActionListener(e -> {
             // Aquí iría la lógica para guardar la cita
-            if(lblPaciente.getText().equals("✓Paciente: ") || txtMotivoConsulta.getText().isEmpty() || cbEspecialidad.getSelectedItem() == null || cbMedico.getSelectedItem() == null || cbFecha.getSelectedItem() == null || cbHora.getSelectedItem() == null) {
+            if (lblPaciente.getText().equals("✓Paciente: ") || txtMotivoConsulta.getText().isEmpty()
+                    || cbEspecialidad.getSelectedItem() == null || cbMedico.getSelectedItem() == null
+                    || cbFecha.getSelectedItem() == null || cbHora.getSelectedItem() == null) {
                 ErrorDialog dialogError = new ErrorDialog(null, true, "Por favor complete todos los campos");
                 dialogError.setVisible(true);
-                
                 return;
+            }
+            File file = new File("desktop/src/main/dataEditable/data_cita.txt");
+            file.getParentFile().mkdirs();
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
+                BuscarPersona buscador = new BuscarPersona();
+                Estudiante estudiante = buscador.buscarEstudiantePorNombre(lblPaciente.getText().replace("✓Paciente: ", ""));
+                Doctor doctor = buscador.buscarDoctorPorNombre((String) cbMedico.getSelectedItem());
+                String linea = estudiante.getCodigo() + "|" +
+                    estudiante.getName() + "|" +
+                        doctor.especialidad + "|" +
+                        cbMedico.getSelectedItem() + "|" +
+                        cbFecha.getSelectedItem() + "|" +
+                        cbHora.getSelectedItem() + "|" +
+                        txtMotivoConsulta.getText().replace("\n", " ");
+                bw.write(linea);
+                bw.newLine();
+
+            } catch (IOException ex) {
+                ErrorDialog dialogError = new ErrorDialog(null, true, "Error al guardar la cita");
+                dialogError.setVisible(true);
             }
             this.dispose();
         });

@@ -1,0 +1,2 @@
+U001|Juan Perez|Cardiología|Dr. Luis Ramos|Viernes|15:00|asd
+U002|Maria Lopez|Endocrinología|Dr. Carlos Medina|Lunes|08:00|hola

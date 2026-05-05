@@ -5,6 +5,9 @@ public class Persona {
     public Persona() {
         // Constructor vacío
     }
+    public String getCodigo() {
+        return codigo;
+    }
     public String getPassword() {
         return password;
     }

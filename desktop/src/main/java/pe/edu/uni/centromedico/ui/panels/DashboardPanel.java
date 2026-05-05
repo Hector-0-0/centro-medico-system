@@ -93,18 +93,39 @@ public class DashboardPanel extends javax.swing.JPanel {
     }
     
     private void filtrar(String tipo) {
-        javax.swing.table.DefaultTableModel mod = (javax.swing.table.DefaultTableModel) tbl_horarios.getModel();
-        mod.setRowCount(0); 
+    
+    ((javax.swing.table.DefaultTableModel) tbl_horarios.getModel()).setRowCount(0);
 
-        for (String[] f : listaDatos) {
-            
-            if (tipo.equals("Todos") || f[7].equals(tipo)) {
-                String estado = f[7].equals("1") ? "Disponible" : "Ocupado";
-                mod.addRow(new Object[]{f[2], f[3], f[4], f[5], f[6], estado});
+    // 2. CREAR UNA LISTA TEMPORAL PARA EL FILTRO
+    // Necesitamos saber qué filas pasan el filtro antes de crear la matriz
+    java.util.List<String[]> filtrados = new java.util.ArrayList<>();
+    for (String[] f : listaDatos) {
+        if (tipo.equals("Todos") || f[7].equals(tipo)) {
+            filtrados.add(f);
+        }
+    }
+    String[][] datosTabla = new String[filtrados.size()][6];
+
+    for (int i = 0; i < filtrados.size(); i++) {
+        String[] filaT = filtrados.get(i);
+        for (int j = 0; j < 6; j++) {
+            if (j == 5) {
+                if (filaT[j + 2].equals("1")) {
+                    datosTabla[i][j] = "Disponible";
+                } else {
+                    datosTabla[i][j] = "Ocupado";
+                }
+            } else {
+                datosTabla[i][j] = filaT[j + 2];
             }
         }
     }
-    
+    // 4. PASAR LA MATRIZ AL MODELO
+    javax.swing.table.DefaultTableModel mod = (javax.swing.table.DefaultTableModel) tbl_horarios.getModel();
+    for (String[] fila : datosTabla) {
+        mod.addRow(fila);
+    }
+}
     
 
     @SuppressWarnings("unchecked")
