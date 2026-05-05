@@ -34,8 +34,16 @@
                           <Group type="102" attributes="0">
                               <EmptySpace min="6" pref="6" max="-2" attributes="0"/>
                               <Component id="pnl_filtros" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
-                              <Component id="cbx_Especialidad" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
+                                      <Component id="cbx_Especialidad" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                                      <Component id="btn_Todos" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
                           </Group>
                       </Group>
                   </Group>
@@ -60,7 +68,11 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="pnl_filtros" min="-2" max="-2" attributes="0"/>
-                  <Component id="cbx_Especialidad" min="-2" max="-2" attributes="0"/>
+                  <Group type="102" attributes="0">
+                      <Component id="cbx_Especialidad" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="52" max="-2" attributes="0"/>
+                      <Component id="btn_Todos" min="-2" max="-2" attributes="0"/>
+                  </Group>
               </Group>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
@@ -213,6 +225,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Agendar Cita"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_agendarActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JComboBox" name="cbx_Especialidad">
       <Properties>
@@ -222,9 +237,20 @@
           </StringArray>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cbx_EspecialidadActionPerformed"/>
+      </Events>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
       </AuxValues>
+    </Component>
+    <Component class="javax.swing.JButton" name="btn_Todos">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Todos"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btn_TodosActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

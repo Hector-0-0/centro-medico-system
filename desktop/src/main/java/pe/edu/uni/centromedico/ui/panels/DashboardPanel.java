@@ -7,18 +7,22 @@ import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
 import pe.edu.uni.centromedico.models.Persona;
 
 public class DashboardPanel extends javax.swing.JPanel {
+    
+    Persona persona = new Persona();
 
     private java.util.ArrayList<String[]> listaDatos = new java.util.ArrayList<>();
     private java.util.HashSet<String> especialidades = new java.util.HashSet<>();
 
     public DashboardPanel(Persona persona) {
         initComponents();
+        this.persona = persona;
 
         // Filtros de horarios: fila horizontal
         pnl_filtros.setLayout(new net.miginfocom.swing.MigLayout(
                 "insets 0, gapx 8", "[][][]", "[]"));
         pnl_filtros.removeAll();
         pnl_filtros.add(cbx_Especialidad);
+        pnl_filtros.add(btn_Todos);
         pnl_filtros.add(btn_disponibles);
         pnl_filtros.add(btn_ocupados);
 
@@ -74,10 +78,6 @@ public class DashboardPanel extends javax.swing.JPanel {
         tbl_horarios.getTableHeader().setReorderingAllowed(false);
 
         scrl_horarios.setViewportView(tbl_horarios);
-        btn_agendar.addActionListener(e -> {
-            NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true, persona);
-            dialogNuevaCita.setVisible(true);
-        });
         
         cbx_Especialidad.removeAllItems();  
         cbx_Especialidad.addItem("Seleccione Especialidad");
@@ -103,39 +103,26 @@ public class DashboardPanel extends javax.swing.JPanel {
         this.add(btn_agendar, "right, h 44!, w 200!");
 
     }
-
+    
+    private String ultimo = "Todos";
+    
     private void filtrar(String tipo) {
 
-        ((javax.swing.table.DefaultTableModel) tbl_horarios.getModel()).setRowCount(0);
-
-        // 2. CREAR UNA LISTA TEMPORAL PARA EL FILTRO
-        // Necesitamos saber qué filas pasan el filtro antes de crear la matriz
-        java.util.List<String[]> filtrados = new java.util.ArrayList<>();
-        for (String[] f : listaDatos) {
-            if (tipo.equals("Todos") || f[7].equals(tipo)) {
-                filtrados.add(f);
-            }
-        }
-        String[][] datosTabla = new String[filtrados.size()][6];
-
-        for (int i = 0; i < filtrados.size(); i++) {
-            String[] filaT = filtrados.get(i);
-            for (int j = 0; j < 6; j++) {
-                if (j == 5) {
-                    if (filaT[j + 2].equals("1")) {
-                        datosTabla[i][j] = "Disponible";
-                    } else {
-                        datosTabla[i][j] = "Ocupado";
-                    }
-                } else {
-                    datosTabla[i][j] = filaT[j + 2];
-                }
-            }
-        }
-        // 4. PASAR LA MATRIZ AL MODELO
         javax.swing.table.DefaultTableModel mod = (javax.swing.table.DefaultTableModel) tbl_horarios.getModel();
-        for (String[] fila : datosTabla) {
+        mod.setRowCount(0);
+        String especialidadSeleccionada = (String) cbx_Especialidad.getSelectedItem();
+        for (String[] f : listaDatos) {
+        boolean coincideEspecialidad = especialidadSeleccionada == null 
+        || especialidadSeleccionada.equals("Seleccione Especialidad") 
+        || f[2].equals(especialidadSeleccionada);
+        boolean coincideEstado = tipo.equals("Todos") || f[7].equals(tipo);
+
+        // Si cumple AMBAS condiciones, se agrega a la tabla
+        if (coincideEspecialidad && coincideEstado) {
+            String estadoLabel = f[7].equals("1") ? "Disponible" : "Ocupado";
+            String[] fila = {f[2], f[3], f[4], f[5], f[6], estadoLabel};
             mod.addRow(fila);
+            }
         }
     }
 
@@ -154,6 +141,7 @@ public class DashboardPanel extends javax.swing.JPanel {
         tbl_horarios = new javax.swing.JTable();
         btn_agendar = new javax.swing.JButton();
         cbx_Especialidad = new javax.swing.JComboBox<>();
+        btn_Todos = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(249, 245, 240));
 
@@ -226,8 +214,13 @@ public class DashboardPanel extends javax.swing.JPanel {
         }
 
         btn_agendar.setText("Agendar Cita");
+        btn_agendar.addActionListener(this::btn_agendarActionPerformed);
 
         cbx_Especialidad.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Especialidad" }));
+        cbx_Especialidad.addActionListener(this::cbx_EspecialidadActionPerformed);
+
+        btn_Todos.setText("Todos");
+        btn_Todos.addActionListener(this::btn_TodosActionPerformed);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -245,8 +238,13 @@ public class DashboardPanel extends javax.swing.JPanel {
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(6, 6, 6)
                                 .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(26, 26, 26)
-                                .addComponent(cbx_Especialidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(26, 26, 26)
+                                        .addComponent(cbx_Especialidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(18, 18, 18)
+                                        .addComponent(btn_Todos))))))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(8, 8, 8)
                         .addComponent(btn_agendar)
@@ -264,7 +262,10 @@ public class DashboardPanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cbx_Especialidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(cbx_Especialidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(52, 52, 52)
+                        .addComponent(btn_Todos)))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -277,15 +278,32 @@ public class DashboardPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void cbx_EspecialidadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbx_EspecialidadActionPerformed
+        filtrar(ultimo);
+    }//GEN-LAST:event_cbx_EspecialidadActionPerformed
+
+    private void btn_agendarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_agendarActionPerformed
+        NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true, persona);
+        dialogNuevaCita.setVisible(true);
+    }//GEN-LAST:event_btn_agendarActionPerformed
+
+    private void btn_TodosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_TodosActionPerformed
+        ultimo = "Todos";
+        filtrar(ultimo);
+    }//GEN-LAST:event_btn_TodosActionPerformed
+
     private void btn_disponiblesActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_disponiblesActionPerformed
-        filtrar("1");
+        ultimo = "1";
+        filtrar(ultimo);
     }// GEN-LAST:event_btn_disponiblesActionPerformed
 
     private void btn_ocupadosActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_ocupadosActionPerformed
-        filtrar("0");
+        ultimo = "0";
+        filtrar(ultimo);
     }// GEN-LAST:event_btn_ocupadosActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btn_Todos;
     private javax.swing.JButton btn_agendar;
     private javax.swing.JButton btn_disponibles;
     private javax.swing.JButton btn_ocupados;
