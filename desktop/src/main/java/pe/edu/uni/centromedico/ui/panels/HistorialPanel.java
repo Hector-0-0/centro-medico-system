@@ -1,5 +1,7 @@
 package pe.edu.uni.centromedico.ui.panels;
 
+import javax.swing.table.DefaultTableModel;
+
 public class HistorialPanel extends javax.swing.JPanel {
 
 
@@ -25,12 +27,24 @@ public class HistorialPanel extends javax.swing.JPanel {
 
         // Tabla
         tbl_citas.setRowHeight(34);
+        tbl_citas.setModel(new javax.swing.table.DefaultTableModel(
+                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
+        for (int i = 0; i < tbl_citas.getColumnCount(); i++) {
+            tbl_citas.getColumnModel().getColumn(i).setResizable(false);
+        }
+        tbl_citas.setColumnSelectionAllowed(false);
+        tbl_citas.getTableHeader().setReorderingAllowed(false);
         scrl_citas.setBorder(
             javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232,221,216)));
 
         // Layout: título / buscador / tabla
         this.setLayout(new net.miginfocom.swing.MigLayout(
-            "fill, insets 24", "[grow]", "[]12[]-50[grow]"
+            "fill, insets 24", "[grow]", "[]12[]12[grow]"
         ));
         this.removeAll();
         this.add(lbl_titulo,    "wrap");
