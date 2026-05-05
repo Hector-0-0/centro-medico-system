@@ -1,5 +1,5 @@
 package pe.edu.uni.centromedico.ui.frames;
-
+import pe.edu.uni.centromedico.models.Persona;
 public class MainFrame extends javax.swing.JFrame {
 
     // ── Singleton ─────────────────────────────────────────────────────────
@@ -9,17 +9,16 @@ public class MainFrame extends javax.swing.JFrame {
     // ── Estado interno ────────────────────────────────────────────────────
     private javax.swing.JPanel areaCentral;
     private javax.swing.JLabel lbl_titulo_topbar;
-
-    public MainFrame(String nombreUsuario, String rol) {
+    public MainFrame(Persona persona) {
         initComponents();
         instance = this;
 
         // Sidebar dinámico según rol
         pe.edu.uni.centromedico.ui.components.Sidebar sidebar =
-            new pe.edu.uni.centromedico.ui.components.Sidebar(nombreUsuario, rol);
+            new pe.edu.uni.centromedico.ui.components.Sidebar(persona);
 
         // TopBar
-        javax.swing.JPanel topBar = crearTopBar(nombreUsuario, rol);
+        javax.swing.JPanel topBar = crearTopBar(persona.name, persona.rol);
 
         // Área central
         areaCentral = new javax.swing.JPanel();
@@ -39,9 +38,9 @@ public class MainFrame extends javax.swing.JFrame {
         getContentPane().add(areaCentral,"grow");
 
         // Panel inicial según rol
-        switch (rol) {
+        switch (persona.rol) {
             case "PACIENTE" ->
-                mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(),
+                mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona),
                              "Horarios Disponibles");
             case "MEDICO" ->
                 mostrarPanel(new pe.edu.uni.centromedico.ui.panels.CitaPanel(),
@@ -56,7 +55,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new java.awt.Dimension(900, 580));
-        setTitle("Centro Médico UNI — " + nombreUsuario);
+        setTitle("Centro Médico UNI — " + persona.name);
     }
 
     // ── Navegación ────────────────────────────────────────────────────────

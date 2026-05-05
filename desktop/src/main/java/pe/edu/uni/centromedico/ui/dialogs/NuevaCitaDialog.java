@@ -30,7 +30,7 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
     private static final java.util.logging.Logger logger = java.util.logging.Logger
             .getLogger(NuevaCitaDialog.class.getName());
 
-    public NuevaCitaDialog(java.awt.Frame parent, boolean modal) {
+    public NuevaCitaDialog(java.awt.Frame parent, boolean modal, Persona persona) {
         super(parent, modal);
         initComponents();
         // la rueda esta girando mno, tu tranqui
@@ -46,24 +46,7 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
                         "fill, insets 24",
                         "[grow][grow]",
                         "[]10[]10[]10[]10[]10[]10[]"));
-        panelFormulario.add(new javax.swing.JLabel("Paciente"), "growx, wrap");
-        javax.swing.JTextField txtPaciente = new javax.swing.JTextField();
-        panelFormulario.add(txtPaciente, "growx");
-        javax.swing.JButton btnBuscarPaciente = new javax.swing.JButton("Buscar");
-        panelFormulario.add(btnBuscarPaciente, "wrap");
-        javax.swing.JLabel lblPaciente = new javax.swing.JLabel("✓Paciente: ");
-        panelFormulario.add(lblPaciente, "growx, wrap");
-        btnBuscarPaciente.addActionListener(e -> {
-            Persona persona = new Persona();
-            BuscarPersona buscador = new BuscarPersona();
-            persona = buscador.buscarEstudiantePorCodigo(txtPaciente.getText());
-            if (persona.getName() != null) {
-                lblPaciente.setText("✓Paciente: " + persona.getName());
-            } else {
-                ErrorDialog dialogError = new ErrorDialog(null, true, "Paciente no encontrado");
-                dialogError.setVisible(true);
-            }
-        });
+        
         panelFormulario.add(new javax.swing.JLabel("Especialidad"), "growx");
         panelFormulario.add(new javax.swing.JLabel("Medico"), "growx, wrap");
         javax.swing.JComboBox<String> cbEspecialidad = new javax.swing.JComboBox<>();
@@ -174,7 +157,7 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         btnGuardar.setForeground(java.awt.Color.WHITE);
         btnGuardar.addActionListener(e -> {
             // Aquí iría la lógica para guardar la cita
-            if (lblPaciente.getText().equals("✓Paciente: ") || txtMotivoConsulta.getText().isEmpty()
+            if (txtMotivoConsulta.getText().isEmpty()
                     || cbEspecialidad.getSelectedItem() == null || cbMedico.getSelectedItem() == null
                     || cbFecha.getSelectedItem() == null || cbHora.getSelectedItem() == null) {
                 ErrorDialog dialogError = new ErrorDialog(null, true, "Por favor complete todos los campos");
@@ -185,11 +168,9 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
             file.getParentFile().mkdirs();
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
                 BuscarPersona buscador = new BuscarPersona();
-                Estudiante estudiante = buscador
-                        .buscarEstudiantePorNombre(lblPaciente.getText().replace("✓Paciente: ", ""));
                 Doctor doctor = buscador.buscarDoctorPorNombre((String) cbMedico.getSelectedItem());
-                String linea = estudiante.getCodigo() + "|" +
-                        estudiante.getName() + "|" +
+                String linea = persona.getCodigo() + "|" +
+                        persona.getName() + "|" +
                         doctor.especialidad + "|" +
                         cbMedico.getSelectedItem() + "|" +
                         cbFecha.getSelectedItem() + "|" +
@@ -356,7 +337,7 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                NuevaCitaDialog dialog = new NuevaCitaDialog(new javax.swing.JFrame(), true);
+                NuevaCitaDialog dialog = new NuevaCitaDialog(new javax.swing.JFrame(), true, null);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {

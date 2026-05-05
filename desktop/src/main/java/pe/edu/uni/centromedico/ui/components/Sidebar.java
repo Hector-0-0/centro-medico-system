@@ -3,14 +3,15 @@ package pe.edu.uni.centromedico.ui.components;
 
 import java.awt.Color;
 import javax.swing.*;
+import pe.edu.uni.centromedico.models.Persona;
 
 public class Sidebar extends javax.swing.JPanel {
     
-    public Sidebar(String nombreUsuario, String rol) {
+    public Sidebar(Persona persona) {
         initComponents();
 
         this.setBackground(new java.awt.Color(26, 10, 10));
-        lblNombre.setText(nombreUsuario);
+        lblNombre.setText(persona.name);
 
         this.setLayout(new net.miginfocom.swing.MigLayout(
             "fillx, insets 20 0 20 0", "[grow]",
@@ -23,13 +24,13 @@ public class Sidebar extends javax.swing.JPanel {
         this.add(separator,   "growx, wrap");
 
         // Botones dinámicos según rol
-        agregarBotonesRol(rol);
+        agregarBotonesRol(persona);
 
         this.add(btnSalir, "growx, h 38!, gapleft 20, gapright 20");
     }
 
-    private void agregarBotonesRol(String rol) {
-        String[][] menus = switch (rol) {
+    private void agregarBotonesRol(Persona persona) {
+        String[][] menus = switch (persona.rol) {
             case "PACIENTE" -> new String[][]{
                 {"Horarios",      "DASH"},
                 {"Agendar Cita",  "AGENDAR"},
@@ -62,10 +63,10 @@ public class Sidebar extends javax.swing.JPanel {
                     pe.edu.uni.centromedico.ui.frames.MainFrame.getInstance();
                 if (mf == null) return;
                 switch (destino) {
-                    case "DASH"          -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(),         "Horarios Disponibles");
-                    case "AGENDAR"       -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(),         "Agendar Cita");
+                    case "DASH"          -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(null),         "Horarios Disponibles");
+                    case "AGENDAR"       -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(null),         "Agendar Cita");
                     case "HISTORIAL"     -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.HistorialPanel(),          "Mis Citas");
-                    case "PERFIL"        -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.PerfilPanel(),             "Mi Perfil");
+                    case "PERFIL"        -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.PerfilPanel(persona),             "Mi Perfil");
                     case "CITAS_MEDICO"  -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.CitaPanel(),              "Mis Citas");
                     case "DISPONIBILIDAD"-> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DisponibilidadPanel(),    "Mi Disponibilidad");
                     case "STOCK_VER"     -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.MedicamentoPanel(),        "Stock");

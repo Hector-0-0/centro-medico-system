@@ -1,16 +1,16 @@
 package pe.edu.uni.centromedico.ui.panels;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
+import pe.edu.uni.centromedico.models.Persona;
 
 public class DashboardPanel extends javax.swing.JPanel {
-    
+
     private java.util.ArrayList<String[]> listaDatos = new java.util.ArrayList<>();
 
-    public DashboardPanel() {
+    public DashboardPanel(Persona persona) {
         initComponents();
 
         // Filtros de horarios: fila horizontal
@@ -44,17 +44,15 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         for (int i = 0; i < listaDatos.size(); i++) {
             String[] filaT = listaDatos.get(i);
-            for(int j = 0; j < 6; j++){
-                if(j==5){
-                    if(filaT[j+2].equals("1")){
+            for (int j = 0; j < 6; j++) {
+                if (j == 5) {
+                    if (filaT[j + 2].equals("1")) {
                         datosTabla[i][j] = "Disponible";
-                    }
-                    else{
+                    } else {
                         datosTabla[i][j] = "Ocupado";
                     }
-                }
-                else{
-                datosTabla[i][j] = filaT[j+2];
+                } else {
+                    datosTabla[i][j] = filaT[j + 2];
                 }
             }
         }
@@ -62,13 +60,12 @@ public class DashboardPanel extends javax.swing.JPanel {
         // Crear modelo con datos reales
         tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
                 datosTabla,
-                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }
-        ){
+                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
-        }); 
+        });
         for (int i = 0; i < tbl_horarios.getColumnCount(); i++) {
             tbl_horarios.getColumnModel().getColumn(i).setResizable(false);
         }
@@ -76,8 +73,8 @@ public class DashboardPanel extends javax.swing.JPanel {
         tbl_horarios.getTableHeader().setReorderingAllowed(false);
 
         scrl_horarios.setViewportView(tbl_horarios);
-        btn_agendar.addActionListener(e->{
-            NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true);
+        btn_agendar.addActionListener(e -> {
+            NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true, persona);
             dialogNuevaCita.setVisible(true);
         });
         // Layout principal: título / subtítulo / filtros / tabla / botón
@@ -91,46 +88,46 @@ public class DashboardPanel extends javax.swing.JPanel {
         this.add(btn_agendar, "right, h 44!, w 200!");
 
     }
-    
+
     private void filtrar(String tipo) {
-    
-    ((javax.swing.table.DefaultTableModel) tbl_horarios.getModel()).setRowCount(0);
 
-    // 2. CREAR UNA LISTA TEMPORAL PARA EL FILTRO
-    // Necesitamos saber qué filas pasan el filtro antes de crear la matriz
-    java.util.List<String[]> filtrados = new java.util.ArrayList<>();
-    for (String[] f : listaDatos) {
-        if (tipo.equals("Todos") || f[7].equals(tipo)) {
-            filtrados.add(f);
-        }
-    }
-    String[][] datosTabla = new String[filtrados.size()][6];
+        ((javax.swing.table.DefaultTableModel) tbl_horarios.getModel()).setRowCount(0);
 
-    for (int i = 0; i < filtrados.size(); i++) {
-        String[] filaT = filtrados.get(i);
-        for (int j = 0; j < 6; j++) {
-            if (j == 5) {
-                if (filaT[j + 2].equals("1")) {
-                    datosTabla[i][j] = "Disponible";
-                } else {
-                    datosTabla[i][j] = "Ocupado";
-                }
-            } else {
-                datosTabla[i][j] = filaT[j + 2];
+        // 2. CREAR UNA LISTA TEMPORAL PARA EL FILTRO
+        // Necesitamos saber qué filas pasan el filtro antes de crear la matriz
+        java.util.List<String[]> filtrados = new java.util.ArrayList<>();
+        for (String[] f : listaDatos) {
+            if (tipo.equals("Todos") || f[7].equals(tipo)) {
+                filtrados.add(f);
             }
         }
+        String[][] datosTabla = new String[filtrados.size()][6];
+
+        for (int i = 0; i < filtrados.size(); i++) {
+            String[] filaT = filtrados.get(i);
+            for (int j = 0; j < 6; j++) {
+                if (j == 5) {
+                    if (filaT[j + 2].equals("1")) {
+                        datosTabla[i][j] = "Disponible";
+                    } else {
+                        datosTabla[i][j] = "Ocupado";
+                    }
+                } else {
+                    datosTabla[i][j] = filaT[j + 2];
+                }
+            }
+        }
+        // 4. PASAR LA MATRIZ AL MODELO
+        javax.swing.table.DefaultTableModel mod = (javax.swing.table.DefaultTableModel) tbl_horarios.getModel();
+        for (String[] fila : datosTabla) {
+            mod.addRow(fila);
+        }
     }
-    // 4. PASAR LA MATRIZ AL MODELO
-    javax.swing.table.DefaultTableModel mod = (javax.swing.table.DefaultTableModel) tbl_horarios.getModel();
-    for (String[] fila : datosTabla) {
-        mod.addRow(fila);
-    }
-}
-    
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         lbl_titulo = new javax.swing.JLabel();
@@ -165,49 +162,52 @@ public class DashboardPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout pnl_filtrosLayout = new javax.swing.GroupLayout(pnl_filtros);
         pnl_filtros.setLayout(pnl_filtrosLayout);
         pnl_filtrosLayout.setHorizontalGroup(
-            pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_filtrosLayout.createSequentialGroup()
-                .addContainerGap(27, Short.MAX_VALUE)
-                .addGroup(pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
-                        .addComponent(btn_disponibles, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
-                        .addComponent(btn_ocupados)
-                        .addGap(32, 32, 32))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
-                        .addComponent(btn_todos)
-                        .addGap(38, 38, 38))))
-        );
+                pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(pnl_filtrosLayout.createSequentialGroup()
+                                .addContainerGap(27, Short.MAX_VALUE)
+                                .addGroup(pnl_filtrosLayout
+                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout
+                                                .createSequentialGroup()
+                                                .addComponent(btn_disponibles, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                        136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addContainerGap())
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
+                                                pnl_filtrosLayout.createSequentialGroup()
+                                                        .addComponent(btn_ocupados)
+                                                        .addGap(32, 32, 32))
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
+                                                pnl_filtrosLayout.createSequentialGroup()
+                                                        .addComponent(btn_todos)
+                                                        .addGap(38, 38, 38)))));
         pnl_filtrosLayout.setVerticalGroup(
-            pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_filtrosLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(btn_todos, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btn_disponibles)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btn_ocupados)
-                .addContainerGap(34, Short.MAX_VALUE))
-        );
+                pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(pnl_filtrosLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(btn_todos, javax.swing.GroupLayout.PREFERRED_SIZE, 22,
+                                        javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btn_disponibles)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btn_ocupados)
+                                .addContainerGap(34, Short.MAX_VALUE)));
 
         tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
-            },
-            new String [] {
-                "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                new Object[][] {
+                        { null, null, null, null, null, null },
+                        { null, null, null, null, null, null },
+                        { null, null, null, null, null, null },
+                        { null, null, null, null, null, null }
+                },
+                new String[] {
+                        "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado"
+                }) {
+            boolean[] canEdit = new boolean[] {
+                    false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         tbl_horarios.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -226,58 +226,65 @@ public class DashboardPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(36, 36, 36)
-                        .addComponent(lbl_titulo))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(67, 67, 67)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lbl_subtitulo)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(6, 6, 6)
-                                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(btn_agendar)
-                        .addGap(18, 18, 18)
-                        .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(125, Short.MAX_VALUE))
-        );
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGap(36, 36, 36)
+                                                .addComponent(lbl_titulo))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGap(67, 67, 67)
+                                                .addGroup(layout
+                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(lbl_subtitulo)
+                                                        .addGroup(layout.createSequentialGroup()
+                                                                .addGap(6, 6, 6)
+                                                                .addComponent(pnl_filtros,
+                                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
+                                                                        javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGap(8, 8, 8)
+                                                .addComponent(btn_agendar)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                        100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap(125, Short.MAX_VALUE)));
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(31, 31, 31)
-                .addComponent(lbl_titulo)
-                .addGap(18, 18, 18)
-                .addComponent(lbl_subtitulo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btn_agendar)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-        );
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addGap(31, 31, 31)
+                                .addComponent(lbl_titulo)
+                                .addGap(18, 18, 18)
+                                .addComponent(lbl_subtitulo)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
+                                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                        100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addContainerGap())
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(btn_agendar)
+                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,
+                                                        Short.MAX_VALUE)))));
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btn_todosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_todosActionPerformed
-            filtrar("Todos");
-    }//GEN-LAST:event_btn_todosActionPerformed
+    private void btn_todosActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_todosActionPerformed
+        filtrar("Todos");
+    }// GEN-LAST:event_btn_todosActionPerformed
 
-    private void btn_disponiblesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_disponiblesActionPerformed
+    private void btn_disponiblesActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_disponiblesActionPerformed
         filtrar("1");
-    }//GEN-LAST:event_btn_disponiblesActionPerformed
+    }// GEN-LAST:event_btn_disponiblesActionPerformed
 
-    private void btn_ocupadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_ocupadosActionPerformed
+    private void btn_ocupadosActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_ocupadosActionPerformed
         filtrar("0");
-    }//GEN-LAST:event_btn_ocupadosActionPerformed
+    }// GEN-LAST:event_btn_ocupadosActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_agendar;

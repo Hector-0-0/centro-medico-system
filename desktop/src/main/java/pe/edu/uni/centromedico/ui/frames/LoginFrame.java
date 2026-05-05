@@ -72,7 +72,7 @@ import pe.edu.uni.centromedico.models.Persona;
                 if (persona != null && persona.getPassword().equals(password)) {
                     dispose();
                     new pe.edu.uni.centromedico.ui.frames.MainFrame(
-                        persona.getName(), persona.rol).setVisible(true);
+                        persona).setVisible(true);
                     return;
                 }
 
