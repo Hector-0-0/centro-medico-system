@@ -181,14 +181,15 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
                 dialogError.setVisible(true);
                 return;
             }
-            File file = new File("desktop/src/main/dataEditable/data_cita.txt");
+            File file = new File("dataEditable/data_cita.txt");
             file.getParentFile().mkdirs();
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
                 BuscarPersona buscador = new BuscarPersona();
-                Estudiante estudiante = buscador.buscarEstudiantePorNombre(lblPaciente.getText().replace("✓Paciente: ", ""));
+                Estudiante estudiante = buscador
+                        .buscarEstudiantePorNombre(lblPaciente.getText().replace("✓Paciente: ", ""));
                 Doctor doctor = buscador.buscarDoctorPorNombre((String) cbMedico.getSelectedItem());
                 String linea = estudiante.getCodigo() + "|" +
-                    estudiante.getName() + "|" +
+                        estudiante.getName() + "|" +
                         doctor.especialidad + "|" +
                         cbMedico.getSelectedItem() + "|" +
                         cbFecha.getSelectedItem() + "|" +
