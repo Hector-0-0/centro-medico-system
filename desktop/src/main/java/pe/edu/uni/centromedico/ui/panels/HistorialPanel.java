@@ -14,6 +14,15 @@ public class HistorialPanel extends javax.swing.JPanel {
         pnl_busqueda.add(txt_buscar, "growx, h 36!");
         pnl_busqueda.add(btn_buscar, "h 36!, gapleft 8");
 
+
+        //botones de filtro 
+
+        javax.swing.JComboBox<String> btn_fecha = new javax.swing.JComboBox<>();
+        btn_fecha.addItem("Todas");
+        btn_fecha.addItem("Hoy");
+        btn_fecha.addItem("Esta semana");
+        btn_fecha.addItem("Este mes");
+
         // Tabla
         tbl_citas.setRowHeight(34);
         scrl_citas.setBorder(
@@ -21,11 +30,12 @@ public class HistorialPanel extends javax.swing.JPanel {
 
         // Layout: título / buscador / tabla
         this.setLayout(new net.miginfocom.swing.MigLayout(
-            "fill, insets 24", "[grow]", "[]12[]12[grow]"
+            "fill, insets 24", "[grow]", "[]12[]-50[grow]"
         ));
         this.removeAll();
         this.add(lbl_titulo,    "wrap");
         this.add(pnl_busqueda,  "growx, wrap");
+        this.add(btn_fecha,     "wrap");
         this.add(scrl_citas,    "grow");
     }
 

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
+import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
 
 public class PacientePanel extends javax.swing.JPanel {
 
@@ -16,33 +17,27 @@ public class PacientePanel extends javax.swing.JPanel {
         scrl_pacientes.setBorder(
                 javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232, 221, 216)));
 
-        InputStream data_doctor = getClass().getResourceAsStream("/data/data_doctor.txt");
+        InputStream data_estudiantes = getClass().getResourceAsStream("/data/data_estudiante.txt");
 
-        try (Scanner myreader = new Scanner(data_doctor)) {
+        try (Scanner myreader = new Scanner(data_estudiantes)) {
             while (myreader.hasNextLine()) {
                 String data = myreader.nextLine();
                 String[] data_split = data.split("\\|");
                 listaDatos.add(data_split);
             }
         } catch (Exception e) {
-            System.out.println("Error al leer: " + e.getMessage());
+            ErrorDialog errorDialog = new ErrorDialog(null, true, "Error al cargar datos de estudiantes: " + e.getMessage());
+            errorDialog.setVisible(true);
         }
 
-        String[][] datosTabla = new String[listaDatos.size()][6];
-
+        String[][] datosTabla = new String[listaDatos.size()][5];
         for (int i = 0; i < listaDatos.size(); i++) {
             String[] filaT = listaDatos.get(i);
-            for (int j = 0; j < 6; j++) {
-                if (j == 5) {
-                    if (filaT[j + 2].equals("1")) {
-                        datosTabla[i][j] = "Disponible";
-                    } else {
-                        datosTabla[i][j] = "Ocupado";
-                    }
-                } else {
-                    datosTabla[i][j] = filaT[j + 2];
-                }
-            }
+            datosTabla[i][0] = filaT[0];
+            datosTabla[i][1] = filaT[2];
+            datosTabla[i][2] = filaT[3];
+            datosTabla[i][3] = filaT[4];
+            datosTabla[i][4] = filaT[5];
         }
 
         // Crear modelo con datos reales
