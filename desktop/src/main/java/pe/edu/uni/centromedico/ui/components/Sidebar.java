@@ -33,7 +33,6 @@ public class Sidebar extends javax.swing.JPanel {
         String[][] menus = switch (persona.rol) {
             case "PACIENTE" -> new String[][]{
                 {"Horarios",      "DASH"},
-                {"Agendar Cita",  "AGENDAR"},
                 {"Mis Citas",     "HISTORIAL"},
                 {"Mi Perfil",     "PERFIL"}
             };

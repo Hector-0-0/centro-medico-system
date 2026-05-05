@@ -164,6 +164,7 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
                 dialogError.setVisible(true);
                 return;
             }
+            System.out.println(System.getProperty("user.dir"));
             File file = new File("dataEditable/data_cita.txt");
             file.getParentFile().mkdirs();
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
@@ -178,7 +179,6 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
                         txtMotivoConsulta.getText().replace("\n", " ");
                 bw.write(linea);
                 bw.newLine();
-
             } catch (IOException ex) {
                 ErrorDialog dialogError = new ErrorDialog(null, true, "Error al guardar la cita");
                 dialogError.setVisible(true);
