@@ -9,6 +9,7 @@ import pe.edu.uni.centromedico.models.Persona;
 public class DashboardPanel extends javax.swing.JPanel {
 
     private java.util.ArrayList<String[]> listaDatos = new java.util.ArrayList<>();
+    private java.util.HashSet<String> especialidades = new java.util.HashSet<>();
 
     public DashboardPanel(Persona persona) {
         initComponents();
@@ -17,7 +18,7 @@ public class DashboardPanel extends javax.swing.JPanel {
         pnl_filtros.setLayout(new net.miginfocom.swing.MigLayout(
                 "insets 0, gapx 8", "[][][]", "[]"));
         pnl_filtros.removeAll();
-        pnl_filtros.add(btn_todos);
+        pnl_filtros.add(cbx_Especialidad);
         pnl_filtros.add(btn_disponibles);
         pnl_filtros.add(btn_ocupados);
 
@@ -77,6 +78,20 @@ public class DashboardPanel extends javax.swing.JPanel {
             NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true, persona);
             dialogNuevaCita.setVisible(true);
         });
+        
+        cbx_Especialidad.removeAllItems();  
+        cbx_Especialidad.addItem("Seleccione Especialidad");
+        especialidades.clear();
+        for (String[] fila : listaDatos) {
+            if (fila.length > 2) {
+                String nombreEspecialidad = fila[2];
+                 if (!especialidades.contains(nombreEspecialidad)) {
+                    especialidades.add(nombreEspecialidad);
+                    cbx_Especialidad.addItem(nombreEspecialidad);
+                }
+            }
+        }
+        
         // Layout principal: título / subtítulo / filtros / tabla / botón
         this.setLayout(new net.miginfocom.swing.MigLayout(
                 "fill, insets 24", "[grow]", "[]4[]12[]12[grow]16[]"));
@@ -127,7 +142,7 @@ public class DashboardPanel extends javax.swing.JPanel {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
     // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         lbl_titulo = new javax.swing.JLabel();
@@ -135,10 +150,10 @@ public class DashboardPanel extends javax.swing.JPanel {
         pnl_filtros = new javax.swing.JPanel();
         btn_disponibles = new javax.swing.JButton();
         btn_ocupados = new javax.swing.JButton();
-        btn_todos = new javax.swing.JButton();
         scrl_horarios = new javax.swing.JScrollPane();
         tbl_horarios = new javax.swing.JTable();
         btn_agendar = new javax.swing.JButton();
+        cbx_Especialidad = new javax.swing.JComboBox<>();
 
         setBackground(new java.awt.Color(249, 245, 240));
 
@@ -156,58 +171,47 @@ public class DashboardPanel extends javax.swing.JPanel {
         btn_ocupados.setText("Ocupados");
         btn_ocupados.addActionListener(this::btn_ocupadosActionPerformed);
 
-        btn_todos.setText("Todos");
-        btn_todos.addActionListener(this::btn_todosActionPerformed);
-
         javax.swing.GroupLayout pnl_filtrosLayout = new javax.swing.GroupLayout(pnl_filtros);
         pnl_filtros.setLayout(pnl_filtrosLayout);
         pnl_filtrosLayout.setHorizontalGroup(
-                pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(pnl_filtrosLayout.createSequentialGroup()
-                                .addContainerGap(27, Short.MAX_VALUE)
-                                .addGroup(pnl_filtrosLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout
-                                                .createSequentialGroup()
-                                                .addComponent(btn_disponibles, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addContainerGap())
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                                pnl_filtrosLayout.createSequentialGroup()
-                                                        .addComponent(btn_ocupados)
-                                                        .addGap(32, 32, 32))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                                pnl_filtrosLayout.createSequentialGroup()
-                                                        .addComponent(btn_todos)
-                                                        .addGap(38, 38, 38)))));
+            pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnl_filtrosLayout.createSequentialGroup()
+                .addContainerGap(27, Short.MAX_VALUE)
+                .addGroup(pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
+                        .addComponent(btn_disponibles, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_filtrosLayout.createSequentialGroup()
+                        .addComponent(btn_ocupados)
+                        .addGap(32, 32, 32))))
+        );
         pnl_filtrosLayout.setVerticalGroup(
-                pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(pnl_filtrosLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(btn_todos, javax.swing.GroupLayout.PREFERRED_SIZE, 22,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_disponibles)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_ocupados)
-                                .addContainerGap(34, Short.MAX_VALUE)));
+            pnl_filtrosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnl_filtrosLayout.createSequentialGroup()
+                .addGap(34, 34, 34)
+                .addComponent(btn_disponibles)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btn_ocupados)
+                .addContainerGap(34, Short.MAX_VALUE))
+        );
 
         tbl_horarios.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][] {
-                        { null, null, null, null, null, null },
-                        { null, null, null, null, null, null },
-                        { null, null, null, null, null, null },
-                        { null, null, null, null, null, null }
-                },
-                new String[] {
-                        "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado"
-                }) {
-            boolean[] canEdit = new boolean[] {
-                    false, false, false, false, false, false
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         tbl_horarios.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -223,60 +227,55 @@ public class DashboardPanel extends javax.swing.JPanel {
 
         btn_agendar.setText("Agendar Cita");
 
+        cbx_Especialidad.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Especialidad" }));
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(36, 36, 36)
-                                                .addComponent(lbl_titulo))
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(67, 67, 67)
-                                                .addGroup(layout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addComponent(lbl_subtitulo)
-                                                        .addGroup(layout.createSequentialGroup()
-                                                                .addGap(6, 6, 6)
-                                                                .addComponent(pnl_filtros,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE))))
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addGap(8, 8, 8)
-                                                .addComponent(btn_agendar)
-                                                .addGap(18, 18, 18)
-                                                .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addContainerGap(125, Short.MAX_VALUE)));
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(36, 36, 36)
+                        .addComponent(lbl_titulo))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(67, 67, 67)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lbl_subtitulo)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
+                                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(26, 26, 26)
+                                .addComponent(cbx_Especialidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(8, 8, 8)
+                        .addComponent(btn_agendar)
+                        .addGap(18, 18, 18)
+                        .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(29, Short.MAX_VALUE))
+        );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGap(31, 31, 31)
-                                .addComponent(lbl_titulo)
-                                .addGap(18, 18, 18)
-                                .addComponent(lbl_subtitulo)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addContainerGap())
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(btn_agendar)
-                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        Short.MAX_VALUE)))));
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(31, 31, 31)
+                .addComponent(lbl_titulo)
+                .addGap(18, 18, 18)
+                .addComponent(lbl_subtitulo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(pnl_filtros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cbx_Especialidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(scrl_horarios, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btn_agendar)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
     }// </editor-fold>//GEN-END:initComponents
-
-    private void btn_todosActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_todosActionPerformed
-        filtrar("Todos");
-    }// GEN-LAST:event_btn_todosActionPerformed
 
     private void btn_disponiblesActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_disponiblesActionPerformed
         filtrar("1");
@@ -290,7 +289,7 @@ public class DashboardPanel extends javax.swing.JPanel {
     private javax.swing.JButton btn_agendar;
     private javax.swing.JButton btn_disponibles;
     private javax.swing.JButton btn_ocupados;
-    private javax.swing.JButton btn_todos;
+    private javax.swing.JComboBox<String> cbx_Especialidad;
     private javax.swing.JLabel lbl_subtitulo;
     private javax.swing.JLabel lbl_titulo;
     private javax.swing.JPanel pnl_filtros;
