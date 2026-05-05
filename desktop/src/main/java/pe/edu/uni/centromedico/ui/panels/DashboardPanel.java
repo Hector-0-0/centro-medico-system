@@ -7,6 +7,8 @@ import java.util.Scanner;
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
 
 public class DashboardPanel extends javax.swing.JPanel {
+    
+    private java.util.ArrayList<String[]> listaDatos = new java.util.ArrayList<>();
 
     public DashboardPanel() {
         initComponents();
@@ -25,7 +27,6 @@ public class DashboardPanel extends javax.swing.JPanel {
                 javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232, 221, 216)));
 
         InputStream data_doctor = getClass().getResourceAsStream("/data/data_doctor.txt");
-        ArrayList<String[]> listaDatos = new ArrayList<>();
 
         try (Scanner myreader = new Scanner(data_doctor)) {
             while (myreader.hasNextLine()) {
@@ -33,9 +34,12 @@ public class DashboardPanel extends javax.swing.JPanel {
                 String[] data_split = data.split("\\|");
                 listaDatos.add(data_split);
             }
+        } catch (Exception e) {
+            System.out.println("Error al leer: " + e.getMessage());
         }
 
-        // Convertir lista a matriz (lo que pide la tabla)
+        filtrar("Todos");
+
         String[][] datosTabla = new String[listaDatos.size()][6];
 
         for (int i = 0; i < listaDatos.size(); i++) {
@@ -87,6 +91,21 @@ public class DashboardPanel extends javax.swing.JPanel {
         this.add(btn_agendar, "right, h 44!, w 200!");
 
     }
+    
+    private void filtrar(String tipo) {
+        javax.swing.table.DefaultTableModel mod = (javax.swing.table.DefaultTableModel) tbl_horarios.getModel();
+        mod.setRowCount(0); 
+
+        for (String[] f : listaDatos) {
+            
+            if (tipo.equals("Todos") || f[7].equals(tipo)) {
+                String estado = f[7].equals("1") ? "Disponible" : "Ocupado";
+                mod.addRow(new Object[]{f[2], f[3], f[4], f[5], f[6], estado});
+            }
+        }
+    }
+    
+    
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated
@@ -114,10 +133,13 @@ public class DashboardPanel extends javax.swing.JPanel {
         pnl_filtros.setOpaque(false);
 
         btn_disponibles.setText("Disponibles");
+        btn_disponibles.addActionListener(this::btn_disponiblesActionPerformed);
 
         btn_ocupados.setText("Ocupados");
+        btn_ocupados.addActionListener(this::btn_ocupadosActionPerformed);
 
         btn_todos.setText("Todos");
+        btn_todos.addActionListener(this::btn_todosActionPerformed);
 
         javax.swing.GroupLayout pnl_filtrosLayout = new javax.swing.GroupLayout(pnl_filtros);
         pnl_filtros.setLayout(pnl_filtrosLayout);
@@ -223,6 +245,18 @@ public class DashboardPanel extends javax.swing.JPanel {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btn_todosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_todosActionPerformed
+            filtrar("Todos");
+    }//GEN-LAST:event_btn_todosActionPerformed
+
+    private void btn_disponiblesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_disponiblesActionPerformed
+        filtrar("1");
+    }//GEN-LAST:event_btn_disponiblesActionPerformed
+
+    private void btn_ocupadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_ocupadosActionPerformed
+        filtrar("0");
+    }//GEN-LAST:event_btn_ocupadosActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_agendar;
