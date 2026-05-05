@@ -98,4 +98,95 @@ public class BuscarPersona {
         }
         return null;
     }
+
+    public Estudiante buscarEstudiantePorNombre(String nombre) {
+        Estudiante estudiante=new Estudiante(); 
+        InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_estudiante.txt");
+        try(Scanner myreader = new Scanner(data_datosTXT)){
+            while(myreader.hasNextLine()){
+                String data=myreader.nextLine();
+                String[] data_split=data.split("\\|");
+                if(data_split[2].equals(nombre)){
+                    estudiante.codigo=data_split[0];
+                    estudiante.password=data_split[1];
+                    estudiante.name=data_split[2];
+                    estudiante.age=Integer.parseInt(data_split[3]);
+                    estudiante.especialidad=data_split[4];
+                    break;
+                }
+            }
+        }
+        return estudiante;
+    }
+    public Doctor buscarDoctorPorNombre(String nombre) {
+        Doctor doctor=new Doctor(); 
+        InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_doctor.txt");
+        try(Scanner myreader = new Scanner(data_datosTXT)){
+            while(myreader.hasNextLine()){
+                String data=myreader.nextLine();
+                String[] data_split=data.split("\\|");
+                if(data_split[3].equals(nombre)){
+                    doctor.codigo=data_split[0];
+                    doctor.password=data_split[1];
+                    doctor.especialidad=data_split[2];
+                    doctor.name=data_split[3];
+                    break;
+                }
+            }
+        }
+        return doctor;
+    }
+    public Admin buscarAdminPorNombre(String nombre) {
+        Admin admin=new Admin(); 
+        InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_admin.txt");
+        try(Scanner myreader = new Scanner(data_datosTXT)){
+            while(myreader.hasNextLine()){
+                String data=myreader.nextLine();
+                String[] data_split=data.split("\\|");
+                if(data_split[2].equals(nombre)){
+                    admin.codigo=data_split[0];
+                    admin.password=data_split[1];
+                    admin.name=data_split[2];
+                    break;
+                }
+            }
+        }
+        return admin;
+    }
+    public Farmacia buscarFarmaciaPorNombre(String nombre) {
+        Farmacia farmacia=new Farmacia(); 
+        InputStream data_datosTXT = getClass().getResourceAsStream("/data/data_farmacia.txt");
+        try(Scanner myreader = new Scanner(data_datosTXT)){
+            while(myreader.hasNextLine()){
+                String data=myreader.nextLine();
+                String[] data_split=data.split("\\|");
+                if(data_split[2].equals(nombre)){
+                    farmacia.codigo=data_split[0];
+                    farmacia.password=data_split[1];
+                    farmacia.name=data_split[2];
+                    break;
+                }
+            }
+        }
+        return farmacia;
+    }
+    public Persona buscarPersonaPorNombre(String nombre) {
+        Estudiante estudiante=buscarEstudiantePorNombre(nombre);
+        if(estudiante.name!=null){
+            return estudiante;
+        }
+        Doctor doctor=buscarDoctorPorNombre(nombre);
+        if(doctor.name!=null){
+            return doctor;
+        }
+        Admin admin=buscarAdminPorNombre(nombre);
+        if(admin.name!=null){
+            return admin;
+        }
+        Farmacia farmacia=buscarFarmaciaPorNombre(nombre);
+        if(farmacia.name!=null){
+            return farmacia;
+        }
+        return null;
+    }
 }
