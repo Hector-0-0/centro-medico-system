@@ -6,52 +6,48 @@ public class HistorialPanel extends javax.swing.JPanel {
 
 
     public HistorialPanel() {
-        initComponents();
-
-        // Buscador: campo crece, botón a la derecha
-        pnl_busqueda.setLayout(new net.miginfocom.swing.MigLayout(
-            "fillx, insets 0", "[grow][]", "[36!]"
-        ));
-        pnl_busqueda.removeAll();
+    initComponents(); // Deja que NetBeans cree los objetos
+    
+    // 1. Configurar el Panel de Búsqueda
+    pnl_busqueda.removeAll(); 
+    pnl_busqueda.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 0", "[grow][]", "[36!]"));
+    
+    // Verificamos que no sean nulos antes de agregar
+    if (txt_buscar != null && btn_buscar != null) {
         pnl_busqueda.add(txt_buscar, "growx, h 36!");
         pnl_busqueda.add(btn_buscar, "h 36!, gapleft 8");
-
-
-        //botones de filtro 
-
-        javax.swing.JComboBox<String> btn_fecha = new javax.swing.JComboBox<>();
-        btn_fecha.addItem("Todas");
-        btn_fecha.addItem("Hoy");
-        btn_fecha.addItem("Esta semana");
-        btn_fecha.addItem("Este mes");
-
-        // Tabla
-        tbl_citas.setRowHeight(34);
-        tbl_citas.setModel(new javax.swing.table.DefaultTableModel(
-                new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        });
-        for (int i = 0; i < tbl_citas.getColumnCount(); i++) {
-            tbl_citas.getColumnModel().getColumn(i).setResizable(false);
-        }
-        tbl_citas.setColumnSelectionAllowed(false);
-        tbl_citas.getTableHeader().setReorderingAllowed(false);
-        scrl_citas.setBorder(
-            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232,221,216)));
-
-        // Layout: título / buscador / tabla
-        this.setLayout(new net.miginfocom.swing.MigLayout(
-            "fill, insets 24", "[grow]", "[]12[]12[grow]"
-        ));
-        this.removeAll();
-        this.add(lbl_titulo,    "wrap");
-        this.add(pnl_busqueda,  "growx, wrap");
-        this.add(btn_fecha,     "wrap");
-        this.add(scrl_citas,    "grow");
     }
+
+    // 2. Filtro de fecha (ComboBox)
+    javax.swing.JComboBox<String> cmb_fecha = new javax.swing.JComboBox<>(new String[]{
+        "Todas", "Hoy", "Esta semana", "Este mes"
+    });
+
+    // 3. Configurar Tabla (Limpiamos el modelo previo)
+    tbl_citas.setModel(new javax.swing.table.DefaultTableModel(
+        new Object[][] {}, 
+        new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" }
+    ) {
+        @Override
+        public boolean isCellEditable(int row, int column) { return false; }
+    });
+    tbl_citas.setRowHeight(34);
+    tbl_citas.getTableHeader().setReorderingAllowed(false);
+
+    // 4. RE-ESTRUCTURAR EL PANEL PRINCIPAL
+    // Esto sobreescribe el GroupLayout de NetBeans con MigLayout
+    this.setLayout(new net.miginfocom.swing.MigLayout("fill, insets 24", "[grow]", "[]12[]12[]12[grow]"));
+    this.removeAll(); 
+    
+    this.add(lbl_titulo, "wrap");
+    this.add(pnl_busqueda, "growx, wrap");
+    this.add(cmb_fecha, "wrap");
+    this.add(scrl_citas, "grow");
+
+    this.revalidate();
+    this.repaint();
+}
+
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

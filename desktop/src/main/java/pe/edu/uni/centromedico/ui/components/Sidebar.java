@@ -10,7 +10,7 @@ public class Sidebar extends javax.swing.JPanel {
     public Sidebar(Persona persona) {
         initComponents();
 
-        this.setBackground(new java.awt.Color(26, 10, 10));
+        this.setBackground(Color.decode("#8B1414"));
         lblNombre.setText(persona.name);
 
         this.setLayout(new net.miginfocom.swing.MigLayout(
@@ -82,7 +82,7 @@ public class Sidebar extends javax.swing.JPanel {
 
     private javax.swing.JButton crearBotonMenu(String texto) {
         javax.swing.JButton btn = new javax.swing.JButton(texto);
-        btn.setBackground(new java.awt.Color(26, 10, 10));
+        btn.setBackground(Color.decode("#8B1414"));       // ← antes era (26,10,10)
         btn.setForeground(new java.awt.Color(200, 200, 200));
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
@@ -90,7 +90,38 @@ public class Sidebar extends javax.swing.JPanel {
         btn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         btn.setFont(new java.awt.Font("Liberation Sans", java.awt.Font.BOLD, 13));
         btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        // ← AGREGAR estos listeners:
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                MovedBtn(btn);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                ExitedBtn(btn);
+            }
+        });
+
         return btn;
+    }
+    
+
+
+    private void MovedBtn(JButton activo) {
+        activo.setBackground(Color.decode("#FFF1D3"));
+        activo.setForeground(Color.decode("#8B1414"));
+        activo.setBorderPainted(false);
+        activo.setFocusPainted(false);
+        activo.setOpaque(true);
+        activo.setContentAreaFilled(true);   // ← clave para que se vea el color
+        activo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+    }
+
+    private void ExitedBtn(JButton activo) {
+        activo.setBackground(Color.decode("#8B1414"));
+        activo.setForeground(Color.decode("#F9F5F0"));
+        activo.setContentAreaFilled(false);
+        activo.setOpaque(false);
+        activo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
     }
 
     
@@ -185,13 +216,15 @@ public class Sidebar extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSalirMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSalirMouseMoved
-        btnSalir.setBorder(null);
-        btnSalir.setBorderPainted(false);
-        btnSalir.setFocusPainted(false);
-        btnSalir.setOpaque(true);
-        btnSalir.setBackground(Color.decode("#FFF1D3"));
-        btnSalir.setForeground(Color.decode("#8b1414"));
-        btnSalir.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+
+    btnSalir.setBorderPainted(false);
+    btnSalir.setFocusPainted(false);
+    btnSalir.setOpaque(true);
+    btnSalir.setContentAreaFilled(true);  // ← esta línea es la que faltaba
+    btnSalir.setBackground(Color.decode("#FFF1D3"));
+    btnSalir.setForeground(Color.decode("#8b1414"));
+    btnSalir.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+
     }//GEN-LAST:event_btnSalirMouseMoved
 
     private void btnSalirMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnSalirMouseExited
