@@ -1,0 +1,6 @@
+D001|pass123|Endocrinología|Dr. Carlos Medina|Lunes|08:00|Consultorio 101|1
+D001|pass123|Endocrinología|Dr. Carlos Medina|Lunes|10:00|Consultorio 101|1
+D002|laura2024|Endocrinología|Dra. Laura Peña|Martes|09:00|Consultorio 102|0
+D003|ruizpass|Odontología|Dr. Javier Ruiz|Miércoles|11:00|Consultorio 201|1
+D004|sofiaRX|Radiología|Dra. Sofia Torres|Jueves|14:00|Sala RX-01|1
+D005|cardio99|Cardiología|Dr. Luis Ramos|Viernes|15:00|Consultorio 305|1
