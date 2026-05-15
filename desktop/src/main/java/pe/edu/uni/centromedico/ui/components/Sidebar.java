@@ -11,7 +11,7 @@ public class Sidebar extends javax.swing.JPanel {
         initComponents();
 
         this.setBackground(Color.decode("#8B1414"));
-        lblNombre.setText(persona.name);
+        lblNombre.setText(persona.getNombre());
 
         this.setLayout(new net.miginfocom.swing.MigLayout(
             "fillx, insets 20 0 20 0", "[grow]",
@@ -30,7 +30,7 @@ public class Sidebar extends javax.swing.JPanel {
     }
 
     private void agregarBotonesRol(Persona persona) {
-        String[][] menus = switch (persona.rol) {
+        String[][] menus = switch (persona.getRol()) {
             case "PACIENTE" -> new String[][]{
                 {"Horarios",      "DASH"},
                 {"Mis Citas",     "HISTORIAL"},

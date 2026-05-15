@@ -21,14 +21,14 @@ public class PerfilPanel extends javax.swing.JPanel {
         pnl_card_izq.add(lbl_email_perfil, "center, wrap");
         pnl_card_izq.add(lbl_tel, "center, wrap");
         pnl_card_izq.add(btn_editar_perfil, "center, h 38!, w 160!");
-        lbl_nombre_perfil.setText(persona.getName());
-        lbl_codigo_perfil.setText("Código: " + persona.getCodigo());
+        lbl_nombre_perfil.setText(persona.getNombre());
+        lbl_codigo_perfil.setText("Código: " + persona.getId());
         if (persona instanceof Estudiante) {
             Estudiante e = (Estudiante) persona;
-            lbl_especialidad.setText("Carrera: " + e.especialidad);
+            lbl_especialidad.setText("Carrera: " + e.getCarrera());
         } else if (persona instanceof Doctor) {
             Doctor d = (Doctor) persona;
-            lbl_especialidad.setText("Especialidad: " + d.especialidad);
+            lbl_especialidad.setText("Especialidad: " + d.getEspecialidad());
         }
         // Card derecho: estadísticas
         pnl_card_der.setLayout(new net.miginfocom.swing.MigLayout(

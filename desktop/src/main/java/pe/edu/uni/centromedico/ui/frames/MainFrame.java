@@ -18,7 +18,7 @@ public class MainFrame extends javax.swing.JFrame {
             new pe.edu.uni.centromedico.ui.components.Sidebar(persona);
 
         // TopBar
-        javax.swing.JPanel topBar = crearTopBar(persona.name, persona.rol);
+        javax.swing.JPanel topBar = crearTopBar(persona.getNombre(), persona.getRol());
 
         // Área central
         areaCentral = new javax.swing.JPanel();
@@ -38,7 +38,7 @@ public class MainFrame extends javax.swing.JFrame {
         getContentPane().add(areaCentral,"grow");
 
         // Panel inicial según rol
-        switch (persona.rol) {
+        switch (persona.getRol()) {
             case "PACIENTE" ->
                 mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona),
                              "Horarios Disponibles");
@@ -55,7 +55,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new java.awt.Dimension(900, 580));
-        setTitle("Centro Médico UNI — " + persona.name);
+        setTitle("Centro Médico UNI — " + persona.getNombre());
     }
 
     // ── Navegación ────────────────────────────────────────────────────────

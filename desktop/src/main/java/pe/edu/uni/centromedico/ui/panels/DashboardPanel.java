@@ -8,7 +8,7 @@ import pe.edu.uni.centromedico.models.Persona;
 
 public class DashboardPanel extends javax.swing.JPanel {
     
-    Persona persona = new Persona();
+    Persona persona = null;
 
     private java.util.ArrayList<String[]> listaDatos = new java.util.ArrayList<>();
     private java.util.HashSet<String> especialidades = new java.util.HashSet<>();
