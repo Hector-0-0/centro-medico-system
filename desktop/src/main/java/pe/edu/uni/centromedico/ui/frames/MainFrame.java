@@ -39,7 +39,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         // Panel inicial según rol
         switch (persona.getRol()) {
-            case "PACIENTE" ->
+            case "ESTUDIANTE" ->
                 mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona),
                              "Horarios Disponibles");
             case "MEDICO" ->

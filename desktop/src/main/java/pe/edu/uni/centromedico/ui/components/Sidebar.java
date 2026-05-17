@@ -31,7 +31,7 @@ public class Sidebar extends javax.swing.JPanel {
 
     private void agregarBotonesRol(Persona persona) {
         String[][] menus = switch (persona.getRol()) {
-            case "PACIENTE" -> new String[][]{
+            case "ESTUDIANTE" -> new String[][]{
                 {"Horarios",      "DASH"},
                 {"Mis Citas",     "HISTORIAL"},
                 {"Mi Perfil",     "PERFIL"}

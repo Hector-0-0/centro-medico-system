@@ -45,12 +45,14 @@ CREATE TABLE IF NOT EXISTS farmacia_usuarios (
 );
 
 CREATE TABLE IF NOT EXISTS horarios_doctor (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    id_doctor  VARCHAR(10) NOT NULL,
-    dia_semana VARCHAR(20) NOT NULL,
-    hora       VARCHAR(10) NOT NULL,
-    disponible TINYINT(1)  DEFAULT 1,
-    FOREIGN KEY (id_doctor) REFERENCES doctores(id_usuario) ON DELETE CASCADE
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    id_doctor   VARCHAR(10) NOT NULL,
+    dia_semana  VARCHAR(20) NOT NULL,
+    hora_inicio VARCHAR(10) NOT NULL,
+    hora_fin    VARCHAR(10) NOT NULL,
+    disponible  TINYINT(1)  DEFAULT 1,
+    FOREIGN KEY (id_doctor) REFERENCES doctores(id_usuario) ON DELETE CASCADE,
+    UNIQUE KEY uq_horario (id_doctor, dia_semana, hora_inicio) -- ← esto
 );
 
 CREATE TABLE IF NOT EXISTS medicamentos (
@@ -136,13 +138,13 @@ INSERT IGNORE INTO administradores VALUES
 INSERT IGNORE INTO farmacia_usuarios VALUES
 ('FAR001', 'Juan Farmaceutico');
 
-INSERT IGNORE INTO horarios_doctor (id_doctor, dia_semana, hora, disponible) VALUES
-('D001', 'Lunes',     '08:00', 1),
-('D001', 'Lunes',     '10:00', 1),
-('D002', 'Martes',    '09:00', 1),
-('D003', 'Miercoles', '11:00', 1),
-('D004', 'Jueves',    '14:00', 1),
-('D005', 'Viernes',   '15:00', 1);
+INSERT IGNORE INTO horarios_doctor (id_doctor, dia_semana, hora_inicio, hora_fin, disponible) VALUES
+('D001', 'Lunes',     '08:00', '09:00', 1),
+('D001', 'Lunes',     '10:00', '11:00', 1),
+('D002', 'Martes',    '09:00', '10:00', 1),
+('D003', 'Miercoles', '11:00', '12:00', 1),
+('D004', 'Jueves',    '14:00', '15:00', 1),
+('D005', 'Viernes',   '15:00', '16:00', 1);
 
 INSERT IGNORE INTO medicamentos VALUES
 ('MED-001', 'Amoxicilina 500mg',  150, 'capsulas'),

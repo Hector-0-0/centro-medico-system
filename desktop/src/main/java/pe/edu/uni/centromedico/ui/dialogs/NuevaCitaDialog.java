@@ -1,23 +1,15 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
- */
 package pe.edu.uni.centromedico.ui.dialogs;
 
+import pe.edu.uni.centromedico.db.dao.CitaDAO;
+import pe.edu.uni.centromedico.db.dao.DoctorDAO;
+import pe.edu.uni.centromedico.db.dao.HorarioDAO;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
-
-import javax.print.Doc;
-
-import java.io.IOException;
-import pe.edu.uni.centromedico.service.BuscarPersona;
 import pe.edu.uni.centromedico.models.*;
 import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
 
@@ -46,7 +38,7 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
                         "fill, insets 24",
                         "[grow][grow]",
                         "[]10[]10[]10[]10[]10[]10[]"));
-        
+
         panelFormulario.add(new javax.swing.JLabel("Especialidad"), "growx");
         panelFormulario.add(new javax.swing.JLabel("Medico"), "growx, wrap");
         javax.swing.JComboBox<String> cbEspecialidad = new javax.swing.JComboBox<>();
@@ -62,76 +54,58 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         panelFormulario.add(new javax.swing.JLabel("Motivo de consulta"), "growx, wrap");
         javax.swing.JTextArea txtMotivoConsulta = new javax.swing.JTextArea(5, 20);
         panelFormulario.add(txtMotivoConsulta, "span 2, growx, wrap");
-        ArrayList<String[]> listaDatos = new ArrayList<>();
 
-        InputStream data_doctor = getClass().getResourceAsStream("/data/data_doctor.txt");
-        try (Scanner sc = new Scanner(data_doctor)) {
-            while (sc.hasNextLine()) {
-                listaDatos.add(sc.nextLine().split("\\|"));
-            }
-        }
+        DoctorDAO doctorDAO = new DoctorDAO();
+        HorarioDAO horarioDAO = new HorarioDAO();
+        List<Horario> todosHorarios = horarioDAO.obtenerTodos();
 
-        Set<String> especialidades = new HashSet<>();
+        doctorDAO.obtenerEspecialidades()
+                .forEach(cbEspecialidad::addItem);
 
-        for (String[] fila : listaDatos) {
-            especialidades.add(fila[2]);
-        }
-
-        for (String esp : especialidades) {
-            cbEspecialidad.addItem(esp);
-        }
-
+        // Especialidad → llena médicos disponibles en esa especialidad
         cbEspecialidad.addActionListener(e -> {
             cbMedico.removeAllItems();
+            cbFecha.removeAllItems();
+            cbHora.removeAllItems();
 
             String espSeleccionada = (String) cbEspecialidad.getSelectedItem();
-            Set<String> medicos = new HashSet<>();
+            if (espSeleccionada == null)
+                return;
 
-            for (String[] fila : listaDatos) {
-                if (fila[2].equals(espSeleccionada)) {
-                    medicos.add(fila[3]);
-                }
-            }
-
-            for (String med : medicos) {
-                cbMedico.addItem(med);
-            }
+            doctorDAO.obtenerPorEspecialidad(espSeleccionada)
+                    .forEach(d -> cbMedico.addItem(d.getNombre()));
         });
 
+        // Médico → llena días disponibles de ese médico
         cbMedico.addActionListener(e -> {
             cbFecha.removeAllItems();
+            cbHora.removeAllItems();
 
-            String esp = (String) cbEspecialidad.getSelectedItem();
-            String med = (String) cbMedico.getSelectedItem();
+            String medSeleccionado = (String) cbMedico.getSelectedItem();
+            if (medSeleccionado == null)
+                return;
 
-            Set<String> dias = new HashSet<>();
-
-            for (String[] fila : listaDatos) {
-                if (fila[2].equals(esp) && fila[3].equals(med)) {
-                    dias.add(fila[4]);
-                }
-            }
-
-            for (String d : dias) {
-                cbFecha.addItem(d);
-            }
+            todosHorarios.stream()
+                    .filter(h -> h.getNombreDoctor().equals(medSeleccionado) && h.isDisponible())
+                    .map(Horario::getDiaSemana)
+                    .distinct()
+                    .forEach(cbFecha::addItem);
         });
 
+        // Día → llena horas disponibles de ese médico en ese día
         cbFecha.addActionListener(e -> {
             cbHora.removeAllItems();
 
-            String esp = (String) cbEspecialidad.getSelectedItem();
-            String med = (String) cbMedico.getSelectedItem();
-            String dia = (String) cbFecha.getSelectedItem();
+            String medSeleccionado = (String) cbMedico.getSelectedItem();
+            String diaSeleccionado = (String) cbFecha.getSelectedItem();
+            if (medSeleccionado == null || diaSeleccionado == null)
+                return;
 
-            for (String[] fila : listaDatos) {
-                if (fila[2].equals(esp) &&
-                        fila[3].equals(med) &&
-                        fila[4].equals(dia)) {
-
-                    cbHora.addItem(fila[5]);
-                }
-            }
+            todosHorarios.stream()
+                    .filter(h -> h.getNombreDoctor().equals(medSeleccionado)
+                            && h.getDiaSemana().equals(diaSeleccionado)
+                            && h.isDisponible())
+                    .forEach(h -> cbHora.addItem(h.getHoraInicio() + " - " + h.getHoraFin()));
         });
 
         // Footer
@@ -156,34 +130,62 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
         btnGuardar.setBackground(new java.awt.Color(139, 20, 20));
         btnGuardar.setForeground(java.awt.Color.WHITE);
         btnGuardar.addActionListener(e -> {
-            // Aquí iría la lógica para guardar la cita
             if (txtMotivoConsulta.getText().isEmpty()
-                    || cbEspecialidad.getSelectedItem() == null || cbMedico.getSelectedItem() == null
-                    || cbFecha.getSelectedItem() == null || cbHora.getSelectedItem() == null) {
-                ErrorDialog dialogError = new ErrorDialog(null, true, "Por favor complete todos los campos");
-                dialogError.setVisible(true);
+                    || cbEspecialidad.getSelectedItem() == null
+                    || cbMedico.getSelectedItem() == null
+                    || cbFecha.getSelectedItem() == null
+                    || cbHora.getSelectedItem() == null) {
+                new ErrorDialog(null, true, "Por favor complete todos los campos")
+                        .setVisible(true);
                 return;
             }
-            System.out.println(System.getProperty("user.dir"));
-            File file = new File("dataEditable/data_cita.txt");
-            file.getParentFile().mkdirs();
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(file, true))) {
-                BuscarPersona buscador = new BuscarPersona();
-                Doctor doctor = buscador.buscarDoctorPorNombre((String) cbMedico.getSelectedItem());
-                String linea = persona.getCodigo() + "|" +
-                        persona.getName() + "|" +
-                        doctor.especialidad + "|" +
-                        cbMedico.getSelectedItem() + "|" +
-                        cbFecha.getSelectedItem() + "|" +
-                        cbHora.getSelectedItem() + "|" +
-                        txtMotivoConsulta.getText().replace("\n", " ");
-                bw.write(linea);
-                bw.newLine();
-            } catch (IOException ex) {
-                ErrorDialog dialogError = new ErrorDialog(null, true, "Error al guardar la cita");
-                dialogError.setVisible(true);
+
+            // Encontrar el horario seleccionado para obtener su ID
+            String medSeleccionado = (String) cbMedico.getSelectedItem();
+            String diaSeleccionado = (String) cbFecha.getSelectedItem();
+            String horaSeleccionada = (String) cbHora.getSelectedItem();
+
+            Horario horarioSeleccionado = todosHorarios.stream()
+                    .filter(h -> h.getNombreDoctor().equals(medSeleccionado)
+                            && h.getDiaSemana().equals(diaSeleccionado)
+                            && (h.getHoraInicio() + " - " + h.getHoraFin()).equals(horaSeleccionada)
+                            && h.isDisponible())
+                    .findFirst()
+                    .orElse(null);
+
+            if (horarioSeleccionado == null) {
+                new ErrorDialog(null, true, "El horario seleccionado ya no está disponible.")
+                        .setVisible(true);
+                return;
             }
-            this.dispose();
+
+            // Obtener el doctor para conseguir su ID
+            Doctor doctor = doctorDAO.obtenerPorEspecialidad(
+                    (String) cbEspecialidad.getSelectedItem())
+                    .stream()
+                    .filter(d -> d.getNombre().equals(medSeleccionado))
+                    .findFirst()
+                    .orElse(null);
+
+            if (doctor == null) {
+                new ErrorDialog(null, true, "Error al obtener datos del médico.")
+                        .setVisible(true);
+                return;
+            }
+
+            CitaDAO citaDAO = new CitaDAO();
+            boolean exito = citaDAO.crearCita(
+                    persona.getId(), // ← getId() no getCodigo()
+                    doctor.getId(),
+                    horarioSeleccionado.getId(),
+                    txtMotivoConsulta.getText().trim());
+
+            if (exito) {
+                this.dispose();
+            } else {
+                new ErrorDialog(null, true, "Error al guardar la cita. Intente nuevamente.")
+                        .setVisible(true);
+            }
         });
         panelFooter.add(btnGuardar);
 
