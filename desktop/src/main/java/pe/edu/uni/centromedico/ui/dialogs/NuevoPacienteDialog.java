@@ -47,111 +47,118 @@ public class NuevoPacienteDialog extends javax.swing.JDialog {
                 super(parent, modal);
                 initComponents();
 
-                // 🔴 BORRAR todo lo que agregó el GroupLayout
                 this.getContentPane().removeAll();
-
-                // Layout principal del dialog
                 this.getContentPane().setLayout(
-                                new net.miginfocom.swing.MigLayout(
-                                                "fill, insets 0",
-                                                "[grow]",
-                                                "[54!][grow, fill][50!]"));
+                        new net.miginfocom.swing.MigLayout(
+                                "fill, insets 0", "[grow]", "[54!][grow,fill][50!]"));
 
-                // Layout interno
+                // ── Formulario ────────────────────────────────────────────
                 panelFormulario.removeAll();
-
                 panelFormulario.setLayout(
-                                new net.miginfocom.swing.MigLayout(
-                                                "fill, insets 24",
-                                                "[grow][grow]",
-                                                "[]10[]10[]10[]10[]10[]10[]"));
+                        new net.miginfocom.swing.MigLayout(
+                                "fill, insets 24", "[130!][grow]", "[]10[]10[]10[]10[]10[]10[]"));
 
-                // 🔹 FILA 1
-                panelFormulario.add(new javax.swing.JLabel("DNI"), "growx");
-                javax.swing.JTextField txtDni = new javax.swing.JTextField();
-                panelFormulario.add(txtDni, "growx, wrap");
+                javax.swing.JTextField txtCodigo  = new javax.swing.JTextField();
+                javax.swing.JTextField txtNombre  = new javax.swing.JTextField();
+                javax.swing.JTextField txtEdad    = new javax.swing.JTextField();
+                javax.swing.JTextField txtCarrera = new javax.swing.JTextField();
+                javax.swing.JTextField txtEmail   = new javax.swing.JTextField();
+                javax.swing.JPasswordField txtPass = new javax.swing.JPasswordField();
 
-                // 🔹 FILA 2
-                panelFormulario.add(new javax.swing.JLabel("Nombre"), "growx");
-                javax.swing.JTextField txtNombre = new javax.swing.JTextField();
-                panelFormulario.add(txtNombre, "growx, wrap");
+                panelFormulario.add(new javax.swing.JLabel("Código"),      "growx");
+                panelFormulario.add(txtCodigo,  "growx, wrap");
+                panelFormulario.add(new javax.swing.JLabel("Nombre"),      "growx");
+                panelFormulario.add(txtNombre,  "growx, wrap");
+                panelFormulario.add(new javax.swing.JLabel("Edad"),        "growx");
+                panelFormulario.add(txtEdad,    "growx, wrap");
+                panelFormulario.add(new javax.swing.JLabel("Carrera"),     "growx");
+                panelFormulario.add(txtCarrera, "growx, wrap");
+                panelFormulario.add(new javax.swing.JLabel("Email"),       "growx");
+                panelFormulario.add(txtEmail,   "growx, wrap");
+                panelFormulario.add(new javax.swing.JLabel("Contraseña"),  "growx");
+                panelFormulario.add(txtPass,    "growx, wrap");
 
-                // 🔹 FILA 3
-                panelFormulario.add(new javax.swing.JLabel("Apellido"), "growx");
-                javax.swing.JTextField txtApellido = new javax.swing.JTextField();
-                panelFormulario.add(txtApellido, "growx, wrap");
-
-                // 🔹 FILA 4
-                panelFormulario.add(new javax.swing.JLabel("Fecha Nacimiento"), "growx");
-                javax.swing.JTextField txtFecha = new javax.swing.JTextField();
-                panelFormulario.add(txtFecha, "growx, wrap");
-
-                // 🔹 FILA 5
-                panelFormulario.add(new javax.swing.JLabel("Teléfono"), "growx");
-                javax.swing.JTextField txtTelefono = new javax.swing.JTextField();
-                panelFormulario.add(txtTelefono, "growx, wrap");
-
-                // 🔹 FILA 6
-                panelFormulario.add(new javax.swing.JLabel("Grupo Sanguíneo"), "growx");
-                javax.swing.JComboBox<String> cbGrupo = new javax.swing.JComboBox<>(
-                                new String[] { "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-" });
-                panelFormulario.add(cbGrupo, "growx, wrap");
-
-                // 🔹 FILA 7 (span 2 columnas)
-                panelFormulario.add(new javax.swing.JLabel("Dirección"), "span 2, growx, wrap");
-                javax.swing.JTextField txtDireccion = new javax.swing.JTextField();
-                panelFormulario.add(txtDireccion, "span 2, growx, wrap");
-
-                // 🔹 FILA 8 (span 2 columnas)
-                panelFormulario.add(new javax.swing.JLabel("Alergias"), "span 2, growx, wrap");
-                javax.swing.JTextArea txtAlergias = new javax.swing.JTextArea(3, 20);
-                javax.swing.JScrollPane scrollAlergias = new javax.swing.JScrollPane(txtAlergias);
-                panelFormulario.add(scrollAlergias, "span 2, growx, h 70!");
-
-                        //llamen a Dios, claude se quedo sin tokens
-                        
+                // ── Footer ────────────────────────────────────────────────
                 panelFooter.removeAll();
-
                 panelFooter.setLayout(
-                                new net.miginfocom.swing.MigLayout(
-                                                "fillx, insets 10 20 10 20",
-                                                "[grow][][]",
-                                                "[38!]"));
-
-                // Espacio vacío
+                        new net.miginfocom.swing.MigLayout(
+                                "fillx, insets 10 20 10 20", "[grow][][]", "[38!]"));
                 panelFooter.add(new javax.swing.JLabel(), "growx");
 
-                // Botón cancelar
                 javax.swing.JButton btnCancelar = new javax.swing.JButton("Cancelar");
                 btnCancelar.setBackground(new java.awt.Color(139, 20, 20));
                 btnCancelar.setForeground(java.awt.Color.WHITE);
+                btnCancelar.setBorderPainted(false);
+                btnCancelar.setFocusPainted(false);
                 btnCancelar.addActionListener(e -> this.dispose());
                 panelFooter.add(btnCancelar);
 
-                // Botón guardar
                 javax.swing.JButton btnGuardar = new javax.swing.JButton("Guardar");
                 btnGuardar.setBackground(new java.awt.Color(139, 20, 20));
                 btnGuardar.setForeground(java.awt.Color.WHITE);
+                btnGuardar.setBorderPainted(false);
+                btnGuardar.setFocusPainted(false);
+                btnGuardar.addActionListener(e -> {
+                        String codigo   = txtCodigo.getText().trim();
+                        String nombre   = txtNombre.getText().trim();
+                        String edadTxt  = txtEdad.getText().trim();
+                        String carrera  = txtCarrera.getText().trim();
+                        String email    = txtEmail.getText().trim();
+                        String password = new String(txtPass.getPassword()).trim();
+
+                        if (codigo.isEmpty() || nombre.isEmpty() || edadTxt.isEmpty()
+                                || carrera.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                                javax.swing.JOptionPane.showMessageDialog(this,
+                                        "Todos los campos son obligatorios.",
+                                        "Campos requeridos", javax.swing.JOptionPane.WARNING_MESSAGE);
+                                return;
+                        }
+                        int edad;
+                        try {
+                                edad = Integer.parseInt(edadTxt);
+                                if (edad <= 0 || edad > 120) throw new NumberFormatException();
+                        } catch (NumberFormatException ex) {
+                                javax.swing.JOptionPane.showMessageDialog(this,
+                                        "Ingresa una edad válida (número entero).",
+                                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                                return;
+                        }
+                        pe.edu.uni.centromedico.models.Estudiante est =
+                                new pe.edu.uni.centromedico.models.Estudiante();
+                        est.setId(codigo);
+                        est.setNombre(nombre);
+                        est.setEdad(edad);
+                        est.setCarrera(carrera);
+                        est.setEmail(email);
+
+                        boolean ok = new pe.edu.uni.centromedico.db.dao.EstudianteDAO()
+                                .registrar(est, password);
+                        if (ok) {
+                                javax.swing.JOptionPane.showMessageDialog(this,
+                                        "Paciente registrado correctamente.",
+                                        "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                                this.dispose();
+                        } else {
+                                javax.swing.JOptionPane.showMessageDialog(this,
+                                        "Error al registrar. El código ya puede existir.",
+                                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                        }
+                });
                 panelFooter.add(btnGuardar);
 
+                // ── Header ────────────────────────────────────────────────
                 panelHeader.removeAll();
-
                 panelHeader.setLayout(
-                                new net.miginfocom.swing.MigLayout(
-                                                "fill, insets 0 20 0 20",
-                                                "[grow]",
-                                                "[center]"));
-
+                        new net.miginfocom.swing.MigLayout(
+                                "fill, insets 0 20 0 20", "[grow]", "[center]"));
                 javax.swing.JLabel titulo = new javax.swing.JLabel("Registrar Paciente");
                 titulo.setForeground(java.awt.Color.WHITE);
                 titulo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
-
                 panelHeader.add(titulo, "align left");
 
-                // AGREGAR los paneles manualmente
-                this.getContentPane().add(panelHeader, "growx, wrap");
+                this.getContentPane().add(panelHeader,    "growx, wrap");
                 this.getContentPane().add(panelFormulario, "grow, push, wrap");
-                this.getContentPane().add(panelFooter, "growx");
+                this.getContentPane().add(panelFooter,    "growx");
                 panelHeader.setPreferredSize(new java.awt.Dimension(0, 54));
                 panelFooter.setPreferredSize(new java.awt.Dimension(0, 50));
 

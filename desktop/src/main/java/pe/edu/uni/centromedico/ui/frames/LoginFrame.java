@@ -67,31 +67,8 @@ public class LoginFrame extends javax.swing.JFrame {
 
                 getContentPane().add(pnlFooter, "dock south, h 120!");
 
-                // ── CONEXIÓN: botón ingresar ─────────────────────────────────────────
-                btnIngresar.addActionListener(e -> {
-                        String codigo = txtUsuario.getText().trim();
-                        String password = new String(txtPassword.getPassword()).trim();
-
-                        if (codigo.isEmpty() || password.isEmpty()) {
-                                new ErrorDialog(this, true, "Por favor ingresa usuario y contraseña.")
-                                                .setVisible(true);
-                                return;
-                        }
-
-                        UsuarioDAO usuarioDAO = new UsuarioDAO();
-                        Persona persona = usuarioDAO.login(codigo, password);
-
-                        if (persona != null) {
-                                dispose();
-                                new pe.edu.uni.centromedico.ui.frames.MainFrame(persona)
-                                                .setVisible(true);
-                                return;
-                        }
-
-                        new ErrorDialog(this, true, "Código o contraseña incorrectos.")
-                                        .setVisible(true);
-                });
-
+                // Lógica delegada al LoginController (MVC estricto)
+                new pe.edu.uni.centromedico.controller.LoginController(this);
         }
 
         private void escalarFondo() {
@@ -542,6 +519,11 @@ public class LoginFrame extends javax.swing.JFrame {
 
                 java.awt.EventQueue.invokeLater(() -> new LoginFrame().setVisible(true));
         }
+
+        // ── API pública para LoginController ─────────────────────────────────
+        public javax.swing.JButton       getBtnIngresar() { return btnIngresar; }
+        public javax.swing.JTextField    getTxtUsuario()  { return txtUsuario; }
+        public javax.swing.JPasswordField getTxtPassword(){ return txtPassword; }
 
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JButton btnIngresar;

@@ -8,6 +8,8 @@ public class Cita {
     private String motivo;
     private String estado; // PENDIENTE, ATENDIDA, CANCELADA
     private String nombreEstudiante;
+    private String nombreDoctor;
+    private String especialidad;
     private String diaSemana;
     private String horaInicio;
     private String horaFin;
@@ -31,6 +33,8 @@ public class Cita {
     public String getMotivo()       { return motivo; }
     public String getEstado()       { return estado; }
     public String getNombreEstudiante() { return nombreEstudiante; }
+    public String getNombreDoctor()     { return nombreDoctor; }
+    public String getEspecialidad()     { return especialidad; }
     public String getDiaSemana()        { return diaSemana; }
     public String getHoraInicio()       { return horaInicio; }
     public String getHoraFin()          { return horaFin; }
@@ -41,8 +45,10 @@ public class Cita {
     public void setIdHorario(int idh)               { this.idHorario = idh; }
     public void setMotivo(String motivo)            { this.motivo = motivo; }
     public void setEstado(String estado)            { this.estado = estado; }
-    public void setNombreEstudiante(String n) { this.nombreEstudiante = n; }
-    public void setDiaSemana(String d)        { this.diaSemana = d; }
-    public void setHoraInicio(String h)       { this.horaInicio = h; }
-    public void setHoraFin(String h)          { this.horaFin = h; }
+    public void setNombreEstudiante(String n)  { this.nombreEstudiante = n; }
+    public void setNombreDoctor(String n)      { this.nombreDoctor = n; }
+    public void setEspecialidad(String e)      { this.especialidad = e; }
+    public void setDiaSemana(String d)         { this.diaSemana = d; }
+    public void setHoraInicio(String h)        { this.horaInicio = h; }
+    public void setHoraFin(String h)           { this.horaFin = h; }
 }

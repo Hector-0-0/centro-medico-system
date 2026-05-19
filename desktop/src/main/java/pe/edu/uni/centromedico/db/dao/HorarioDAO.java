@@ -46,4 +46,74 @@ public class HorarioDAO {
         }
         return lista;
     }
+
+    public List<Horario> obtenerPorDoctor(String idDoctor) {
+        List<Horario> lista = new ArrayList<>();
+        String sql = """
+                SELECT h.id, h.id_doctor, h.dia_semana, h.hora_inicio, h.hora_fin,
+                       h.disponible
+                FROM horarios_doctor h
+                WHERE h.id_doctor = ?
+                ORDER BY h.dia_semana, h.hora_inicio
+                """;
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, idDoctor);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Horario h = new Horario();
+                h.setId(rs.getInt("id"));
+                h.setIdDoctor(rs.getString("id_doctor"));
+                h.setDiaSemana(rs.getString("dia_semana"));
+                h.setHoraInicio(rs.getString("hora_inicio"));
+                h.setHoraFin(rs.getString("hora_fin"));
+                h.setDisponible(rs.getInt("disponible") == 1);
+                lista.add(h);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener horarios del doctor: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    public boolean guardar(Horario horario) {
+        String sql = """
+                INSERT INTO horarios_doctor
+                    (id_doctor, dia_semana, hora_inicio, hora_fin, disponible)
+                VALUES (?, ?, ?, ?, 1)
+                ON DUPLICATE KEY UPDATE
+                    hora_inicio = VALUES(hora_inicio),
+                    hora_fin    = VALUES(hora_fin),
+                    disponible  = 1
+                """;
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, horario.getIdDoctor());
+            stmt.setString(2, horario.getDiaSemana());
+            stmt.setString(3, horario.getHoraInicio());
+            stmt.setString(4, horario.getHoraFin());
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error al guardar horario: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean eliminarPorDoctor(String idDoctor) {
+        String sql = "DELETE FROM horarios_doctor WHERE id_doctor = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, idDoctor);
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar horarios del doctor: " + e.getMessage());
+            return false;
+        }
+    }
 }

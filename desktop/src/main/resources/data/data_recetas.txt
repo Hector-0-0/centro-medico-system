@@ -1,3 +1,0 @@
-C001|U001|Juan Perez|Amoxicilina 500mg|1 capsula cada 8h|7 dias|PENDIENTE
-C002|U002|Maria Lopez|Ibuprofeno 400mg|1 comp cada 12h|3 dias|ENTREGADA
-C003|U003|Carlos Ramirez|Loratadina 10mg|1 tab al dia|5 dias|PENDIENTE

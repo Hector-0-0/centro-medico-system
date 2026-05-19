@@ -1,7 +1,10 @@
 package pe.edu.uni.centromedico.ui.panels;
 
 
+import pe.edu.uni.centromedico.db.dao.CitaDAO;
 import pe.edu.uni.centromedico.models.*;
+
+import java.util.List;
 
 public class PerfilPanel extends javax.swing.JPanel {
 
@@ -23,13 +26,35 @@ public class PerfilPanel extends javax.swing.JPanel {
         pnl_card_izq.add(btn_editar_perfil, "center, h 38!, w 160!");
         lbl_nombre_perfil.setText(persona.getNombre());
         lbl_codigo_perfil.setText("Código: " + persona.getId());
-        if (persona instanceof Estudiante) {
-            Estudiante e = (Estudiante) persona;
+        if (persona instanceof Estudiante e) {
             lbl_especialidad.setText("Carrera: " + e.getCarrera());
-        } else if (persona instanceof Doctor) {
-            Doctor d = (Doctor) persona;
+            lbl_email_perfil.setText(e.getEmail() != null ? e.getEmail() : "—");
+            lbl_tel.setText("Edad: " + e.getEdad() + " años");
+        } else if (persona instanceof Doctor d) {
             lbl_especialidad.setText("Especialidad: " + d.getEspecialidad());
+            lbl_email_perfil.setText("Consultorio: " + d.getConsultorio());
+            lbl_tel.setText(d.isActivo() ? "Estado: Activo" : "Estado: Inactivo");
+        } else {
+            lbl_email_perfil.setText("—");
+            lbl_tel.setText("—");
         }
+        // Card derecho: estadísticas de citas
+        CitaDAO citaDAO = new CitaDAO();
+        String id = persona.getId();
+        List<Cita> citas;
+        if (persona instanceof Estudiante) {
+            citas = citaDAO.obtenerPorEstudiante(id);
+        } else if (persona instanceof Doctor) {
+            citas = citaDAO.obtenerPorDoctor(id);
+        } else {
+            citas = java.util.Collections.emptyList();
+        }
+        long pendientes = citas.stream().filter(c -> "PENDIENTE".equals(c.getEstado())).count();
+        long atendidas  = citas.stream().filter(c -> "ATENDIDA".equals(c.getEstado())).count();
+        lbl_total_citas.setText("Total de citas: " + citas.size());
+        jLabel1.setText("Citas pendientes: " + pendientes);
+        lbl_atendidas.setText("Citas atendidas: " + atendidas);
+
         // Card derecho: estadísticas
         pnl_card_der.setLayout(new net.miginfocom.swing.MigLayout(
                 "fillx, insets 30", "[grow]", "[]20[]8[]8[]"));

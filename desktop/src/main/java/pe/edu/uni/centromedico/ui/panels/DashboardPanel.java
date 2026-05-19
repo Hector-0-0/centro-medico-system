@@ -298,6 +298,22 @@ public class DashboardPanel extends javax.swing.JPanel {
                 filtrar(ultimo);
         }// GEN-LAST:event_btn_ocupadosActionPerformed
 
+        // ── API pública para DashboardController ──────────────────────────────
+        public void cargarDatos(java.util.List<pe.edu.uni.centromedico.models.Horario> horarios) {
+            tablaManager.cargar(horarios);
+            cbx_Especialidad.removeAllItems();
+            cbx_Especialidad.addItem("Seleccione Especialidad");
+            horarios.stream().map(pe.edu.uni.centromedico.models.Horario::getEspecialidad)
+                    .distinct().forEach(cbx_Especialidad::addItem);
+        }
+        public javax.swing.JButton getBtnAgendar()      { return btn_agendar; }
+        public javax.swing.JButton getBtnTodos()        { return btn_Todos; }
+        public javax.swing.JButton getBtnDisponibles()  { return btn_disponibles; }
+        public javax.swing.JButton getBtnOcupados()     { return btn_ocupados; }
+        public javax.swing.JComboBox<String> getCbxEspecialidad() { return cbx_Especialidad; }
+        public javax.swing.JTable getTblHorarios()      { return tbl_horarios; }
+        public void filtrarPublico(String tipo)         { filtrar(tipo); }
+
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JButton btn_Todos;
         private javax.swing.JButton btn_agendar;

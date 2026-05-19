@@ -85,6 +85,12 @@ public CitaPanel() {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    // ── API pública para CitaController ──────────────────────────────────
+    public javax.swing.JTable getTblCitas()          { return tbl_citas_medico; }
+    public void setFecha(String fecha)               { lbl_fecha_hoy.setText(fecha); }
+    public int getFilaSeleccionada()                 { return tbl_citas_medico.getSelectedRow(); }
+    public Object getValueAt(int row, int col)       { return tbl_citas_medico.getValueAt(row, col); }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel lbl_fecha_hoy;
     private javax.swing.JLabel lbl_titulo;

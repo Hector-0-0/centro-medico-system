@@ -95,6 +95,55 @@ public class DoctorDAO {
         return lista;
     }
 
+    public boolean registrar(Doctor doctor, String password) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.getConnection();
+            conn.setAutoCommit(false);
+
+            String sqlUsuario = "INSERT INTO usuarios (id, password, rol) VALUES (?, ?, 'DOCTOR')";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlUsuario)) {
+                stmt.setString(1, doctor.getId());
+                stmt.setString(2, password);
+                stmt.executeUpdate();
+            }
+
+            String sqlDoc = """
+                    INSERT INTO doctores (id_usuario, nombre, especialidad, consultorio, activo)
+                    VALUES (?, ?, ?, ?, 1)
+                    """;
+            try (PreparedStatement stmt = conn.prepareStatement(sqlDoc)) {
+                stmt.setString(1, doctor.getId());
+                stmt.setString(2, doctor.getNombre());
+                stmt.setString(3, doctor.getEspecialidad());
+                stmt.setString(4, doctor.getConsultorio());
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error al registrar doctor: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { /* ignorar */ }
+            return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { /* ignorar */ }
+        }
+    }
+
+    public boolean eliminar(String id) {
+        String sql = "DELETE FROM usuarios WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar doctor: " + e.getMessage());
+            return false;
+        }
+    }
+
     public Doctor obtenerPorId(String id) {
         String sql = "SELECT * FROM doctores WHERE id_usuario = ?";
 

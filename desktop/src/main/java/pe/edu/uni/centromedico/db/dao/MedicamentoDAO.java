@@ -57,6 +57,41 @@ public class MedicamentoDAO {
         return lista;
     }
 
+    public boolean registrar(Medicamento med) {
+        String sql = "INSERT INTO medicamentos (id, nombre, stock, tipo) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, med.getId());
+            stmt.setString(2, med.getNombre());
+            stmt.setInt(3, med.getStock());
+            stmt.setString(4, med.getTipo());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al registrar medicamento: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public Medicamento obtenerPorId(String id) {
+        String sql = "SELECT * FROM medicamentos WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Medicamento m = new Medicamento();
+                m.setId(rs.getString("id"));
+                m.setNombre(rs.getString("nombre"));
+                m.setStock(rs.getInt("stock"));
+                m.setTipo(rs.getString("tipo"));
+                return m;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener medicamento: " + e.getMessage());
+        }
+        return null;
+    }
+
     public boolean actualizarStock(String id, int nuevoStock) {
         String sql = "UPDATE medicamentos SET stock = ? WHERE id = ?";
 

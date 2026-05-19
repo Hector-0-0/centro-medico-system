@@ -289,6 +289,10 @@ public class DisponibilidadPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btn_guardar_dispActionPerformed
 
 
+    // ── API pública para DisponibilidadController ────────────────────────
+    public javax.swing.JPanel getPnlDias()          { return pnl_dias; }
+    public javax.swing.JButton getBtnGuardar()      { return btn_guardar_disp; }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_guardar_disp;
     private javax.swing.JLabel chk_jueves;

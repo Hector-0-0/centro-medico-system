@@ -1,14 +1,12 @@
 package pe.edu.uni.centromedico.ui.panels;
 
-import java.io.InputStream;
-import java.util.Scanner;
-
+import pe.edu.uni.centromedico.db.dao.EstudianteDAO;
+import pe.edu.uni.centromedico.models.Estudiante;
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
 import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
+import java.util.List;
 
 public class PacientePanel extends javax.swing.JPanel {
-
-    private java.util.ArrayList<String[]> listaDatos = new java.util.ArrayList<>();
 
     public PacientePanel() {
         initComponents();
@@ -17,38 +15,7 @@ public class PacientePanel extends javax.swing.JPanel {
         scrl_pacientes.setBorder(
                 javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232, 221, 216)));
 
-        InputStream data_estudiantes = getClass().getResourceAsStream("/data/data_estudiante.txt");
-
-        try (Scanner myreader = new Scanner(data_estudiantes)) {
-            while (myreader.hasNextLine()) {
-                String data = myreader.nextLine();
-                String[] data_split = data.split("\\|");
-                listaDatos.add(data_split);
-            }
-        } catch (Exception e) {
-            ErrorDialog errorDialog = new ErrorDialog(null, true, "Error al cargar datos de estudiantes: " + e.getMessage());
-            errorDialog.setVisible(true);
-        }
-
-        String[][] datosTabla = new String[listaDatos.size()][5];
-        for (int i = 0; i < listaDatos.size(); i++) {
-            String[] filaT = listaDatos.get(i);
-            datosTabla[i][0] = filaT[0];
-            datosTabla[i][1] = filaT[2];
-            datosTabla[i][2] = filaT[3];
-            datosTabla[i][3] = filaT[4];
-            datosTabla[i][4] = filaT[5];
-        }
-
-        // Crear modelo con datos reales
-        tbl_pacientes.setModel(new javax.swing.table.DefaultTableModel(
-                datosTabla,
-                new String[] { "Codigo", "Nombre", "Edad", "Carrera", "Email" }) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        });
+        cargarEstudiantes();
         for (int i = 0; i < tbl_pacientes.getColumnCount(); i++) {
             tbl_pacientes.getColumnModel().getColumn(i).setResizable(false);
         }
@@ -65,6 +32,25 @@ public class PacientePanel extends javax.swing.JPanel {
         this.add(btn_eliminar_pac, "grow");
         this.add(btn_nuevo_pac, "grow, wrap");
         this.add(scrl_pacientes, "span 5,grow, wrap");
+    }
+
+    private void cargarEstudiantes() {
+        List<Estudiante> estudiantes = new EstudianteDAO().obtenerTodos();
+        String[][] datos = new String[estudiantes.size()][5];
+        for (int i = 0; i < estudiantes.size(); i++) {
+            Estudiante e = estudiantes.get(i);
+            datos[i][0] = e.getId();
+            datos[i][1] = e.getNombre();
+            datos[i][2] = String.valueOf(e.getEdad());
+            datos[i][3] = e.getCarrera();
+            datos[i][4] = e.getEmail();
+        }
+        tbl_pacientes.setModel(new javax.swing.table.DefaultTableModel(
+                datos,
+                new String[]{"Código", "Nombre", "Edad", "Carrera", "Email"}) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -179,6 +165,14 @@ public class PacientePanel extends javax.swing.JPanel {
                                         javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap(64, Short.MAX_VALUE)));
     }// </editor-fold>//GEN-END:initComponents
+
+    // ── API pública para PacienteController ──────────────────────────────
+    public javax.swing.JTable   getTblPacientes()   { return tbl_pacientes; }
+    public javax.swing.JButton  getBtnBuscar()       { return btn_buscar_pac; }
+    public javax.swing.JButton  getBtnNuevo()        { return btn_nuevo_pac; }
+    public javax.swing.JButton  getBtnEliminar()     { return btn_eliminar_pac; }
+    public javax.swing.JTextField getTxtBuscar()     { return txt_buscar_pac; }
+    public int getFilaSeleccionada()                 { return tbl_pacientes.getSelectedRow(); }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_buscar_pac;
