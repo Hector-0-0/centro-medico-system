@@ -2,6 +2,7 @@ package pe.edu.uni.centromedico.controller;
 
 import pe.edu.uni.centromedico.db.dao.HorarioDAO;
 import pe.edu.uni.centromedico.models.Horario;
+import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
 import pe.edu.uni.centromedico.ui.panels.DisponibilidadPanel;
 import pe.edu.uni.centromedico.util.SesionManager;
 
@@ -70,16 +71,19 @@ public class DisponibilidadController {
                         ? cmbIni.getSelectedItem().toString() : "08:00";
                     String horaFin = cmbFin.getSelectedItem() != null
                         ? cmbFin.getSelectedItem().toString() : "09:00";
-
+                    
                     Horario h = new Horario();
                     h.setIdDoctor(idDoctor);
                     h.setDiaSemana(chk.getText());
                     h.setHoraInicio(horaIni);
                     h.setHoraFin(horaFin);
                     h.setDisponible(true);
-
                     horarioDAO.guardar(h);
                     guardados++;
+                    if (horarioDAO.eliminarHorariosSinCitas(idDoctor)) {
+                        ErrorDialog errorDialog = new ErrorDialog(null, true,"Error al eliminar horarios anteriores: ");
+                        errorDialog.setVisible(true);
+                    } 
                 }
             }
             idx += 5; // avanzar al siguiente bloque de día

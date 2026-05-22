@@ -58,7 +58,7 @@ public class HorarioDAO {
                 """;
 
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, idDoctor);
             ResultSet rs = stmt.executeQuery();
@@ -91,7 +91,7 @@ public class HorarioDAO {
                     disponible  = 1
                 """;
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, horario.getIdDoctor());
             stmt.setString(2, horario.getDiaSemana());
             stmt.setString(3, horario.getHoraInicio());
@@ -104,15 +104,72 @@ public class HorarioDAO {
         }
     }
 
-    public boolean eliminarPorDoctor(String idDoctor) {
-        String sql = "DELETE FROM horarios_doctor WHERE id_doctor = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, idDoctor);
-            stmt.executeUpdate();
+    // funcion de prueba
+    public boolean eliminarHorariosSinCitas(String idDoctor) {
+
+        // Primero mostrar cuáles NO se pueden eliminar
+        String sqlConCitas = """
+                SELECT id, dia_semana, hora_inicio, hora_fin
+                FROM horarios_doctor
+                WHERE id_doctor = ?
+                  AND disponible = 0
+                """;
+
+        // Luego eliminar los que sí se pueden eliminar
+        String sqlEliminar = """
+                DELETE FROM horarios_doctor
+                WHERE id_doctor = ?
+                AND disponible = 1
+                """;
+
+        try (Connection conn = DatabaseManager.getConnection()) {
+
+            // Ver horarios con citas asociadas
+            try (PreparedStatement stmt = conn.prepareStatement(sqlConCitas)) {
+
+                stmt.setString(1, idDoctor);
+
+                ResultSet rs = stmt.executeQuery();
+
+                boolean hayBloqueados = false;
+
+                while (rs.next()) {
+
+                    hayBloqueados = true;
+
+                    System.out.println(
+                            "No se pudo eliminar el horario ID "
+                                    + rs.getInt("id")
+                                    + " | "
+                                    + rs.getString("dia_semana")
+                                    + " "
+                                    + rs.getString("hora_inicio")
+                                    + " - "
+                                    + rs.getString("hora_fin")
+                                    + " porque tiene una cita agendada.");
+                }
+
+                if (!hayBloqueados) {
+                    System.out.println("No existen horarios con citas agendadas.");
+                }
+            }
+
+            // Eliminar horarios disponibles
+            try (PreparedStatement stmt = conn.prepareStatement(sqlEliminar)) {
+
+                stmt.setString(1, idDoctor);
+
+                int eliminados = stmt.executeUpdate();
+
+                System.out.println("Horarios eliminados correctamente: " + eliminados);
+            }
+
             return true;
+
         } catch (SQLException e) {
-            System.err.println("Error al eliminar horarios del doctor: " + e.getMessage());
+
+            System.err.println("Error al eliminar horarios: " + e.getMessage());
+
             return false;
         }
     }
