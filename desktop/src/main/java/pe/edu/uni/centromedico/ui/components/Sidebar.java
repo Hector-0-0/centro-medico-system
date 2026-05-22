@@ -11,7 +11,7 @@ public class Sidebar extends javax.swing.JPanel {
         initComponents();
 
         this.setBackground(Color.decode("#8B1414"));
-        lblNombre.setText(persona.name);
+        lblNombre.setText(persona.getNombre());
         lblNombre.setForeground(Color.WHITE);
 
         this.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 20 20 20 20", "[grow]", ""));
