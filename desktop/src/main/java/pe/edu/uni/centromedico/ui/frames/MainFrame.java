@@ -29,7 +29,7 @@ public class MainFrame extends javax.swing.JFrame {
         // Layout: sidebar fijo | [topbar / contenido]
         getContentPane().setLayout(new net.miginfocom.swing.MigLayout(
             "fill, insets 0, gap 0",
-            "[230!][grow, fill]",
+            "[280!][grow, fill]",
             "[54!][grow, fill]"
         ));
         getContentPane().removeAll();

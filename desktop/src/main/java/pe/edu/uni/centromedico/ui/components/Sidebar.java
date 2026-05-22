@@ -12,21 +12,20 @@ public class Sidebar extends javax.swing.JPanel {
 
         this.setBackground(Color.decode("#8B1414"));
         lblNombre.setText(persona.name);
+        lblNombre.setForeground(Color.WHITE);
 
-        this.setLayout(new net.miginfocom.swing.MigLayout(
-            "fillx, insets 20 0 20 0", "[grow]",
-            "[]10[]6[]10[]push[]"
-        ));
+        this.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 20 20 20 20", "[grow]", ""));
+
         this.removeAll();
         this.add(lblLogo,     "center, wrap");
         this.add(lblCentro,   "center, wrap");
-        this.add(lblNombre,   "center, wrap");
-        this.add(separator,   "growx, wrap");
+        this.add(lblNombre,"growx, center,wrap");
+        this.add(separator,"center, wrap");
 
         // Botones dinámicos según rol
         agregarBotonesRol(persona);
+        this.add(btnSalir, "growx, h 38!, pushy, aligny bottom");
 
-        this.add(btnSalir, "growx, h 38!, gapleft 20, gapright 20");
     }
 
     private void agregarBotonesRol(Persona persona) {
@@ -75,8 +74,9 @@ public class Sidebar extends javax.swing.JPanel {
                     case "RECETAS"       -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.FarmaciaRecetasPanel(),    "Recetas Pendientes");
                     case "STOCK_EDIT"    -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.GestionStockPanel(),       "Gestión de Stock");
                 }
+                setBotonActivo(btn);
             });
-            this.add(btn, "growx, h 42!, gapleft 20, gapright 20, wrap 4");
+            this.add(btn, "growx, h 42!, wrap 5");
         }
     }
 
@@ -88,7 +88,7 @@ public class Sidebar extends javax.swing.JPanel {
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        btn.setFont(new java.awt.Font("Liberation Sans", java.awt.Font.BOLD, 13));
+        btn.setFont(new java.awt.Font("Segoe UI Emoji", java.awt.Font.PLAIN, 16));
         btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
         // ← AGREGAR estos listeners:
@@ -106,23 +106,46 @@ public class Sidebar extends javax.swing.JPanel {
     
 
 
-    private void MovedBtn(JButton activo) {
-        activo.setBackground(Color.decode("#FFF1D3"));
-        activo.setForeground(Color.decode("#8B1414"));
-        activo.setBorderPainted(false);
-        activo.setFocusPainted(false);
-        activo.setOpaque(true);
-        activo.setContentAreaFilled(true);   // ← clave para que se vea el color
-        activo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
-    }
+private JButton botonActivo = null; // ← AGREGAR como campo de la clase
 
-    private void ExitedBtn(JButton activo) {
+private void setBotonActivo(JButton activo) {
+    // Resetear el anterior
+    if (botonActivo != null && botonActivo != activo) {
+        botonActivo.setBackground(Color.decode("#8B1414"));
+        botonActivo.setForeground(Color.decode("#F9F5F0"));
+        botonActivo.setContentAreaFilled(false);
+        botonActivo.setOpaque(false);
+        botonActivo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+    }
+    botonActivo = activo;
+    activo.setBackground(Color.decode("#FAEDCF"));
+    activo.setForeground(Color.decode("#8B1414"));
+    activo.setContentAreaFilled(true);
+    activo.setOpaque(true);
+    activo.setBorderPainted(false);
+    activo.setFocusPainted(false);
+    activo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+}
+
+private void MovedBtn(JButton activo){
+    activo.setBackground(Color.decode("#FFF1D3"));
+    activo.setForeground(Color.decode("#8B1414"));
+    activo.setBorderPainted(false);
+    activo.setFocusPainted(false);
+    activo.setOpaque(true);
+    activo.setContentAreaFilled(true);  // ← AGREGAR
+    activo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+}
+private void ExitedBtn(JButton activo) {
+    if (activo.getBackground().getRGB() != Color.decode("#FAEDCF").getRGB()) {
         activo.setBackground(Color.decode("#8B1414"));
         activo.setForeground(Color.decode("#F9F5F0"));
-        activo.setContentAreaFilled(false);
+        activo.setContentAreaFilled(false);  // ← AGREGAR
         activo.setOpaque(false);
         activo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
     }
+}
+
 
     
     
@@ -220,7 +243,7 @@ public class Sidebar extends javax.swing.JPanel {
     btnSalir.setBorderPainted(false);
     btnSalir.setFocusPainted(false);
     btnSalir.setOpaque(true);
-    btnSalir.setContentAreaFilled(true);  // ← esta línea es la que faltaba
+    btnSalir.setContentAreaFilled(true);  // ← AGREGAR
     btnSalir.setBackground(Color.decode("#FFF1D3"));
     btnSalir.setForeground(Color.decode("#8b1414"));
     btnSalir.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
