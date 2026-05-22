@@ -12,7 +12,7 @@ public class MedicamentoPanel extends javax.swing.JPanel {
         pnl_acciones.removeAll();
         pnl_acciones.add(txt_buscar_med, "growx, h 36!");
         pnl_acciones.add(btn_buscar_med, "h 36!, gapleft 8");
-        pnl_acciones.add(btn_agregar_med,"h 36!, gapleft 4");
+        // btn_agregar_med no se muestra: esta vista es solo lectura para el médico
 
         // Tabla
         tbl_medicamentos.setRowHeight(36);
@@ -129,6 +129,12 @@ public class MedicamentoPanel extends javax.swing.JPanel {
     private void txt_buscar_medActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txt_buscar_medActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txt_buscar_medActionPerformed
+
+    // ── API pública para MedicamentoController ───────────────────────────
+    public javax.swing.JTable     getTblMedicamentos() { return tbl_medicamentos; }
+    public javax.swing.JButton    getBtnBuscar()        { return btn_buscar_med; }
+    public javax.swing.JButton    getBtnAgregar()       { return btn_agregar_med; }
+    public javax.swing.JTextField getTxtBuscar()        { return txt_buscar_med; }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_agregar_med;

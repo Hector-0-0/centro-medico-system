@@ -16,9 +16,8 @@ public class AdminCitasPanel extends javax.swing.JPanel {
     public AdminCitasPanel() {
         initComponents();
 
-        cmb_especialidad.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
-            "Todas", "Endocrinología", "Odontología", "Radiología", "Cardiología"
-        }));
+        // Especialidades se cargan dinámicamente desde AdminCitasController
+        cmb_especialidad.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Todas"}));
         cmb_estado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
             "Todos", "PENDIENTE", "ATENDIDA", "CANCELADA"
         }));
@@ -140,6 +139,19 @@ public class AdminCitasPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+
+    // ── API pública para AdminCitasController ────────────────────────────
+    public javax.swing.JTable            getTblCitasAdmin()    { return tbl_citas_admin; }
+    public javax.swing.JButton           getBtnFiltrar()       { return btn_filtrar; }
+    public javax.swing.JComboBox<String> getCmbEspecialidad()  { return cmb_especialidad; }
+    public javax.swing.JComboBox<String> getCmbEstado()        { return cmb_estado; }
+
+    public void setEspecialidades(java.util.List<String> especialidades) {
+        javax.swing.DefaultComboBoxModel<String> model = new javax.swing.DefaultComboBoxModel<>();
+        model.addElement("Todas");
+        especialidades.forEach(model::addElement);
+        cmb_especialidad.setModel(model);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_filtrar;

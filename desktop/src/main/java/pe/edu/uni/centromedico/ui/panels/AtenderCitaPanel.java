@@ -28,7 +28,7 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
 
         pnl_formulario.setLayout(new net.miginfocom.swing.MigLayout(
             "fill, insets 20", "[grow]",
-            "[]6[80!]16[]6[80!]16[]6[100!]16[]"
+            "[]6[80!]16[]6[80!]16[]6[100!]8[]16[]"
         ));
         pnl_formulario.removeAll();
         pnl_formulario.add(lbl_diag,    "wrap");
@@ -37,6 +37,27 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
         pnl_formulario.add(scrl_trat,   "growx, wrap");
         pnl_formulario.add(lbl_receta,  "wrap");
         pnl_formulario.add(scrl_receta, "growx, h 100!, wrap");
+
+        // Fila de controles para agregar medicamentos a la receta
+        javax.swing.JPanel pnlAddMed = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout(
+                "fillx, insets 0", "[grow][120!][80!][90!]", "[30!]"));
+        cbMedicamento = new javax.swing.JComboBox<>();
+        txtDosisMed   = new javax.swing.JTextField();
+        txtDuraMed    = new javax.swing.JTextField();
+        btnAgregarMed = new javax.swing.JButton("+ Agregar");
+        txtDosisMed.setToolTipText("Dosis (ej: 500mg)");
+        txtDuraMed.setToolTipText("Duración (ej: 7 días)");
+        btnAgregarMed.setBackground(new java.awt.Color(139, 20, 20));
+        btnAgregarMed.setForeground(java.awt.Color.WHITE);
+        btnAgregarMed.setBorderPainted(false);
+        btnAgregarMed.setFocusPainted(false);
+        pnlAddMed.add(cbMedicamento, "growx, h 30!");
+        pnlAddMed.add(txtDosisMed,   "w 120!, h 30!");
+        pnlAddMed.add(txtDuraMed,    "w 80!,  h 30!");
+        pnlAddMed.add(btnAgregarMed, "w 90!,  h 30!");
+
+        pnl_formulario.add(pnlAddMed, "growx, wrap");
         pnl_formulario.add(pnl_botones, "growx");
 
         // Layout principal: split horizontal 35% | 65%
@@ -263,6 +284,29 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    // ── API pública para AtenderCitaController ───────────────────────────
+    public javax.swing.JButton               getBtnGuardar()      { return btn_guardar_aten; }
+    public javax.swing.JButton               getBtnCancelar()     { return btn_cancelar_aten; }
+    public javax.swing.JTextArea             getTaDiagnostico()   { return ta_diagnostico; }
+    public javax.swing.JTextArea             getTaTratamiento()   { return ta_tratamiento; }
+    public javax.swing.JTable                getTblReceta()       { return tbl_receta; }
+    public javax.swing.JComboBox<String>     getCbMedicamento()   { return cbMedicamento; }
+    public javax.swing.JTextField            getTxtDosisMed()     { return txtDosisMed; }
+    public javax.swing.JTextField            getTxtDuraMed()      { return txtDuraMed; }
+    public javax.swing.JButton               getBtnAgregarMed()   { return btnAgregarMed; }
+
+    public void setDatosPaciente(String nombre, String codigo, String edad) {
+        lbl_nombre_pac.setText(nombre);
+        lbl_codigo_pac.setText("Código: " + codigo);
+        lbl_edad_pac.setText("Edad: " + edad);
+    }
+
+    // Campos declarados programáticamente (no generados por GUI Builder)
+    private javax.swing.JComboBox<String> cbMedicamento;
+    private javax.swing.JTextField        txtDosisMed;
+    private javax.swing.JTextField        txtDuraMed;
+    private javax.swing.JButton           btnAgregarMed;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_cancelar_aten;

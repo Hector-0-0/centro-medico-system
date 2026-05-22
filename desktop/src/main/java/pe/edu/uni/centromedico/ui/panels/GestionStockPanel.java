@@ -126,6 +126,12 @@ public class GestionStockPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
 
+    // ── API pública para GestionStockController ──────────────────────────
+    public javax.swing.JTable     getTblStock()         { return tbl_stock; }
+    public javax.swing.JButton    getBtnBuscarStock()   { return btn_buscar_stock; }
+    public javax.swing.JButton    getBtnAgregarStock()  { return btn_agregar_stock; }
+    public javax.swing.JTextField getTxtBuscarStock()   { return txt_buscar_stock; }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_agregar_stock;
     private javax.swing.JButton btn_buscar_stock;

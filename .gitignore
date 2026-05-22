@@ -5,6 +5,9 @@ target/
 *.war
 *.list
 
+#desktop 
+src/main/resources/config.properties
+
 # Spring Boot
 *.log
 

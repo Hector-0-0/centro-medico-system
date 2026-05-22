@@ -134,6 +134,12 @@ public class FarmaciaRecetasPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
 
+    // ── API pública para FarmaciaController ──────────────────────────────
+    public javax.swing.JTable getTblRecetas()          { return tbl_recetas; }
+    public javax.swing.JButton getBtnBuscarReceta()    { return btn_buscar_receta; }
+    public javax.swing.JButton getBtnConfirmarEntrega(){ return btn_confirmar_entrega; }
+    public javax.swing.JTextField getTxtBuscarReceta() { return txt_buscar_receta; }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_buscar_receta;
     private javax.swing.JButton btn_confirmar_entrega;

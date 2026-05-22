@@ -129,6 +129,11 @@ public class HistorialPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    // ── API pública para HistorialController ─────────────────────────────
+    public javax.swing.JTable     getTblCitas()   { return tbl_citas; }
+    public javax.swing.JButton    getBtnBuscar()  { return btn_buscar; }
+    public javax.swing.JTextField getTxtBuscar()  { return txt_buscar; }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_buscar;
     private javax.swing.JLabel lbl_titulo;

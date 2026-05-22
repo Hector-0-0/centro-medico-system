@@ -1,6 +1,0 @@
-MED-001|Amoxicilina 500mg|150|cápsulas
-MED-002|Ibuprofeno 400mg|80|comprimidos
-MED-003|Loratadina 10mg|0|tabletas
-MED-004|Paracetamol 500mg|220|comprimidos
-MED-005|Omeprazol 20mg|12|cápsulas
-MED-006|Metformina 850mg|95|comprimidos

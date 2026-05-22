@@ -1,5 +1,0 @@
-U001|1234|Juan Perez|21|Ingenieria de Sistemas|hola@uni.pe
-U002|abcd|Maria Lopez|22|Ingenieria Industrial|correo@uni.pe
-U003|pass2024|Carlos Ramirez|20|Ingenieria Civil| prueba@uni.pe
-U004|qwerty|Ana Torres|23|Ingenieria Electronica|yafueya@uni.pe
-U005|admin123|Luis Gomez|24|Ingenieria Mecanica|arianasapa@uni.pe

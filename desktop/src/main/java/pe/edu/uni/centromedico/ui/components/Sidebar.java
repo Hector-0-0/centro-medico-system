@@ -15,6 +15,7 @@ public class Sidebar extends javax.swing.JPanel {
         lblNombre.setForeground(Color.WHITE);
 
         this.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 20 20 20 20", "[grow]", ""));
+        lblNombre.setText(persona.getNombre());
 
         this.removeAll();
         this.add(lblLogo,     "center, wrap");
@@ -26,11 +27,18 @@ public class Sidebar extends javax.swing.JPanel {
         agregarBotonesRol(persona);
         this.add(btnSalir, "growx, h 38!, pushy, aligny bottom");
 
+        this.add(btnSalir, "growx, h 38!, gapleft 20, gapright 20");
+
+        btnSalir.addActionListener(e -> {
+            pe.edu.uni.centromedico.util.SesionManager.cerrar();
+            javax.swing.SwingUtilities.getWindowAncestor(this).dispose();
+            new pe.edu.uni.centromedico.ui.frames.LoginFrame().setVisible(true);
+        });
     }
 
     private void agregarBotonesRol(Persona persona) {
-        String[][] menus = switch (persona.rol) {
-            case "PACIENTE" -> new String[][]{
+        String[][] menus = switch (persona.getRol()) {
+            case "ESTUDIANTE" -> new String[][]{
                 {"Horarios",      "DASH"},
                 {"Mis Citas",     "HISTORIAL"},
                 {"Mi Perfil",     "PERFIL"}
@@ -60,19 +68,60 @@ public class Sidebar extends javax.swing.JPanel {
                 pe.edu.uni.centromedico.ui.frames.MainFrame mf =
                     pe.edu.uni.centromedico.ui.frames.MainFrame.getInstance();
                 if (mf == null) return;
+                // MVC: cada case crea View + Controller juntos
                 switch (destino) {
-                    case "DASH"          -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(null),         "Horarios Disponibles");
-                    case "AGENDAR"       -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(null),         "Agendar Cita");
-                    case "HISTORIAL"     -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.HistorialPanel(),          "Mis Citas");
-                    case "PERFIL"        -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.PerfilPanel(persona),             "Mi Perfil");
-                    case "CITAS_MEDICO"  -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.CitaPanel(),              "Mis Citas");
-                    case "DISPONIBILIDAD"-> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DisponibilidadPanel(),    "Mi Disponibilidad");
-                    case "STOCK_VER"     -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.MedicamentoPanel(),        "Stock");
-                    case "PACIENTES"     -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.PacientePanel(),           "Pacientes");
-                    case "MEDICOS"       -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.MedicoPanel(),             "Médicos");
-                    case "ADMIN_CITAS"   -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.AdminCitasPanel(),         "Todas las Citas");
-                    case "RECETAS"       -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.FarmaciaRecetasPanel(),    "Recetas Pendientes");
-                    case "STOCK_EDIT"    -> mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.GestionStockPanel(),       "Gestión de Stock");
+                    case "DASH", "AGENDAR" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona);
+                        new pe.edu.uni.centromedico.controller.DashboardController(p);
+                        mf.mostrarPanel(p, "Horarios Disponibles");
+                    }
+                    case "HISTORIAL" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.HistorialPanel();
+                        new pe.edu.uni.centromedico.controller.HistorialController(p);
+                        mf.mostrarPanel(p, "Mis Citas");
+                    }
+                    case "PERFIL" ->
+                        mf.mostrarPanel(new pe.edu.uni.centromedico.ui.panels.PerfilPanel(persona), "Mi Perfil");
+                    case "CITAS_MEDICO" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.CitaPanel();
+                        new pe.edu.uni.centromedico.controller.CitaController(p);
+                        mf.mostrarPanel(p, "Mis Citas");
+                    }
+                    case "DISPONIBILIDAD" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.DisponibilidadPanel();
+                        new pe.edu.uni.centromedico.controller.DisponibilidadController(p);
+                        mf.mostrarPanel(p, "Mi Disponibilidad");
+                    }
+                    case "STOCK_VER" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.MedicamentoPanel();
+                        new pe.edu.uni.centromedico.controller.MedicamentoController(p);
+                        mf.mostrarPanel(p, "Stock de Medicamentos");
+                    }
+                    case "PACIENTES" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.PacientePanel();
+                        new pe.edu.uni.centromedico.controller.PacienteController(p);
+                        mf.mostrarPanel(p, "Pacientes");
+                    }
+                    case "MEDICOS" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.MedicoPanel();
+                        new pe.edu.uni.centromedico.controller.MedicoController(p);
+                        mf.mostrarPanel(p, "Médicos");
+                    }
+                    case "ADMIN_CITAS" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.AdminCitasPanel();
+                        new pe.edu.uni.centromedico.controller.AdminCitasController(p);
+                        mf.mostrarPanel(p, "Todas las Citas");
+                    }
+                    case "RECETAS" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.FarmaciaRecetasPanel();
+                        new pe.edu.uni.centromedico.controller.FarmaciaController(p);
+                        mf.mostrarPanel(p, "Recetas Pendientes");
+                    }
+                    case "STOCK_EDIT" -> {
+                        var p = new pe.edu.uni.centromedico.ui.panels.GestionStockPanel();
+                        new pe.edu.uni.centromedico.controller.GestionStockController(p);
+                        mf.mostrarPanel(p, "Gestión de Stock");
+                    }
                 }
                 setBotonActivo(btn);
             });

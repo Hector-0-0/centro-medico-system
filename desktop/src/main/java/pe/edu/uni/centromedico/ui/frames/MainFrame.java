@@ -18,7 +18,7 @@ public class MainFrame extends javax.swing.JFrame {
             new pe.edu.uni.centromedico.ui.components.Sidebar(persona);
 
         // TopBar
-        javax.swing.JPanel topBar = crearTopBar(persona.name, persona.rol);
+        javax.swing.JPanel topBar = crearTopBar(persona.getNombre(), persona.getRol());
 
         // Área central
         areaCentral = new javax.swing.JPanel();
@@ -37,25 +37,37 @@ public class MainFrame extends javax.swing.JFrame {
         getContentPane().add(topBar,     "growx, wrap");
         getContentPane().add(areaCentral,"grow");
 
-        // Panel inicial según rol
-        switch (persona.rol) {
-            case "PACIENTE" ->
-                mostrarPanel(new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona),
-                             "Horarios Disponibles");
-            case "MEDICO" ->
-                mostrarPanel(new pe.edu.uni.centromedico.ui.panels.CitaPanel(),
-                             "Mis Citas");
-            case "ADMIN" ->
-                mostrarPanel(new pe.edu.uni.centromedico.ui.panels.PacientePanel(),
-                             "Gestión de Pacientes");
-            case "FARMACIA" ->
-                mostrarPanel(new pe.edu.uni.centromedico.ui.panels.MedicamentoPanel(),
-                             "Gestión de Stock");
+        // Panel inicial según rol — Controller + View instanciados juntos (MVC)
+        switch (persona.getRol()) {
+            case "ESTUDIANTE" -> {
+                pe.edu.uni.centromedico.ui.panels.DashboardPanel dash =
+                    new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona);
+                new pe.edu.uni.centromedico.controller.DashboardController(dash);
+                mostrarPanel(dash, "Horarios Disponibles");
+            }
+            case "MEDICO" -> {
+                pe.edu.uni.centromedico.ui.panels.CitaPanel citas =
+                    new pe.edu.uni.centromedico.ui.panels.CitaPanel();
+                new pe.edu.uni.centromedico.controller.CitaController(citas);
+                mostrarPanel(citas, "Mis Citas");
+            }
+            case "ADMIN" -> {
+                pe.edu.uni.centromedico.ui.panels.PacientePanel pacs =
+                    new pe.edu.uni.centromedico.ui.panels.PacientePanel();
+                new pe.edu.uni.centromedico.controller.PacienteController(pacs);
+                mostrarPanel(pacs, "Gestión de Pacientes");
+            }
+            case "FARMACIA" -> {
+                pe.edu.uni.centromedico.ui.panels.GestionStockPanel stock =
+                    new pe.edu.uni.centromedico.ui.panels.GestionStockPanel();
+                new pe.edu.uni.centromedico.controller.GestionStockController(stock);
+                mostrarPanel(stock, "Gestión de Stock");
+            }
         }
 
         setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new java.awt.Dimension(900, 580));
-        setTitle("Centro Médico UNI — " + persona.name);
+        setTitle("Centro Médico UNI — " + persona.getNombre());
     }
 
     // ── Navegación ────────────────────────────────────────────────────────
