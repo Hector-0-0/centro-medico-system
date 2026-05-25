@@ -10,7 +10,7 @@ public class UsuarioDAO {
     public Persona login(String id, String password) {
 
         // Primero verificamos en la tabla usuarios
-        String sqlUsuario = "SELECT * FROM usuarios WHERE id = ? AND password = ?";
+        String sqlUsuario = "SELECT * FROM usuarios WHERE id = ? AND password = ? AND eliminado = 0";
 
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sqlUsuario)) {
