@@ -138,7 +138,7 @@ public class CitaDAO {
             stmt.setString(1, idDoctor);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                Cita c = mapear(rs);
+                Cita c = mapear_sin_webadas(rs);
                 c.setNombreEstudiante(rs.getString("nombre_estudiante"));
                 lista.add(c);
             }
@@ -159,6 +159,19 @@ public class CitaDAO {
         c.setEstado(rs.getString("estado"));
         c.setNombreDoctor(rs.getString("nombre_doctor"));
         c.setEspecialidad(rs.getString("especialidad"));
+        c.setDiaSemana(rs.getString("dia_semana"));
+        c.setHoraInicio(rs.getString("hora_inicio"));
+        c.setHoraFin(rs.getString("hora_fin"));
+        return c;
+    }
+    private Cita mapear_sin_webadas(ResultSet rs) throws SQLException {
+        Cita c = new Cita();
+        c.setId(rs.getInt("id"));
+        c.setIdEstudiante(rs.getString("id_estudiante"));
+        c.setIdDoctor(rs.getString("id_doctor"));
+        c.setIdSlot(rs.getInt("id_slot")); // ← idSlot
+        c.setMotivo(rs.getString("motivo"));
+        c.setEstado(rs.getString("estado"));
         c.setDiaSemana(rs.getString("dia_semana"));
         c.setHoraInicio(rs.getString("hora_inicio"));
         c.setHoraFin(rs.getString("hora_fin"));

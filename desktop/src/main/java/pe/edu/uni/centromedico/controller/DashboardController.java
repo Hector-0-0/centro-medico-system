@@ -35,13 +35,6 @@ public class DashboardController {
             vista.filtrarPublico("Todos"));
 
         vista.getBtnAgendar().addActionListener(e -> {
-            int fila = vista.getTblHorarios().getSelectedRow();
-            if (fila < 0) {
-                javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Selecciona un horario de la tabla antes de agendar.",
-                    "Sin selección", javax.swing.JOptionPane.WARNING_MESSAGE);
-                return;
-            }
             java.awt.Frame ventana = (java.awt.Frame)
                 javax.swing.SwingUtilities.getWindowAncestor(vista);
             new NuevaCitaDialog(ventana, true,

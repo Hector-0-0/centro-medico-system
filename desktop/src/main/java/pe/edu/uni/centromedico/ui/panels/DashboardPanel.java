@@ -276,8 +276,6 @@ public class DashboardPanel extends javax.swing.JPanel {
         }// GEN-LAST:event_cbx_EspecialidadActionPerformed
 
         private void btn_agendarActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_agendarActionPerformed
-                NuevaCitaDialog dialogNuevaCita = new NuevaCitaDialog(null, true, persona);
-                dialogNuevaCita.setVisible(true);
         }// GEN-LAST:event_btn_agendarActionPerformed
 
         private void btn_TodosActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_TodosActionPerformed

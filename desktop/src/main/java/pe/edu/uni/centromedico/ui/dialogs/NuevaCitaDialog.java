@@ -3,15 +3,9 @@ package pe.edu.uni.centromedico.ui.dialogs;
 import pe.edu.uni.centromedico.db.dao.CitaDAO;
 import pe.edu.uni.centromedico.db.dao.DoctorDAO;
 import pe.edu.uni.centromedico.db.dao.SlotDAO;
-
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import pe.edu.uni.centromedico.models.*;
-import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
+
 
 /**
  *
