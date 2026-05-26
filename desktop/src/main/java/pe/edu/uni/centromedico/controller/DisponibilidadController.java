@@ -81,10 +81,10 @@ public class DisponibilidadController {
                     s.setHoraFin(horaFin);
                     s.setDisponible(true);
                     slotDAO.guardar(s);
-                    guardados++;
+         
                     if (slotDAO.eliminarSlotsSinCitas(idDoctor)) {
                         ErrorDialog errorDialog = new ErrorDialog(null, true, "Error al eliminar slots anteriores: ");
-                        errorDialog.setVisible(true);
+                        errorDialog.setVisible(true);           guardados++;
                     }
                 }
             }
