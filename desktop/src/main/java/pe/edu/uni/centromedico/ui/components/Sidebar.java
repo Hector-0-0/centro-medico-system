@@ -17,19 +17,23 @@ public class Sidebar extends javax.swing.JPanel {
 
         this.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 20 20 20 20", "[grow]", ""));
         lblNombre.setText(persona.getNombre());
-
+        
         this.removeAll();
         this.add(lblLogo,     "center, wrap");
         this.add(lblCentro,   "center, wrap");
-        this.add(lblNombre,"growx, center,wrap");
+        this.add(lblNombre,"center,wrap");
         this.add(separator,"center, wrap");
 
         // Botones dinámicos según rol
         agregarBotonesRol(persona);
-        this.add(btnSalir, "growx, h 38!, pushy, aligny bottom");
+        
+        
+        btnSalir.setHorizontalAlignment(SwingConstants.CENTER);
+        btnSalir.setVerticalAlignment(SwingConstants.CENTER);
+        btnSalir.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        
 
-        this.add(btnSalir, "growx, h 38!, gapleft 20, gapright 20");
-
+        this.add(btnSalir, "w 140!, h 38!, pushx, alignx right, pushy, aligny bottom, gapright 15, gapbottom 15");       
         btnSalir.addActionListener(e -> ErrorHandler.ejecutarSeguro(this, () -> {
             pe.edu.uni.centromedico.util.SesionManager.cerrar();
             javax.swing.SwingUtilities.getWindowAncestor(this).dispose();
