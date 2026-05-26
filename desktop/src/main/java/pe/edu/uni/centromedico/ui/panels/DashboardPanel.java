@@ -2,18 +2,16 @@ package pe.edu.uni.centromedico.ui.panels;
 
 import pe.edu.uni.centromedico.ui.components.TablaManager;
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
-import pe.edu.uni.centromedico.models.Horario;
+import pe.edu.uni.centromedico.models.Slot;
 import pe.edu.uni.centromedico.models.Persona;
-
+import pe.edu.uni.centromedico.db.dao.SlotDAO;
 import java.util.List;
-
-import pe.edu.uni.centromedico.db.dao.HorarioDAO;
 
 public class DashboardPanel extends javax.swing.JPanel {
 
         Persona persona = null;
 
-        private TablaManager<Horario> tablaManager;
+        private TablaManager<Slot> tablaManager;
 
         public DashboardPanel(Persona persona) {
                 initComponents();
@@ -33,14 +31,14 @@ public class DashboardPanel extends javax.swing.JPanel {
                                 tbl_horarios,
                                 new String[] { "Especialidad", "Médico", "Día", "Hora", "Consultorio", "Estado" },
                                 java.util.List.of(
-                                                Horario::getEspecialidad,
-                                                Horario::getNombreDoctor,
-                                                Horario::getDiaSemana,
-                                                h -> h.getHoraInicio() + " - " + h.getHoraFin(),
-                                                Horario::getConsultorio,
-                                                h -> h.isDisponible() ? "Disponible" : "Ocupado"));
+                                                Slot::getEspecialidad,
+                                                Slot::getNombreDoctor,
+                                                Slot::getDiaSemana,
+                                                s -> s.getHoraInicio() + " - " + s.getHoraFin(),
+                                                Slot::getConsultorio,
+                                                s -> s.isDisponible() ? "Disponible" : "Ocupado"));
 
-                List<Horario> datos = new HorarioDAO().obtenerTodos();
+                List<Slot> datos = new SlotDAO().obtenerTodos();
                 tablaManager.cargar(datos);
                 scrl_horarios.setBorder(
                                 javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232, 221, 216)));
@@ -49,7 +47,7 @@ public class DashboardPanel extends javax.swing.JPanel {
                 cbx_Especialidad.removeAllItems();
                 cbx_Especialidad.addItem("Seleccione Especialidad");
                 datos.stream()
-                                .map(Horario::getEspecialidad)
+                                .map(Slot::getEspecialidad)
                                 .distinct()
                                 .forEach(cbx_Especialidad::addItem);
 
@@ -72,19 +70,18 @@ public class DashboardPanel extends javax.swing.JPanel {
                 boolean todasEspecialidades = especialidad == null
                                 || especialidad.equals("Seleccione Especialidad");
 
-                tablaManager.filtrarPorCondicion(h -> {
+                tablaManager.filtrarPorCondicion(s -> {
                         boolean coincideEspecialidad = todasEspecialidades
-                                        || h.getEspecialidad().equals(especialidad);
+                                        || s.getEspecialidad().equals(especialidad);
 
                         boolean coincideEstado = tipo.equals("Todos")
-                                        || (tipo.equals("1") && h.isDisponible())
-                                        || (tipo.equals("0") && !h.isDisponible());
+                                        || (tipo.equals("1") && s.isDisponible())
+                                        || (tipo.equals("0") && !s.isDisponible());
 
                         return coincideEspecialidad && coincideEstado;
                 });
         }
 
-        
         @SuppressWarnings("unchecked")
         // <editor-fold defaultstate="collapsed" desc="Generated
         // <editor-fold defaultstate="collapsed" desc="Generated
@@ -299,20 +296,41 @@ public class DashboardPanel extends javax.swing.JPanel {
         }// GEN-LAST:event_btn_ocupadosActionPerformed
 
         // ── API pública para DashboardController ──────────────────────────────
-        public void cargarDatos(java.util.List<pe.edu.uni.centromedico.models.Horario> horarios) {
-            tablaManager.cargar(horarios);
-            cbx_Especialidad.removeAllItems();
-            cbx_Especialidad.addItem("Seleccione Especialidad");
-            horarios.stream().map(pe.edu.uni.centromedico.models.Horario::getEspecialidad)
-                    .distinct().forEach(cbx_Especialidad::addItem);
+        public void cargarDatos(java.util.List<pe.edu.uni.centromedico.models.Slot> slots) {
+                tablaManager.cargar(slots);
+                cbx_Especialidad.removeAllItems();
+                cbx_Especialidad.addItem("Seleccione Especialidad");
+                slots.stream().map(pe.edu.uni.centromedico.models.Slot::getEspecialidad)
+                                .distinct().forEach(cbx_Especialidad::addItem);
         }
-        public javax.swing.JButton getBtnAgendar()      { return btn_agendar; }
-        public javax.swing.JButton getBtnTodos()        { return btn_Todos; }
-        public javax.swing.JButton getBtnDisponibles()  { return btn_disponibles; }
-        public javax.swing.JButton getBtnOcupados()     { return btn_ocupados; }
-        public javax.swing.JComboBox<String> getCbxEspecialidad() { return cbx_Especialidad; }
-        public javax.swing.JTable getTblHorarios()      { return tbl_horarios; }
-        public void filtrarPublico(String tipo)         { filtrar(tipo); }
+
+        public javax.swing.JButton getBtnAgendar() {
+                return btn_agendar;
+        }
+
+        public javax.swing.JButton getBtnTodos() {
+                return btn_Todos;
+        }
+
+        public javax.swing.JButton getBtnDisponibles() {
+                return btn_disponibles;
+        }
+
+        public javax.swing.JButton getBtnOcupados() {
+                return btn_ocupados;
+        }
+
+        public javax.swing.JComboBox<String> getCbxEspecialidad() {
+                return cbx_Especialidad;
+        }
+
+        public javax.swing.JTable getTblHorarios() {
+                return tbl_horarios;
+        }
+
+        public void filtrarPublico(String tipo) {
+                filtrar(tipo);
+        }
 
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JButton btn_Todos;

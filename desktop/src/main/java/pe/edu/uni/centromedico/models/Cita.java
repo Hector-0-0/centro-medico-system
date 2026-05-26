@@ -4,7 +4,7 @@ public class Cita {
     private int id;
     private String idEstudiante;
     private String idDoctor;
-    private int idHorario;
+    private int idSlot;
     private String motivo;
     private String estado; // PENDIENTE, ATENDIDA, CANCELADA
     private String nombreEstudiante;
@@ -17,11 +17,11 @@ public class Cita {
     public Cita() {}
 
     public Cita(int id, String idEstudiante, String idDoctor,
-        int idHorario, String motivo, String estado) {
+        int idSlot, String motivo, String estado) {
         this.id = id;
         this.idEstudiante = idEstudiante;
         this.idDoctor = idDoctor;
-        this.idHorario = idHorario;
+        this.idSlot = idSlot;
         this.motivo = motivo;
         this.estado = estado;
     }
@@ -29,7 +29,7 @@ public class Cita {
     public int getId()              { return id; }
     public String getIdEstudiante() { return idEstudiante; }
     public String getIdDoctor()     { return idDoctor; }
-    public int getIdHorario()       { return idHorario; }
+    public int getIdSlot()       { return idSlot; }
     public String getMotivo()       { return motivo; }
     public String getEstado()       { return estado; }
     public String getNombreEstudiante() { return nombreEstudiante; }
@@ -42,7 +42,7 @@ public class Cita {
     public void setId(int id)                       { this.id = id; }
     public void setIdEstudiante(String ide)         { this.idEstudiante = ide; }
     public void setIdDoctor(String idd)             { this.idDoctor = idd; }
-    public void setIdHorario(int idh)               { this.idHorario = idh; }
+    public void setIdSlot(int idh)               { this.idSlot = idh; }
     public void setMotivo(String motivo)            { this.motivo = motivo; }
     public void setEstado(String estado)            { this.estado = estado; }
     public void setNombreEstudiante(String n)  { this.nombreEstudiante = n; }

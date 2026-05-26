@@ -1,19 +1,19 @@
 package pe.edu.uni.centromedico.service;
 
 import pe.edu.uni.centromedico.db.dao.CitaDAO;
-import pe.edu.uni.centromedico.db.dao.HorarioDAO;
+import pe.edu.uni.centromedico.db.dao.SlotDAO;
 import pe.edu.uni.centromedico.models.Cita;
-import pe.edu.uni.centromedico.models.Horario;
-
+import pe.edu.uni.centromedico.models.Slot;
+    
 import java.util.List;
 
 public class CitaService {
 
     private final CitaDAO    citaDAO    = new CitaDAO();
-    private final HorarioDAO horarioDAO = new HorarioDAO();
+    private final SlotDAO    slotDAO    = new SlotDAO();
 
-    public List<Horario> obtenerHorariosDisponibles() {
-        return horarioDAO.obtenerTodos();
+    public List<Slot> obtenerSlotsDisponibles() {
+        return slotDAO.obtenerTodos();
     }
 
     public boolean agendarCita(String idEstudiante, String idDoctor,

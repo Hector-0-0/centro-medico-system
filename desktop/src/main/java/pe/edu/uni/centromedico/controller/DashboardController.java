@@ -1,6 +1,6 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.models.Horario;
+import pe.edu.uni.centromedico.models.Slot;
 import pe.edu.uni.centromedico.service.CitaService;
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
 import pe.edu.uni.centromedico.ui.panels.DashboardPanel;
@@ -12,7 +12,7 @@ public class DashboardController {
 
     private final DashboardPanel vista;
     private final CitaService    citaService;
-    private List<Horario> todosLosHorarios;
+    private List<Slot> todosLosSlots;
 
     public DashboardController(DashboardPanel vista) {
         this.vista       = vista;
@@ -22,8 +22,8 @@ public class DashboardController {
     }
 
     private void cargarDatos() {
-        todosLosHorarios = citaService.obtenerHorariosDisponibles();
-        vista.cargarDatos(todosLosHorarios);
+        todosLosSlots = citaService.obtenerSlotsDisponibles();
+        vista.cargarDatos(todosLosSlots);
     }
 
     private void conectarEventos() {
