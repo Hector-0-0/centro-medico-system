@@ -9,13 +9,13 @@ import java.util.List;
 
 public class EstudianteDAO {
 
-    // Para TablaManager — devuelve todos
     public List<Estudiante> obtenerTodos() {
         List<Estudiante> lista = new ArrayList<>();
         String sql = """
             SELECT e.id_usuario, e.nombre, e.edad, e.carrera, e.email
             FROM estudiantes e
             JOIN usuarios u ON e.id_usuario = u.id
+            WHERE u.eliminado = 0
             ORDER BY e.nombre
             """;
 
@@ -77,9 +77,9 @@ public class EstudianteDAO {
         }
     }
 
+    // Soft delete — preserva historial de citas e integridad referencial
     public boolean eliminar(String id) {
-        // La FK en cascada eliminará el registro de estudiantes automáticamente
-        String sql = "DELETE FROM usuarios WHERE id = ?";
+        String sql = "UPDATE usuarios SET eliminado = 1 WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
@@ -90,29 +90,4 @@ public class EstudianteDAO {
         }
     }
 
-    // Para buscar uno solo — login, perfil
-    public Estudiante obtenerPorId(String id) {
-        String sql = "SELECT * FROM estudiantes WHERE id_usuario = ?";
-
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                Estudiante e = new Estudiante();
-                e.setId(rs.getString("id_usuario"));
-                e.setNombre(rs.getString("nombre"));
-                e.setEdad(rs.getInt("edad"));
-                e.setCarrera(rs.getString("carrera"));
-                e.setEmail(rs.getString("email"));
-                return e;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error al obtener estudiante: " + e.getMessage());
-        }
-        return null;
-    }
 }

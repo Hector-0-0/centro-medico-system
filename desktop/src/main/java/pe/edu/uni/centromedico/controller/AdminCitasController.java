@@ -1,9 +1,10 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.db.dao.CitaDAO;
 import pe.edu.uni.centromedico.db.dao.DoctorDAO;
 import pe.edu.uni.centromedico.models.Cita;
+import pe.edu.uni.centromedico.service.CitaService;
 import pe.edu.uni.centromedico.ui.panels.AdminCitasPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
@@ -11,14 +12,14 @@ import javax.swing.table.DefaultTableModel;
 public class AdminCitasController {
 
     private final AdminCitasPanel vista;
-    private final CitaDAO         citaDAO;
+    private final CitaService     citaService;
     private final DoctorDAO       doctorDAO;
     private List<Cita>            todasLasCitas;
 
     public AdminCitasController(AdminCitasPanel vista) {
-        this.vista      = vista;
-        this.citaDAO    = new CitaDAO();
-        this.doctorDAO  = new DoctorDAO();
+        this.vista       = vista;
+        this.citaService = new CitaService();
+        this.doctorDAO   = new DoctorDAO();
         cargarEspecialidades();
         cargarDatos();
         conectarEventos();
@@ -29,7 +30,7 @@ public class AdminCitasController {
     }
 
     private void cargarDatos() {
-        todasLasCitas = citaDAO.obtenerTodas();
+        todasLasCitas = citaService.obtenerTodas();
         filtrar();
     }
 
@@ -72,8 +73,8 @@ public class AdminCitasController {
     }
 
     private void conectarEventos() {
-        vista.getBtnFiltrar().addActionListener(e -> filtrar());
-        vista.getCmbEspecialidad().addActionListener(e -> filtrar());
-        vista.getCmbEstado().addActionListener(e -> filtrar());
+        vista.getBtnFiltrar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::filtrar));
+        vista.getCmbEspecialidad().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::filtrar));
+        vista.getCmbEstado().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::filtrar));
     }
 }

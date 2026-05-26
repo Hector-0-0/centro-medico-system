@@ -72,26 +72,6 @@ public class MedicamentoDAO {
         }
     }
 
-    public Medicamento obtenerPorId(String id) {
-        String sql = "SELECT * FROM medicamentos WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Medicamento m = new Medicamento();
-                m.setId(rs.getString("id"));
-                m.setNombre(rs.getString("nombre"));
-                m.setStock(rs.getInt("stock"));
-                m.setTipo(rs.getString("tipo"));
-                return m;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al obtener medicamento: " + e.getMessage());
-        }
-        return null;
-    }
-
     public boolean actualizarStock(String id, int nuevoStock) {
         String sql = "UPDATE medicamentos SET stock = ? WHERE id = ?";
 

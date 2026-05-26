@@ -1,26 +1,27 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.db.dao.MedicamentoDAO;
 import pe.edu.uni.centromedico.models.Medicamento;
+import pe.edu.uni.centromedico.service.MedicamentoService;
 import pe.edu.uni.centromedico.ui.panels.MedicamentoPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
 public class MedicamentoController {
 
-    private final MedicamentoPanel vista;
-    private final MedicamentoDAO   medicamentoDAO;
+    private final MedicamentoPanel    vista;
+    private final MedicamentoService  medicamentoService;
 
     public MedicamentoController(MedicamentoPanel vista) {
-        this.vista          = vista;
-        this.medicamentoDAO = new MedicamentoDAO();
+        this.vista              = vista;
+        this.medicamentoService = new MedicamentoService();
         cargarDatos();
         conectarEventos();
     }
 
     private void cargarDatos() {
-        cargarTabla(medicamentoDAO.obtenerTodos());
+        cargarTabla(medicamentoService.obtenerTodos());
     }
 
     private void cargarTabla(List<Medicamento> lista) {
@@ -33,24 +34,17 @@ public class MedicamentoController {
             };
         }
         vista.getTblMedicamentos().setModel(new DefaultTableModel(
-            datos, new String[]{"Código","Nombre","Stock","Tipo"}) {
+            datos, new String[]{"Código", "Nombre", "Stock", "Tipo"}) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         });
     }
 
     private void conectarEventos() {
-        vista.getBtnBuscar().addActionListener(e -> buscar());
-        vista.getTxtBuscar().addActionListener(e -> buscar());
-        // btn_agregar no se incluye en el layout de MedicamentoPanel (vista solo lectura)
+        vista.getBtnBuscar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getTxtBuscar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::buscar));
     }
 
     private void buscar() {
-        String texto = vista.getTxtBuscar().getText().trim().toLowerCase();
-        if (texto.isEmpty()) { cargarDatos(); return; }
-        List<Medicamento> filtrados = medicamentoDAO.obtenerTodos().stream()
-            .filter(m -> m.getNombre().toLowerCase().contains(texto)
-                      || m.getId().toLowerCase().contains(texto))
-            .toList();
-        cargarTabla(filtrados);
+        cargarTabla(medicamentoService.buscar(vista.getTxtBuscar().getText()));
     }
 }

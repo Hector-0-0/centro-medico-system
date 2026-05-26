@@ -1,8 +1,9 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.db.dao.CitaDAO;
 import pe.edu.uni.centromedico.models.Cita;
+import pe.edu.uni.centromedico.service.CitaService;
 import pe.edu.uni.centromedico.ui.panels.HistorialPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 import pe.edu.uni.centromedico.util.SesionManager;
 
 import java.util.List;
@@ -11,17 +12,17 @@ import javax.swing.table.DefaultTableModel;
 public class HistorialController {
 
     private final HistorialPanel vista;
-    private final CitaDAO        citaDAO;
+    private final CitaService    citaService;
 
     public HistorialController(HistorialPanel vista) {
-        this.vista   = vista;
-        this.citaDAO = new CitaDAO();
+        this.vista       = vista;
+        this.citaService = new CitaService();
         cargarDatos();
         conectarEventos();
     }
 
     private void cargarDatos() {
-        cargarTabla(citaDAO.obtenerPorEstudiante(SesionManager.getId()));
+        cargarTabla(citaService.obtenerHistorialPaciente(SesionManager.getId()));
     }
 
     private void cargarTabla(List<Cita> citas) {
@@ -47,14 +48,14 @@ public class HistorialController {
     }
 
     private void conectarEventos() {
-        vista.getBtnBuscar().addActionListener(e -> buscar());
-        vista.getTxtBuscar().addActionListener(e -> buscar());
+        vista.getBtnBuscar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getTxtBuscar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::buscar));
     }
 
     private void buscar() {
         String texto = vista.getTxtBuscar().getText().trim().toLowerCase();
         if (texto.isEmpty()) { cargarDatos(); return; }
-        List<Cita> filtradas = citaDAO.obtenerPorEstudiante(SesionManager.getId())
+        List<Cita> filtradas = citaService.obtenerHistorialPaciente(SesionManager.getId())
             .stream()
             .filter(c -> (c.getEspecialidad() != null && c.getEspecialidad().toLowerCase().contains(texto))
                       || (c.getNombreDoctor()  != null && c.getNombreDoctor().toLowerCase().contains(texto))

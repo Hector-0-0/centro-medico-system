@@ -49,82 +49,87 @@ public class RecetaDAO {
         return lista;
     }
 
-    // Marcar receta como entregada
-    public boolean confirmarEntrega(int idReceta) {
-        String sql = "UPDATE recetas SET estado = 'ENTREGADA' WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, idReceta);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error al confirmar entrega: " + e.getMessage());
-            return false;
-        }
-    }
+    // Crea receta + detalles en una sola transacción atómica
+    public boolean registrarConDetalles(int idAtencion, List<RecetaDetalle> detalles) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.getConnection();
+            conn.setAutoCommit(false);
 
-    // Insertar nueva receta; devuelve el id generado (o -1 si falla)
-    public int registrar(int idAtencion) {
-        String sql = "INSERT INTO recetas (id_atencion, estado) VALUES (?, 'PENDIENTE')";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, idAtencion);
-            stmt.executeUpdate();
-            ResultSet keys = stmt.getGeneratedKeys();
-            if (keys.next()) return keys.getInt(1);
-        } catch (SQLException e) {
-            System.err.println("Error al registrar receta: " + e.getMessage());
-        }
-        return -1;
-    }
-
-    // Insertar un detalle de receta
-    public boolean registrarDetalle(int idReceta, RecetaDetalle detalle) {
-        String sql = """
-                INSERT INTO receta_detalle
-                    (id_receta, id_medicamento, dosis, duracion)
-                VALUES (?, ?, ?, ?)
-                """;
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, idReceta);
-            stmt.setString(2, detalle.getIdMedicamento());
-            stmt.setString(3, detalle.getDosis());
-            stmt.setString(4, detalle.getDuracion());
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error al registrar detalle de receta: " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Detalles de una receta, con JOIN a medicamentos para obtener nombre
-    public List<RecetaDetalle> obtenerDetallesPorReceta(int idReceta) {
-        List<RecetaDetalle> lista = new ArrayList<>();
-        String sql = """
-                SELECT rd.id, rd.id_receta, rd.id_medicamento,
-                       m.nombre AS nombre_medicamento,
-                       rd.dosis, rd.duracion
-                FROM receta_detalle rd
-                JOIN medicamentos m ON rd.id_medicamento = m.id
-                WHERE rd.id_receta = ?
-                """;
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, idReceta);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                RecetaDetalle det = new RecetaDetalle();
-                det.setId(rs.getInt("id"));
-                det.setIdReceta(rs.getInt("id_receta"));
-                det.setIdMedicamento(rs.getString("id_medicamento"));
-                det.setNombreMedicamento(rs.getString("nombre_medicamento"));
-                det.setDosis(rs.getString("dosis"));
-                det.setDuracion(rs.getString("duracion"));
-                lista.add(det);
+            int idReceta;
+            String sqlReceta = "INSERT INTO recetas (id_atencion, estado) VALUES (?, 'PENDIENTE')";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlReceta, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setInt(1, idAtencion);
+                stmt.executeUpdate();
+                ResultSet keys = stmt.getGeneratedKeys();
+                if (!keys.next()) throw new SQLException("No se generó id de receta");
+                idReceta = keys.getInt(1);
             }
+
+            String sqlDetalle = """
+                    INSERT INTO receta_detalle
+                        (id_receta, id_medicamento, dosis, duracion)
+                    VALUES (?, ?, ?, ?)
+                    """;
+            try (PreparedStatement stmt = conn.prepareStatement(sqlDetalle)) {
+                for (RecetaDetalle d : detalles) {
+                    stmt.setInt(1, idReceta);
+                    stmt.setString(2, d.getIdMedicamento());
+                    stmt.setString(3, d.getDosis());
+                    stmt.setString(4, d.getDuracion());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+
+            conn.commit();
+            return true;
+
         } catch (SQLException e) {
-            System.err.println("Error al obtener detalles de receta: " + e.getMessage());
+            System.err.println("Error al registrar receta con detalles: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { /* ignorar */ }
+            return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { /* ignorar */ }
         }
-        return lista;
     }
+
+    // Marca receta como entregada y descuenta stock — atómico
+    public boolean entregarYDescontarStock(int idReceta) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Descontar stock de cada medicamento de la receta
+            String sqlDescontar = """
+                    UPDATE medicamentos m
+                    JOIN receta_detalle rd ON m.id = rd.id_medicamento
+                    SET m.stock = m.stock - 1
+                    WHERE rd.id_receta = ? AND m.stock > 0
+                    """;
+            try (PreparedStatement stmt = conn.prepareStatement(sqlDescontar)) {
+                stmt.setInt(1, idReceta);
+                stmt.executeUpdate();
+            }
+
+            // 2. Marcar receta como entregada
+            String sqlEstado = "UPDATE recetas SET estado = 'ENTREGADA' WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sqlEstado)) {
+                stmt.setInt(1, idReceta);
+                if (stmt.executeUpdate() == 0) throw new SQLException("Receta no encontrada");
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error al entregar receta: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { /* ignorar */ }
+            return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { /* ignorar */ }
+        }
+    }
+
 }

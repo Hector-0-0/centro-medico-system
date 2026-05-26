@@ -1,9 +1,8 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.db.dao.SlotDAO;
-import pe.edu.uni.centromedico.models.Slot;
-import pe.edu.uni.centromedico.ui.dialogs.ErrorDialog;
+import pe.edu.uni.centromedico.db.dao.DisponibilidadDAO;
 import pe.edu.uni.centromedico.ui.panels.DisponibilidadPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 import pe.edu.uni.centromedico.util.SesionManager;
 
 import java.awt.Component;
@@ -11,94 +10,77 @@ import java.awt.Component;
 public class DisponibilidadController {
 
     private final DisponibilidadPanel vista;
-    private final SlotDAO slotDAO;
+    private final DisponibilidadDAO   disponibilidadDAO;
 
     public DisponibilidadController(DisponibilidadPanel vista) {
-        this.vista = vista;
-        this.slotDAO = new SlotDAO();
+        this.vista              = vista;
+        this.disponibilidadDAO  = new DisponibilidadDAO();
         conectarEventos();
     }
 
     private void conectarEventos() {
-        // Reemplazar el listener de stub puesto en el constructor del panel
-        // removemos los listeners existentes y ponemos el nuestro
+        // Limpiar stub generado por NetBeans y agregar el real
         for (java.awt.event.ActionListener al : vista.getBtnGuardar().getActionListeners()) {
             vista.getBtnGuardar().removeActionListener(al);
         }
-        vista.getBtnGuardar().addActionListener(e -> guardarDisponibilidad());
+        vista.getBtnGuardar().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::guardarDisponibilidad));
     }
 
     private void guardarDisponibilidad() {
         String idDoctor = SesionManager.getId();
         if (idDoctor == null || idDoctor.isBlank()) {
-            javax.swing.JOptionPane.showMessageDialog(vista,
-                    "No hay sesión activa.", "Error",
-                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            ErrorHandler.mostrarError(vista, "No hay sesión activa.");
             return;
         }
 
-        // Iterar los componentes de pnl_dias buscando JCheckBox y JComboBox pares
-        // La estructura es: JLabel(encabezado)×5, luego por cada día:
-        // JCheckBox, JLabel("→"), JComboBox(inicio), JLabel("—"), JComboBox(fin)
+        // pnl_dias contiene: 5 JLabel encabezados + por día (JCheckBox, JLabel"→", JComboBox ini, JLabel"—", JComboBox fin)
         Component[] comps = vista.getPnlDias().getComponents();
-
         int guardados = 0;
+        int rechazados = 0;
         int idx = 0;
 
-        // Saltar los 5 encabezados (JLabel)
         while (idx < comps.length && comps[idx] instanceof javax.swing.JLabel) {
             idx++;
         }
 
         while (idx < comps.length) {
-            // Buscar el siguiente JCheckBox
-            if (!(comps[idx] instanceof javax.swing.JCheckBox chk)) {
-                idx++;
-                continue;
-            }
-            // idx+1 = JLabel "→"
-            // idx+2 = JComboBox inicio
-            // idx+3 = JLabel "—"
-            // idx+4 = JComboBox fin
-            if (idx + 4 >= comps.length)
-                break;
+            if (!(comps[idx] instanceof javax.swing.JCheckBox chk)) { idx++; continue; }
+            if (idx + 4 >= comps.length) break;
 
             if (comps[idx + 2] instanceof javax.swing.JComboBox<?> cmbIni
-                    && comps[idx + 4] instanceof javax.swing.JComboBox<?> cmbFin) {
+             && comps[idx + 4] instanceof javax.swing.JComboBox<?> cmbFin
+             && chk.isSelected()) {
 
-                if (chk.isSelected()) {
-                    String horaIni = cmbIni.getSelectedItem() != null
-                            ? cmbIni.getSelectedItem().toString()
-                            : "08:00";
-                    String horaFin = cmbFin.getSelectedItem() != null
-                            ? cmbFin.getSelectedItem().toString()
-                            : "09:00";
+                String horaIni = cmbIni.getSelectedItem() != null
+                    ? cmbIni.getSelectedItem().toString() : "08:00";
+                String horaFin = cmbFin.getSelectedItem() != null
+                    ? cmbFin.getSelectedItem().toString() : "09:00";
 
-                    Slot s = new Slot();
-                    s.setIdDoctor(idDoctor);
-                    s.setDiaSemana(chk.getText());
-                    s.setHoraInicio(horaIni);
-                    s.setHoraFin(horaFin);
-                    s.setDisponible(true);
-                    slotDAO.guardar(s);
-         
-                    if (slotDAO.eliminarSlotsSinCitas(idDoctor)) {
-                        ErrorDialog errorDialog = new ErrorDialog(null, true, "Error al eliminar slots anteriores: ");
-                        errorDialog.setVisible(true);           guardados++;
-                    }
+                if (horaIni.compareTo(horaFin) >= 0) {
+                    rechazados++;
+                } else {
+                    boolean ok = disponibilidadDAO.guardar(idDoctor, chk.getText(), horaIni, horaFin);
+                    if (ok) guardados++; else rechazados++;
                 }
             }
-            idx += 5; // avanzar al siguiente bloque de día
+            idx += 5;
         }
 
-        if (guardados > 0) {
-            javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Disponibilidad guardada: " + guardados + " día(s) registrado(s).",
-                    "Disponibilidad", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        if (guardados > 0 && rechazados == 0) {
+            ErrorHandler.mostrarInfo(vista, "Disponibilidad",
+                "Disponibilidad guardada: " + guardados + " día(s) registrado(s).");
+        } else if (guardados > 0) {
+            ErrorHandler.mostrarAdvertencia(vista,
+                "Guardados: " + guardados + ". Rechazados: " + rechazados +
+                " (rango inválido o citas pendientes en ese día).");
+        } else if (rechazados > 0) {
+            ErrorHandler.mostrarError(vista,
+                "No se pudo guardar ningún día. Verifica el rango horario " +
+                "o que no haya citas pendientes en esos días.");
         } else {
-            javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Selecciona al menos un día para guardar.",
-                    "Sin selección", javax.swing.JOptionPane.WARNING_MESSAGE);
+            ErrorHandler.mostrarAdvertencia(vista,
+                "Selecciona al menos un día para guardar.");
         }
     }
 }

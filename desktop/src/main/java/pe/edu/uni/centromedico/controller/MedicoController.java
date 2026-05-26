@@ -4,6 +4,7 @@ import pe.edu.uni.centromedico.db.dao.DoctorDAO;
 import pe.edu.uni.centromedico.models.Doctor;
 import pe.edu.uni.centromedico.ui.dialogs.NuevoMedicoDialog;
 import pe.edu.uni.centromedico.ui.panels.MedicoPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
@@ -40,20 +41,15 @@ public class MedicoController {
     }
 
     private void conectarEventos() {
-        vista.getBtnBuscar().addActionListener(e -> buscar());
-        vista.getTxtBuscar().addActionListener(e -> buscar());
-
-        vista.getBtnNuevo().addActionListener(e -> {
-            java.awt.Frame ventana = (java.awt.Frame)
-                javax.swing.SwingUtilities.getWindowAncestor(vista);
-            new NuevoMedicoDialog(ventana, true).setVisible(true);
-            cargarDatos();
-        });
+        vista.getBtnBuscar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getTxtBuscar().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getBtnNuevo().addActionListener(e -> ErrorHandler.ejecutarSeguro(vista, this::nuevo));
 
         vista.getTblMedicos().addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) eliminarSeleccionado();
+                if (e.getClickCount() == 2)
+                    ErrorHandler.ejecutarSeguro(vista, MedicoController.this::eliminarSeleccionado);
             }
         });
     }
@@ -69,26 +65,26 @@ public class MedicoController {
         cargarTabla(filtrados);
     }
 
+    private void nuevo() {
+        java.awt.Frame ventana = (java.awt.Frame)
+            javax.swing.SwingUtilities.getWindowAncestor(vista);
+        new NuevoMedicoDialog(ventana, true).setVisible(true);
+        cargarDatos();
+    }
+
     private void eliminarSeleccionado() {
         int fila = vista.getFilaSeleccionada();
         if (fila < 0) return;
         String nombre = (String) vista.getTblMedicos().getValueAt(fila, 1);
-        int confirmar = javax.swing.JOptionPane.showConfirmDialog(vista,
-            "¿Eliminar al médico " + nombre + "?",
-            "Confirmar eliminación", javax.swing.JOptionPane.YES_NO_OPTION);
-        if (confirmar == javax.swing.JOptionPane.YES_OPTION) {
-            String id = (String) vista.getTblMedicos().getValueAt(fila, 0);
-            boolean ok = doctorDAO.eliminar(id);
-            if (ok) {
-                javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Médico eliminado correctamente.",
-                    "Eliminado", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                javax.swing.JOptionPane.showMessageDialog(vista,
-                    "No se pudo eliminar. Puede tener citas registradas.",
-                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-            }
-            cargarDatos();
+        if (!ErrorHandler.confirmar(vista, "Confirmar eliminación",
+                "¿Eliminar al médico " + nombre + "?")) return;
+
+        String id = (String) vista.getTblMedicos().getValueAt(fila, 0);
+        if (doctorDAO.eliminar(id)) {
+            ErrorHandler.mostrarInfo(vista, "Eliminado", "Médico eliminado correctamente.");
+        } else {
+            ErrorHandler.mostrarError(vista, "No se pudo eliminar el médico.");
         }
+        cargarDatos();
     }
 }

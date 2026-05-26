@@ -153,20 +153,10 @@ public class DisponibilidadDAO {
 
         } catch (SQLException e) {
             System.err.println("Error al guardar disponibilidad: " + e.getMessage());
-            try {
-                if (conn != null)
-                    conn.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { /* ignorar */ }
             return false;
         } finally {
-            try {
-                if (conn != null)
-                    conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { /* ignorar */ }
         }
     }
 

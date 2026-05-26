@@ -9,7 +9,6 @@ import java.util.List;
 
 public class DoctorDAO {
 
-    // Para TablaManager — devuelve todos
     public List<Doctor> obtenerTodos() {
         List<Doctor> lista = new ArrayList<>();
         String sql = """
@@ -17,6 +16,7 @@ public class DoctorDAO {
                    d.consultorio, d.activo
             FROM doctores d
             JOIN usuarios u ON d.id_usuario = u.id
+            WHERE u.eliminado = 0
             ORDER BY d.especialidad, d.nombre
             """;
 
@@ -40,14 +40,14 @@ public class DoctorDAO {
         return lista;
     }
 
-    // Para el combobox de especialidades al agendar cita
     public List<String> obtenerEspecialidades() {
         List<String> lista = new ArrayList<>();
         String sql = """
-            SELECT DISTINCT especialidad
-            FROM doctores
-            WHERE activo = 1
-            ORDER BY especialidad
+            SELECT DISTINCT d.especialidad
+            FROM doctores d
+            JOIN usuarios u ON d.id_usuario = u.id
+            WHERE d.activo = 1 AND u.eliminado = 0
+            ORDER BY d.especialidad
             """;
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -64,13 +64,13 @@ public class DoctorDAO {
         return lista;
     }
 
-    // Para filtrar doctores por especialidad — NuevaCitaDialog
     public List<Doctor> obtenerPorEspecialidad(String especialidad) {
         List<Doctor> lista = new ArrayList<>();
         String sql = """
-            SELECT * FROM doctores
-            WHERE especialidad = ? AND activo = 1
-            ORDER BY nombre
+            SELECT d.* FROM doctores d
+            JOIN usuarios u ON d.id_usuario = u.id
+            WHERE d.especialidad = ? AND d.activo = 1 AND u.eliminado = 0
+            ORDER BY d.nombre
             """;
 
         try (Connection conn = DatabaseManager.getConnection();
@@ -132,8 +132,9 @@ public class DoctorDAO {
         }
     }
 
+    // Soft delete — preserva historial de citas e integridad referencial
     public boolean eliminar(String id) {
-        String sql = "DELETE FROM usuarios WHERE id = ?";
+        String sql = "UPDATE usuarios SET eliminado = 1 WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
@@ -144,28 +145,4 @@ public class DoctorDAO {
         }
     }
 
-    public Doctor obtenerPorId(String id) {
-        String sql = "SELECT * FROM doctores WHERE id_usuario = ?";
-
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                Doctor d = new Doctor();
-                d.setId(rs.getString("id_usuario"));
-                d.setNombre(rs.getString("nombre"));
-                d.setEspecialidad(rs.getString("especialidad"));
-                d.setConsultorio(rs.getString("consultorio"));
-                d.setActivo(rs.getInt("activo") == 1);
-                return d;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error al obtener doctor: " + e.getMessage());
-        }
-        return null;
-    }
 }

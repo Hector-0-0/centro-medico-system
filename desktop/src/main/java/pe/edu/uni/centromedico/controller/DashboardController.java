@@ -4,6 +4,7 @@ import pe.edu.uni.centromedico.models.Slot;
 import pe.edu.uni.centromedico.service.CitaService;
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
 import pe.edu.uni.centromedico.ui.panels.DashboardPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 import pe.edu.uni.centromedico.util.SesionManager;
 
 import java.util.List;
@@ -22,24 +23,32 @@ public class DashboardController {
     }
 
     private void cargarDatos() {
-        todosLosSlots = citaService.obtenerSlotsDisponibles();
+        todosLosSlots = citaService.obtenerTodosLosSlots();
         vista.cargarDatos(todosLosSlots);
     }
 
     private void conectarEventos() {
-        vista.getBtnTodos().addActionListener(e       -> vista.filtrarPublico("Todos"));
-        vista.getBtnDisponibles().addActionListener(e -> vista.filtrarPublico("1"));
-        vista.getBtnOcupados().addActionListener(e    -> vista.filtrarPublico("0"));
-
+        vista.getBtnTodos().addActionListener(e       ->
+            ErrorHandler.ejecutarSeguro(vista, () -> vista.filtrarPublico("Todos")));
+        vista.getBtnDisponibles().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, () -> vista.filtrarPublico("1")));
+        vista.getBtnOcupados().addActionListener(e    ->
+            ErrorHandler.ejecutarSeguro(vista, () -> vista.filtrarPublico("0")));
         vista.getCbxEspecialidad().addActionListener(e ->
-            vista.filtrarPublico("Todos"));
+            ErrorHandler.ejecutarSeguro(vista, () -> vista.filtrarPublico("Todos")));
 
-        vista.getBtnAgendar().addActionListener(e -> {
-            java.awt.Frame ventana = (java.awt.Frame)
-                javax.swing.SwingUtilities.getWindowAncestor(vista);
-            new NuevaCitaDialog(ventana, true,
-                SesionManager.getUsuario()).setVisible(true);
-            cargarDatos(); // refresca después de agendar
-        });
+        vista.getBtnAgendar().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::abrirNuevaCita));
+    }
+
+    private void abrirNuevaCita() {
+        if (!SesionManager.haySesion()) {
+            ErrorHandler.mostrarError(vista, "No hay sesión activa.");
+            return;
+        }
+        java.awt.Frame ventana = (java.awt.Frame)
+            javax.swing.SwingUtilities.getWindowAncestor(vista);
+        new NuevaCitaDialog(ventana, true, SesionManager.getUsuario()).setVisible(true);
+        cargarDatos();
     }
 }

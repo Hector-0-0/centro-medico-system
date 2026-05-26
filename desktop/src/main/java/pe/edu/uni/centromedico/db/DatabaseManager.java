@@ -40,15 +40,12 @@ public class DatabaseManager {
     }
 
     public static void inicializarDB() {
-        System.out.println("Iniciando configuración de base de datos...");
-
         String user = ConfigManager.get("db.user");
         String pass = ConfigManager.get("db.password");
 
         try (Connection conn = DriverManager.getConnection(
                 getBaseUrl(), user, pass)) {
 
-            // Leer el script SQL desde resources
             String script;
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(
@@ -59,7 +56,6 @@ public class DatabaseManager {
                     .collect(Collectors.joining("\n"));
             }
 
-            // Ejecutar sentencia por sentencia
             for (String sentencia : script.split(";")) {
                 String s = sentencia.trim();
                 if (!s.isEmpty()) {
@@ -69,11 +65,8 @@ public class DatabaseManager {
                 }
             }
 
-            System.out.println("Base de datos lista.");
-
         } catch (Exception e) {
             System.err.println("Error al inicializar la BD: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -81,7 +74,6 @@ public class DatabaseManager {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("Conexión cerrada.");
             }
         } catch (SQLException e) {
             System.err.println("Error al cerrar conexión: " + e.getMessage());

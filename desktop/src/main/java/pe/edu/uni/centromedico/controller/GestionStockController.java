@@ -1,27 +1,28 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.db.dao.MedicamentoDAO;
 import pe.edu.uni.centromedico.models.Medicamento;
+import pe.edu.uni.centromedico.service.MedicamentoService;
 import pe.edu.uni.centromedico.ui.dialogs.NuevoMedicamentoDialog;
 import pe.edu.uni.centromedico.ui.panels.GestionStockPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
 public class GestionStockController {
 
-    private final GestionStockPanel vista;
-    private final MedicamentoDAO    medicamentoDAO;
+    private final GestionStockPanel    vista;
+    private final MedicamentoService   medicamentoService;
 
     public GestionStockController(GestionStockPanel vista) {
-        this.vista          = vista;
-        this.medicamentoDAO = new MedicamentoDAO();
+        this.vista              = vista;
+        this.medicamentoService = new MedicamentoService();
         cargarDatos();
         conectarEventos();
     }
 
     private void cargarDatos() {
-        cargarTabla(medicamentoDAO.obtenerTodos());
+        cargarTabla(medicamentoService.obtenerTodos());
     }
 
     private void cargarTabla(List<Medicamento> lista) {
@@ -42,60 +43,54 @@ public class GestionStockController {
     }
 
     private void conectarEventos() {
-        vista.getBtnBuscarStock().addActionListener(e -> buscar());
-        vista.getTxtBuscarStock().addActionListener(e -> buscar());
+        vista.getBtnBuscarStock().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getTxtBuscarStock().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::buscar));
 
-        // Doble-click en fila → ajustar stock del medicamento seleccionado
         vista.getTblStock().addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) ajustarStock();
+                if (e.getClickCount() == 2)
+                    ErrorHandler.ejecutarSeguro(vista, GestionStockController.this::ajustarStock);
             }
         });
 
-        // Botón "+ Agregar" → nuevo medicamento
-        vista.getBtnAgregarStock().addActionListener(e -> {
-            java.awt.Frame ventana = (java.awt.Frame)
-                javax.swing.SwingUtilities.getWindowAncestor(vista);
-            new NuevoMedicamentoDialog(ventana, true).setVisible(true);
-            cargarDatos();
-        });
+        vista.getBtnAgregarStock().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::abrirDialogoNuevo));
+    }
+
+    private void abrirDialogoNuevo() {
+        java.awt.Frame ventana = (java.awt.Frame)
+            javax.swing.SwingUtilities.getWindowAncestor(vista);
+        new NuevoMedicamentoDialog(ventana, true).setVisible(true);
+        cargarDatos();
     }
 
     private void buscar() {
-        String texto = vista.getTxtBuscarStock().getText().trim().toLowerCase();
-        if (texto.isEmpty()) { cargarDatos(); return; }
-        List<Medicamento> filtrados = medicamentoDAO.obtenerTodos().stream()
-            .filter(m -> m.getNombre().toLowerCase().contains(texto)
-                      || m.getId().toLowerCase().contains(texto))
-            .toList();
-        cargarTabla(filtrados);
+        cargarTabla(medicamentoService.buscar(vista.getTxtBuscarStock().getText()));
     }
 
     private void ajustarStock() {
         int fila = vista.getTblStock().getSelectedRow();
-        if (fila < 0) {
-            javax.swing.JOptionPane.showMessageDialog(vista,
-                "Haz doble-click en un medicamento para ajustar su stock.",
-                "Sin selección", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
+        if (fila < 0) return;
+
         String id     = (String) vista.getTblStock().getValueAt(fila, 0);
         String nombre = (String) vista.getTblStock().getValueAt(fila, 1);
         String input  = javax.swing.JOptionPane.showInputDialog(vista,
             "Nuevo stock para \"" + nombre + "\":",
             "Ajustar Stock", javax.swing.JOptionPane.QUESTION_MESSAGE);
-        if (input != null && !input.isBlank()) {
-            try {
-                int nuevoStock = Integer.parseInt(input.trim());
-                if (nuevoStock < 0) throw new NumberFormatException();
-                medicamentoDAO.actualizarStock(id, nuevoStock);
+        if (input == null || input.isBlank()) return;
+
+        try {
+            int nuevoStock = Integer.parseInt(input.trim());
+            if (medicamentoService.actualizarStock(id, nuevoStock)) {
                 cargarDatos();
-            } catch (NumberFormatException ex) {
-                javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Ingresa un número entero ≥ 0.",
-                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            } else {
+                ErrorHandler.mostrarError(vista, "Stock inválido o error al actualizar.");
             }
+        } catch (NumberFormatException ex) {
+            ErrorHandler.mostrarError(vista, "Ingresa un número entero ≥ 0.");
         }
     }
 }

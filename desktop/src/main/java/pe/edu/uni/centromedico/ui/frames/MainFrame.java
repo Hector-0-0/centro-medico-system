@@ -45,7 +45,7 @@ public class MainFrame extends javax.swing.JFrame {
                 new pe.edu.uni.centromedico.controller.DashboardController(dash);
                 mostrarPanel(dash, "Horarios Disponibles");
             }
-            case "MEDICO" -> {
+            case "DOCTOR" -> {
                 pe.edu.uni.centromedico.ui.panels.CitaPanel citas =
                     new pe.edu.uni.centromedico.ui.panels.CitaPanel();
                 new pe.edu.uni.centromedico.controller.CitaController(citas);

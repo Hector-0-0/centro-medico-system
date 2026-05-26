@@ -7,28 +7,31 @@ import java.sql.*;
 
 public class AtencionDAO {
 
-    public boolean registrar(AtencionCita atencion) {
+    // Registra la atención + marca la cita como ATENDIDA en una transacción.
+    // Devuelve el id generado de la atención, o -1 si falla.
+    public int registrar(AtencionCita atencion) {
         Connection conn = null;
         try {
             conn = DatabaseManager.getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Insertar la atención
+            int idAtencion;
             String sqlAtencion = """
                     INSERT INTO atencion_cita (id_cita, diagnostico, comentarios)
                     VALUES (?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        diagnostico = VALUES(diagnostico),
-                        comentarios = VALUES(comentarios)
                     """;
-            try (PreparedStatement stmt = conn.prepareStatement(sqlAtencion)) {
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    sqlAtencion, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setInt(1, atencion.getIdCita());
                 stmt.setString(2, atencion.getDiagnostico());
                 stmt.setString(3, atencion.getComentarios());
                 stmt.executeUpdate();
+                try (ResultSet keys = stmt.getGeneratedKeys()) {
+                    if (!keys.next()) throw new SQLException("No se generó id de atención");
+                    idAtencion = keys.getInt(1);
+                }
             }
 
-            // 2. Marcar la cita como ATENDIDA
             String sqlCita = "UPDATE citas SET estado = 'ATENDIDA' WHERE id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sqlCita)) {
                 stmt.setInt(1, atencion.getIdCita());
@@ -36,34 +39,15 @@ public class AtencionDAO {
             }
 
             conn.commit();
-            return true;
+            return idAtencion;
 
         } catch (SQLException e) {
             System.err.println("Error al registrar atención: " + e.getMessage());
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) { /* ignorar */ }
-            return false;
+            return -1;
         } finally {
             try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { /* ignorar */ }
         }
     }
 
-    public AtencionCita obtenerPorCita(int idCita) {
-        String sql = "SELECT * FROM atencion_cita WHERE id_cita = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, idCita);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                AtencionCita a = new AtencionCita();
-                a.setId(rs.getInt("id"));
-                a.setIdCita(rs.getInt("id_cita"));
-                a.setDiagnostico(rs.getString("diagnostico"));
-                a.setComentarios(rs.getString("comentarios"));
-                return a;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al obtener atención: " + e.getMessage());
-        }
-        return null;
-    }
 }

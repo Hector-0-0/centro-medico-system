@@ -3,6 +3,7 @@ package pe.edu.uni.centromedico.controller;
 import pe.edu.uni.centromedico.models.Receta;
 import pe.edu.uni.centromedico.service.RecetaService;
 import pe.edu.uni.centromedico.ui.panels.FarmaciaRecetasPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
@@ -31,9 +32,9 @@ public class FarmaciaController {
             Receta r = lista.get(i);
             datos[i] = new String[]{
                 String.valueOf(r.getId()),
-                r.getNombrePaciente(),
+                r.getNombrePaciente() != null ? r.getNombrePaciente() : "—",
                 String.valueOf(r.getIdCita()),
-                r.getDiagnostico(),
+                r.getDiagnostico() != null ? r.getDiagnostico() : "—",
                 r.getEstado()
             };
         }
@@ -44,9 +45,12 @@ public class FarmaciaController {
     }
 
     private void conectarEventos() {
-        vista.getBtnBuscarReceta().addActionListener(e -> buscar());
-        vista.getTxtBuscarReceta().addActionListener(e -> buscar());
-        vista.getBtnConfirmarEntrega().addActionListener(e -> confirmarEntrega());
+        vista.getBtnBuscarReceta().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getTxtBuscarReceta().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::buscar));
+        vista.getBtnConfirmarEntrega().addActionListener(e ->
+            ErrorHandler.ejecutarSeguro(vista, this::confirmarEntrega));
     }
 
     private void buscar() {
@@ -68,31 +72,33 @@ public class FarmaciaController {
     private void confirmarEntrega() {
         int fila = vista.getTblRecetas().getSelectedRow();
         if (fila < 0) {
-            javax.swing.JOptionPane.showMessageDialog(vista,
-                "Selecciona una receta para confirmar la entrega.",
-                "Sin selección", javax.swing.JOptionPane.WARNING_MESSAGE);
+            ErrorHandler.mostrarAdvertencia(vista,
+                "Selecciona una receta para confirmar la entrega.");
             return;
         }
 
-        int idReceta = Integer.parseInt(
-            vista.getTblRecetas().getValueAt(fila, 0).toString());
-
-        int confirmar = javax.swing.JOptionPane.showConfirmDialog(vista,
-            "¿Confirmar entrega de la receta #" + idReceta + "?",
-            "Confirmar entrega", javax.swing.JOptionPane.YES_NO_OPTION);
-
-        if (confirmar == javax.swing.JOptionPane.YES_OPTION) {
-            boolean ok = recetaService.confirmarEntrega(idReceta);
-            if (ok) {
-                javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Entrega confirmada correctamente.",
-                    "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                cargarDatos();
-            } else {
-                javax.swing.JOptionPane.showMessageDialog(vista,
-                    "Error al confirmar la entrega. Intenta de nuevo.",
-                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-            }
+        Object valor = vista.getTblRecetas().getValueAt(fila, 0);
+        if (valor == null) {
+            ErrorHandler.mostrarError(vista, "La fila seleccionada no tiene ID válido.");
+            return;
         }
+        int idReceta;
+        try {
+            idReceta = Integer.parseInt(valor.toString());
+        } catch (NumberFormatException ex) {
+            ErrorHandler.mostrarError(vista, "ID de receta inválido.");
+            return;
+        }
+
+        if (!ErrorHandler.confirmar(vista, "Confirmar entrega",
+                "¿Confirmar entrega de la receta #" + idReceta + "?")) return;
+
+        if (recetaService.confirmarEntrega(idReceta)) {
+            ErrorHandler.mostrarInfo(vista, "Éxito", "Entrega confirmada correctamente.");
+        } else {
+            ErrorHandler.mostrarError(vista,
+                "Error al confirmar la entrega. Verifica el stock disponible.");
+        }
+        cargarDatos();
     }
 }

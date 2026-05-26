@@ -1,0 +1,67 @@
+═══════════════════════════════════════════════════════════════
+  CENTRO MÉDICO UNI — Aplicativo de Escritorio
+═══════════════════════════════════════════════════════════════
+
+REQUISITOS
+─────────────────────────────────────────────────────────────
+  • Java 21 (JDK)
+  • Maven 3.6+
+  • MySQL Server 5.7+ / 8.0+
+
+
+CONFIGURACIÓN DE BASE DE DATOS (primera vez)
+─────────────────────────────────────────────────────────────
+  1. Asegurar que MySQL esté corriendo:
+       sudo systemctl start mysql
+
+  2. Habilitar autenticación nativa para 'root' (solo si MySQL 8+):
+       sudo mysql
+       ALTER USER 'root'@'localhost'
+         IDENTIFIED WITH mysql_native_password BY '123';
+       FLUSH PRIVILEGES;
+       EXIT;
+
+  3. (Opcional) Cambiar credenciales editando:
+       src/main/resources/config.properties
+
+  NOTA: El esquema y los datos de prueba se cargan automáticamente
+        al iniciar la app (init_db.sql).
+
+
+EJECUCIÓN
+─────────────────────────────────────────────────────────────
+  Desde la raíz del proyecto:
+
+       mvn exec:java
+
+
+USUARIOS DE PRUEBA
+─────────────────────────────────────────────────────────────
+  Rol         Código    Contraseña
+  ─────────────────────────────────
+  ESTUDIANTE  U001      1234
+  ESTUDIANTE  U002      abcd
+  DOCTOR      D001      pass123
+  DOCTOR      D003      ruizpass
+  ADMIN       ADM001    adm123
+  FARMACIA    FAR001    far123
+
+
+ARQUITECTURA
+─────────────────────────────────────────────────────────────
+  Patrón MVC estricto:
+
+       View (panels/dialogs) → Controller → Service → DAO → MySQL
+
+  Capas:
+    • models/      — POJOs del dominio (con herencia: Persona)
+    • db/dao/      — Acceso a BD con PreparedStatement + transacciones
+    • service/     — Lógica de negocio + validaciones
+    • controller/  — Manejadores de eventos UI
+    • ui/panels/   — JPanels (NetBeans GUI Builder + MigLayout)
+    • ui/dialogs/  — JDialogs (formularios modales)
+    • ui/frames/   — LoginFrame, MainFrame
+    • util/        — SesionManager, ErrorHandler
+
+
+═══════════════════════════════════════════════════════════════

@@ -1,8 +1,9 @@
 package pe.edu.uni.centromedico.controller;
 
-import pe.edu.uni.centromedico.db.dao.CitaDAO;
 import pe.edu.uni.centromedico.models.Cita;
+import pe.edu.uni.centromedico.service.CitaService;
 import pe.edu.uni.centromedico.ui.panels.CitaPanel;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 import pe.edu.uni.centromedico.util.SesionManager;
 
 import java.time.LocalDate;
@@ -13,12 +14,12 @@ import javax.swing.table.DefaultTableModel;
 
 public class CitaController {
 
-    private final CitaPanel vista;
-    private final CitaDAO   citaDAO;
+    private final CitaPanel    vista;
+    private final CitaService  citaService;
 
     public CitaController(CitaPanel vista) {
-        this.vista   = vista;
-        this.citaDAO = new CitaDAO();
+        this.vista       = vista;
+        this.citaService = new CitaService();
         mostrarFecha();
         cargarDatos();
         conectarEventos();
@@ -28,35 +29,49 @@ public class CitaController {
         vista.getTblCitas().addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int row = vista.getTblCitas().getSelectedRow();
-                    if (row < 0) return;
-                    String estado = vista.getTblCitas().getValueAt(row, 5) != null
-                        ? vista.getTblCitas().getValueAt(row, 5).toString() : "";
-                    if (!"PENDIENTE".equalsIgnoreCase(estado)) {
-                        javax.swing.JOptionPane.showMessageDialog(vista,
-                            "Solo se pueden atender citas PENDIENTES.",
-                            "Cita no disponible", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                        return;
-                    }
-                    int idCita = Integer.parseInt(
-                        vista.getTblCitas().getValueAt(row, 0).toString());
-                    // Buscar la cita en la lista cargada
-                    List<Cita> citas = citaDAO.obtenerPorDoctor(SesionManager.getId());
-                    Cita citaSel = citas.stream()
-                        .filter(c -> c.getId() == idCita)
-                        .findFirst().orElse(null);
-                    if (citaSel == null) return;
-                    pe.edu.uni.centromedico.ui.frames.MainFrame mf =
-                        pe.edu.uni.centromedico.ui.frames.MainFrame.getInstance();
-                    if (mf == null) return;
-                    pe.edu.uni.centromedico.ui.panels.AtenderCitaPanel panel =
-                        new pe.edu.uni.centromedico.ui.panels.AtenderCitaPanel();
-                    new pe.edu.uni.centromedico.controller.AtenderCitaController(panel, citaSel);
-                    mf.mostrarPanel(panel, "Atender Cita");
-                }
+                if (e.getClickCount() == 2)
+                    ErrorHandler.ejecutarSeguro(vista, CitaController.this::abrirAtencion);
             }
         });
+    }
+
+    private void abrirAtencion() {
+        int row = vista.getTblCitas().getSelectedRow();
+        if (row < 0) return;
+
+        Object estadoObj = vista.getTblCitas().getValueAt(row, 5);
+        String estado = estadoObj != null ? estadoObj.toString() : "";
+        if (!"PENDIENTE".equalsIgnoreCase(estado)) {
+            ErrorHandler.mostrarInfo(vista, "Cita no disponible",
+                "Solo se pueden atender citas PENDIENTES.");
+            return;
+        }
+
+        Object idObj = vista.getTblCitas().getValueAt(row, 0);
+        if (idObj == null) return;
+        int idCita;
+        try {
+            idCita = Integer.parseInt(idObj.toString());
+        } catch (NumberFormatException ex) {
+            ErrorHandler.mostrarError(vista, "ID de cita inválido.");
+            return;
+        }
+
+        Cita citaSel = citaService.obtenerCitasDoctor(SesionManager.getId()).stream()
+            .filter(c -> c.getId() == idCita)
+            .findFirst().orElse(null);
+        if (citaSel == null) {
+            ErrorHandler.mostrarError(vista, "No se encontró la cita seleccionada.");
+            return;
+        }
+
+        pe.edu.uni.centromedico.ui.frames.MainFrame mf =
+            pe.edu.uni.centromedico.ui.frames.MainFrame.getInstance();
+        if (mf == null) return;
+        pe.edu.uni.centromedico.ui.panels.AtenderCitaPanel panel =
+            new pe.edu.uni.centromedico.ui.panels.AtenderCitaPanel();
+        new AtenderCitaController(panel, citaSel);
+        mf.mostrarPanel(panel, "Atender Cita");
     }
 
     private void mostrarFecha() {
@@ -67,7 +82,7 @@ public class CitaController {
     }
 
     private void cargarDatos() {
-        List<Cita> citas = citaDAO.obtenerPorDoctor(SesionManager.getId());
+        List<Cita> citas = citaService.obtenerCitasDoctor(SesionManager.getId());
         String[][] datos = new String[citas.size()][6];
         for (int i = 0; i < citas.size(); i++) {
             Cita c = citas.get(i);

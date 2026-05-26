@@ -4,6 +4,7 @@ package pe.edu.uni.centromedico.ui.components;
 import java.awt.Color;
 import javax.swing.*;
 import pe.edu.uni.centromedico.models.Persona;
+import pe.edu.uni.centromedico.util.ErrorHandler;
 
 public class Sidebar extends javax.swing.JPanel {
     
@@ -29,11 +30,11 @@ public class Sidebar extends javax.swing.JPanel {
 
         this.add(btnSalir, "growx, h 38!, gapleft 20, gapright 20");
 
-        btnSalir.addActionListener(e -> {
+        btnSalir.addActionListener(e -> ErrorHandler.ejecutarSeguro(this, () -> {
             pe.edu.uni.centromedico.util.SesionManager.cerrar();
             javax.swing.SwingUtilities.getWindowAncestor(this).dispose();
             new pe.edu.uni.centromedico.ui.frames.LoginFrame().setVisible(true);
-        });
+        }));
     }
 
     private void agregarBotonesRol(Persona persona) {
@@ -64,7 +65,7 @@ public class Sidebar extends javax.swing.JPanel {
         for (String[] m : menus) {
             javax.swing.JButton btn = crearBotonMenu(m[0]);
             final String destino = m[1];
-            btn.addActionListener(e -> {
+            btn.addActionListener(e -> ErrorHandler.ejecutarSeguro(this, () -> {
                 pe.edu.uni.centromedico.ui.frames.MainFrame mf =
                     pe.edu.uni.centromedico.ui.frames.MainFrame.getInstance();
                 if (mf == null) return;
@@ -124,7 +125,7 @@ public class Sidebar extends javax.swing.JPanel {
                     }
                 }
                 setBotonActivo(btn);
-            });
+            }));
             this.add(btn, "growx, h 42!, wrap 5");
         }
     }
