@@ -11,21 +11,20 @@ public class DatabaseManager {
 
     // URL sin base de datos — para poder crearla si no existe
     private static String getBaseUrl() {
-        return "jdbc:mysql://"
-            + ConfigManager.get("db.host") + ":"
-            + ConfigManager.get("db.port")
-            + "?useSSL=false&serverTimezone=America/Lima"
-            + "&allowPublicKeyRetrieval=true";
+        StringBuilder url = new StringBuilder("jdbc:sqlserver://")
+            .append(ConfigManager.get("db.host"))
+            .append(":").append(ConfigManager.get("db.port"));
+        String inst = ConfigManager.get("db.instance");
+        if (inst != null && !inst.isBlank()) {
+            url.append(";instanceName=").append(inst.trim());
+        }
+        url.append(";encrypt=true;trustServerCertificate=true");
+        return url.toString();
     }
 
     // URL con base de datos — para uso normal
     private static String getDbUrl() {
-        return "jdbc:mysql://"
-            + ConfigManager.get("db.host") + ":"
-            + ConfigManager.get("db.port") + "/"
-            + ConfigManager.get("db.name")
-            + "?useSSL=false&serverTimezone=America/Lima"
-            + "&allowPublicKeyRetrieval=true";
+        return getBaseUrl() + ";databaseName=" + ConfigManager.get("db.name");
     }
 
     public static Connection getConnection() throws SQLException {
@@ -43,25 +42,22 @@ public class DatabaseManager {
         String user = ConfigManager.get("db.user");
         String pass = ConfigManager.get("db.password");
 
-        try (Connection conn = DriverManager.getConnection(
-                getBaseUrl(), user, pass)) {
+        try (Connection conn = DriverManager.getConnection(getBaseUrl(), user, pass)) {
 
             String script;
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(
-                        DatabaseManager.class
-                            .getResourceAsStream("/init_db.sql")))) {
+                        DatabaseManager.class.getResourceAsStream("/init_db.sql")))) {
 
-                script = reader.lines()
-                    .collect(Collectors.joining("\n"));
+                script = reader.lines().collect(Collectors.joining("\n"));
             }
 
-            for (String sentencia : script.split(";")) {
-                String s = sentencia.trim();
-                if (!s.isEmpty()) {
-                    try (Statement stmt = conn.createStatement()) {
-                        stmt.execute(s);
-                    }
+            // SQL Server usa "GO" como separador de batches (case-insensitive, en su propia línea)
+            for (String batch : script.split("(?im)^\\s*GO\\s*$")) {
+                String s = batch.trim();
+                if (s.isEmpty()) continue;
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.execute(s);
                 }
             }
 

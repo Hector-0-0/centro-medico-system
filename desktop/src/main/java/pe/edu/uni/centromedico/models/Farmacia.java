@@ -6,8 +6,4 @@ public class Farmacia extends Persona {
         super();
         this.setRol("FARMACIA");
     }
-
-    public Farmacia(String id, String password, String nombre) {
-        super(id, password, nombre, "FARMACIA");
-    }
 }

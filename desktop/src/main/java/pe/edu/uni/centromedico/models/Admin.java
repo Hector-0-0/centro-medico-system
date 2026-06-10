@@ -6,8 +6,4 @@ public class Admin extends Persona {
         super();
         this.setRol("ADMIN");
     }
-
-    public Admin(String id, String password, String nombre) {
-        super(id, password, nombre, "ADMIN");
-    }
 }

@@ -10,14 +10,6 @@ public class Doctor extends Persona {
         this.setRol("DOCTOR");
     }
 
-    public Doctor(String id, String password, String nombre,
-        String especialidad, String consultorio, boolean activo) {
-        super(id, password, nombre, "DOCTOR");
-        this.especialidad = especialidad;
-        this.consultorio = consultorio;
-        this.activo = activo;
-    }
-
     public String getEspecialidad()     { return especialidad; }
     public String getConsultorio()      { return consultorio; }
     public boolean isActivo()           { return activo; }

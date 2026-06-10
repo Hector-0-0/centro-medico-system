@@ -80,11 +80,11 @@ public class DisponibilidadDAO {
             conn = DatabaseManager.getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Marcar como eliminados los slots disponibles de ese día
+            // 1. Marcar como eliminados los slots disponibles de ese día (sintaxis SQL Server)
             String sqlEliminarSlots = """
-                    UPDATE slots_disponibilidad s
-                    JOIN disponibilidad_doctor d ON s.id_disponibilidad = d.id
-                    SET s.eliminado = 1
+                    UPDATE s SET s.eliminado = 1
+                    FROM slots_disponibilidad s
+                    INNER JOIN disponibilidad_doctor d ON s.id_disponibilidad = d.id
                     WHERE d.id_doctor  = ?
                       AND d.dia_semana = ?
                       AND s.disponible = 1

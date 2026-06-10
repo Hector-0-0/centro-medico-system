@@ -4,12 +4,19 @@ package pe.edu.uni.centromedico.ui.components;
 import java.awt.Color;
 import javax.swing.*;
 import pe.edu.uni.centromedico.models.Persona;
+import pe.edu.uni.centromedico.util.ConfiguracionParametros;
 import pe.edu.uni.centromedico.util.ErrorHandler;
 
 public class Sidebar extends javax.swing.JPanel {
-    
+
+    private final ConfiguracionParametros OBJ = new ConfiguracionParametros();
+
     public Sidebar(Persona persona) {
         initComponents();
+
+        // Sobrescribir logo con ruta dinámica de SGH.config
+        ImageIcon logoIcon = OBJ.cargarIcono("unii2.png");
+        if (logoIcon != null) lblLogo.setIcon(logoIcon);
 
         this.setBackground(Color.decode("#8B1414"));
         lblNombre.setText(persona.getNombre());
@@ -76,7 +83,7 @@ public class Sidebar extends javax.swing.JPanel {
                 // MVC: cada case crea View + Controller juntos
                 switch (destino) {
                     case "DASH", "AGENDAR" -> {
-                        var p = new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona);
+                        var p = new pe.edu.uni.centromedico.ui.panels.DashboardPanel();
                         new pe.edu.uni.centromedico.controller.DashboardController(p);
                         mf.mostrarPanel(p, "Horarios Disponibles");
                     }

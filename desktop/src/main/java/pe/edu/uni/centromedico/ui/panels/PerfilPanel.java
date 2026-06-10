@@ -9,6 +9,10 @@ import java.util.List;
 public class PerfilPanel extends javax.swing.JPanel {
 
     public PerfilPanel(Persona persona) {
+        if (persona == null) {
+            throw new IllegalArgumentException(
+                "PerfilPanel requiere una persona con sesión activa.");
+        }
         initComponents();
 
         // Card izquierdo: datos personales

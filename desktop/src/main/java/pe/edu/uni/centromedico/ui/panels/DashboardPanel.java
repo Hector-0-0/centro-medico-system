@@ -3,19 +3,15 @@ package pe.edu.uni.centromedico.ui.panels;
 import pe.edu.uni.centromedico.ui.components.TablaManager;
 import pe.edu.uni.centromedico.ui.dialogs.NuevaCitaDialog;
 import pe.edu.uni.centromedico.models.Slot;
-import pe.edu.uni.centromedico.models.Persona;
 import pe.edu.uni.centromedico.db.dao.SlotDAO;
 import java.util.List;
 
 public class DashboardPanel extends javax.swing.JPanel {
 
-        Persona persona = null;
-
         private TablaManager<Slot> tablaManager;
 
-        public DashboardPanel(Persona persona) {
+        public DashboardPanel() {
                 initComponents();
-                this.persona = persona;
 
                 // Filtros de horarios: fila horizontal
                 pnl_filtros.setLayout(new net.miginfocom.swing.MigLayout(

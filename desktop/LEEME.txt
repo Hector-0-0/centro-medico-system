@@ -6,26 +6,53 @@ REQUISITOS
 ─────────────────────────────────────────────────────────────
   • Java 21 (JDK)
   • Maven 3.6+
-  • MySQL Server 5.7+ / 8.0+
+  • SQL Server 2017+ (Express, Developer o Standard)
 
 
-CONFIGURACIÓN DE BASE DE DATOS (primera vez)
+⚠️  PASO OBLIGATORIO ANTES DE EJECUTAR — SGH.config
 ─────────────────────────────────────────────────────────────
-  1. Asegurar que MySQL esté corriendo:
-       sudo systemctl start mysql
+  La ruta a la carpeta de imágenes está externalizada en el
+  archivo SGH.config (raíz del proyecto).
 
-  2. Habilitar autenticación nativa para 'root' (solo si MySQL 8+):
-       sudo mysql
-       ALTER USER 'root'@'localhost'
-         IDENTIFIED WITH mysql_native_password BY '123';
-       FLUSH PRIVILEGES;
-       EXIT;
+  ABRE SGH.config y cambia la línea IMAGES = ... colocando la
+  ruta EXACTA donde tienes la carpeta Images/ en TU máquina.
 
-  3. (Opcional) Cambiar credenciales editando:
+  Ejemplos:
+    Linux:    IMAGES = /home/usuario/proyecto/desktop/src/main/resources/Images/
+    Windows:  IMAGES = C:/Users/usuario/proyecto/desktop/src/main/resources/Images/
+
+
+CONFIGURACIÓN DE SQL SERVER (primera vez)
+─────────────────────────────────────────────────────────────
+  1. Asegurar que SQL Server esté corriendo y permita conexiones
+     TCP/IP (por defecto puerto 1433).
+
+  2. Habilitar autenticación SQL (modo "Mixed"):
+     - SQL Server Management Studio (SSMS):
+         Right-click servidor → Properties → Security
+         → "SQL Server and Windows Authentication mode"
+         → Reiniciar el servicio SQL Server.
+
+  3. Asegurar que el usuario 'sa' esté habilitado y tenga password:
+       ALTER LOGIN sa ENABLE;
+       ALTER LOGIN sa WITH PASSWORD = '123';
+
+  4. (Opcional) Cambiar credenciales editando:
        src/main/resources/config.properties
 
+     Campos disponibles:
+       db.host=localhost
+       db.port=1433
+       db.name=centro_medico
+       db.user=sa
+       db.password=123
+       db.instance=         (vacío para instancia por defecto)
+
+     Si tienes SQL Server Express con instancia nombrada:
+       db.instance=SQLEXPRESS
+
   NOTA: El esquema y los datos de prueba se cargan automáticamente
-        al iniciar la app (init_db.sql).
+        al iniciar la app (init_db.sql en T-SQL).
 
 
 EJECUCIÓN
@@ -51,17 +78,26 @@ ARQUITECTURA
 ─────────────────────────────────────────────────────────────
   Patrón MVC estricto:
 
-       View (panels/dialogs) → Controller → Service → DAO → MySQL
+       View (panels/dialogs) → Controller → Service → DAO → SQL Server
 
   Capas:
     • models/      — POJOs del dominio (con herencia: Persona)
-    • db/dao/      — Acceso a BD con PreparedStatement + transacciones
+    • db/dao/      — Acceso a BD con PreparedStatement + transacciones (T-SQL)
     • service/     — Lógica de negocio + validaciones
     • controller/  — Manejadores de eventos UI
     • ui/panels/   — JPanels (NetBeans GUI Builder + MigLayout)
     • ui/dialogs/  — JDialogs (formularios modales)
     • ui/frames/   — LoginFrame, MainFrame
-    • util/        — SesionManager, ErrorHandler
+    • util/        — SesionManager, ErrorHandler, ConfiguracionParametros
+
+  Configuración externalizada:
+    • SGH.config              — Rutas a recursos (imágenes)
+    • config.properties       — Credenciales de SQL Server
+
+  Dependencias:
+    • flatlaf 3.7.1                  — Look & Feel moderno
+    • miglayout-swing 11.4.2         — Layout manager flexible
+    • mssql-jdbc 12.8.1              — Driver oficial Microsoft SQL Server
 
 
 ═══════════════════════════════════════════════════════════════

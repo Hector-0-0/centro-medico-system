@@ -10,6 +10,10 @@ public class NuevaCitaDialog extends javax.swing.JDialog {
 
         public NuevaCitaDialog(java.awt.Frame parent, boolean modal, Persona persona) {
                 super(parent, modal);
+                if (persona == null) {
+                        throw new IllegalArgumentException(
+                                "NuevaCitaDialog requiere una persona con sesión activa.");
+                }
                 initComponents();
                 this.getContentPane().removeAll();
                 this.getContentPane().setLayout(

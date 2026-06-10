@@ -10,14 +10,6 @@ public class Estudiante extends Persona {
         this.setRol("ESTUDIANTE");
     }
 
-    public Estudiante(String id, String password, String nombre,
-        int edad, String carrera, String email) {
-        super(id, password, nombre, "ESTUDIANTE");
-        this.edad = edad;
-        this.carrera = carrera;
-        this.email = email;
-    }
-
     public int getEdad()        { return edad; }
     public String getCarrera()  { return carrera; }
     public String getEmail()    { return email; }

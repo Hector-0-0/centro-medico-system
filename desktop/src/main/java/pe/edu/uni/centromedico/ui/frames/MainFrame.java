@@ -41,7 +41,7 @@ public class MainFrame extends javax.swing.JFrame {
         switch (persona.getRol()) {
             case "ESTUDIANTE" -> {
                 pe.edu.uni.centromedico.ui.panels.DashboardPanel dash =
-                    new pe.edu.uni.centromedico.ui.panels.DashboardPanel(persona);
+                    new pe.edu.uni.centromedico.ui.panels.DashboardPanel();
                 new pe.edu.uni.centromedico.controller.DashboardController(dash);
                 mostrarPanel(dash, "Horarios Disponibles");
             }

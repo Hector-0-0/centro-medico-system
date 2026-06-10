@@ -101,11 +101,11 @@ public class RecetaDAO {
             conn = DatabaseManager.getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Descontar stock de cada medicamento de la receta
+            // 1. Descontar stock de cada medicamento de la receta (sintaxis SQL Server)
             String sqlDescontar = """
-                    UPDATE medicamentos m
-                    JOIN receta_detalle rd ON m.id = rd.id_medicamento
-                    SET m.stock = m.stock - 1
+                    UPDATE m SET m.stock = m.stock - 1
+                    FROM medicamentos m
+                    INNER JOIN receta_detalle rd ON m.id = rd.id_medicamento
                     WHERE rd.id_receta = ? AND m.stock > 0
                     """;
             try (PreparedStatement stmt = conn.prepareStatement(sqlDescontar)) {
