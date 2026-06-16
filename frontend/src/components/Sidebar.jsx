@@ -45,6 +45,7 @@ const MENU_MEDICO = [
   { to: '/recetas',        icono: '🧾', label: 'Recetas' },
   { to: '/historial',      icono: '📋', label: 'Historial médico' },
   { to: '/pacientes',      icono: '👥', label: 'Pacientes' },
+  { to: '/medicamentos',   icono: '💊', label: 'Ver Stock' },
   { to: '/perfil',         icono: '👤', label: 'Mi Perfil' },
 ];
 

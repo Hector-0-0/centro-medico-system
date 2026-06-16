@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { citaService, pacienteService, medicoService } from '../services/servicios';
+import Buscador from '../components/Buscador';
+import ThOrden from '../components/ThOrden';
+import { useOrden } from '../components/useOrden';
+import { citaService, pacienteService, medicoService, historialService } from '../services/servicios';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
+const ESTADOS = ['TODOS', 'PENDIENTE', 'ATENDIDA', 'CANCELADA', 'REPROGRAMADA'];
 
 const COLORES = { PENDIENTE: ['#fbece9','#711610'], ATENDIDA: ['#dcfce7','#166534'], CANCELADA: ['#fee2e2','#dc2626'], REPROGRAMADA: ['#fef3c7','#92400e'] };
 
@@ -20,6 +26,8 @@ const s = {
   label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
   input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none' },
   select: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff' },
+  textarea: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 70, boxSizing: 'border-box' },
+  fichaPac: { background: '#f9f5f0', border: '1px solid #e8ddd8', borderRadius: 10, padding: '12px 16px', marginBottom: 18, fontSize: 13, color: '#374151' },
   btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
   btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
   error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
@@ -36,6 +44,10 @@ export default function Citas() {
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [reprog, setReprog] = useState(null); // { cita, fechaHora }
+  const [atencion, setAtencion] = useState(null); // { cita, diagnostico, tratamiento, receta, observaciones }
+  const [buscar, setBuscar] = useState('');
+  const [estadoFiltro, setEstadoFiltro] = useState('TODOS');
+  const orden = useOrden();
 
   const cargar = async () => {
     try {
@@ -61,9 +73,27 @@ export default function Citas() {
     catch (err) { alert(err.response?.data?.error || 'Error'); }
   };
 
-  const atender = async (id) => {
-    try { await citaService.atender(id); cargar(); }
-    catch (err) { alert(err.response?.data?.error || 'Error'); }
+  const abrirAtender = (cita) => {
+    setError('');
+    setAtencion({ cita, diagnostico: '', tratamiento: '', receta: '', observaciones: '' });
+  };
+
+  // Atender = registrar la consulta (diagnóstico/tratamiento/receta) — esto
+  // marca la cita como ATENDIDA en el backend (igual que el desktop).
+  const guardarAtencion = async (e) => {
+    e.preventDefault(); setGuardando(true); setError('');
+    try {
+      await historialService.registrar({
+        citaId: atencion.cita.id,
+        diagnostico: atencion.diagnostico,
+        tratamiento: atencion.tratamiento,
+        receta: atencion.receta,
+        observaciones: atencion.observaciones,
+      });
+      setAtencion(null); cargar();
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || 'Error al guardar la consulta');
+    } finally { setGuardando(false); }
   };
 
   const reprogramar = async (e) => {
@@ -81,6 +111,20 @@ export default function Citas() {
 
   const formatFecha = (f) => new Date(f).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
 
+  const visibles = orden.ordenar(
+    citas.filter(c =>
+      (estadoFiltro === 'TODOS' || c.estado === estadoFiltro) &&
+      (!buscar || incluye(buscar, c.paciente?.nombre, c.paciente?.apellido, c.medico?.nombre, c.medico?.apellido, c.motivo))
+    ),
+    {
+      fecha: c => new Date(c.fechaHora).getTime(),
+      paciente: c => `${c.paciente?.nombre} ${c.paciente?.apellido}`,
+      medico: c => `${c.medico?.nombre} ${c.medico?.apellido}`,
+      motivo: c => c.motivo,
+      estado: c => c.estado,
+    }
+  );
+
   return (
     <Layout titulo="Citas médicas">
       <div style={s.header}>
@@ -88,21 +132,28 @@ export default function Citas() {
         <button style={s.btnPrimario} onClick={() => { setForm(FORM_VACIO); setError(''); setModal(true); }}>+ Nueva cita</button>
       </div>
 
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
+        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por paciente, médico o motivo..." ancho={360} />
+        <select style={{ ...s.select, width: 'auto' }} value={estadoFiltro} onChange={e => setEstadoFiltro(e.target.value)}>
+          {ESTADOS.map(es => <option key={es} value={es}>{es === 'TODOS' ? 'Todos los estados' : es}</option>)}
+        </select>
+      </div>
+
       <table style={s.tabla}>
         <thead>
           <tr>
-            <th style={s.th}>Fecha y hora</th>
-            <th style={s.th}>Paciente</th>
-            <th style={s.th}>Médico</th>
-            <th style={s.th}>Motivo</th>
-            <th style={s.th}>Estado</th>
+            <ThOrden label="Fecha y hora" col="fecha" orden={orden} style={s.th} />
+            <ThOrden label="Paciente" col="paciente" orden={orden} style={s.th} />
+            <ThOrden label="Médico" col="medico" orden={orden} style={s.th} />
+            <ThOrden label="Motivo" col="motivo" orden={orden} style={s.th} />
+            <ThOrden label="Estado" col="estado" orden={orden} style={s.th} />
             <th style={s.th}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {citas.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No hay citas registradas</td></tr>
-          ) : citas.map(c => (
+          {visibles.length === 0 ? (
+            <tr><td colSpan={6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron citas</td></tr>
+          ) : visibles.map(c => (
             <tr key={c.id}>
               <td style={s.td}>{formatFecha(c.fechaHora)}</td>
               <td style={s.td}>{c.paciente?.nombre} {c.paciente?.apellido}</td>
@@ -111,7 +162,7 @@ export default function Citas() {
               <td style={s.td}><span style={s.badge(c.estado)}>{c.estado}</span></td>
               <td style={s.td}>
                 {(c.estado === 'PENDIENTE' || c.estado === 'REPROGRAMADA') && <>
-                  <button style={s.btnAcc('verde')} onClick={() => atender(c.id)}>Atender</button>
+                  <button style={s.btnAcc('verde')} onClick={() => abrirAtender(c)}>Atender</button>
                   <button style={s.btnAcc('azul')} onClick={() => setReprog({ cita: c, fechaHora: c.fechaHora?.slice(0, 16) || '' })}>Reprogramar</button>
                   <button style={s.btnAcc('rojo')} onClick={() => cancelar(c.id)}>Cancelar</button>
                 </>}
@@ -120,6 +171,52 @@ export default function Citas() {
           ))}
         </tbody>
       </table>
+
+      {atencion && (
+        <div style={s.overlay} onClick={e => e.target === e.currentTarget && setAtencion(null)}>
+          <div style={{ ...s.modal, width: 560, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={s.modalTit}>Atender cita — registrar consulta</div>
+            <div style={s.fichaPac}>
+              <strong>{atencion.cita.paciente?.nombre} {atencion.cita.paciente?.apellido}</strong>
+              {atencion.cita.paciente?.dni ? ` · DNI ${atencion.cita.paciente.dni}` : ''}<br />
+              Dr. {atencion.cita.medico?.nombre} {atencion.cita.medico?.apellido}
+              {atencion.cita.medico?.especialidad?.nombre ? ` · ${atencion.cita.medico.especialidad.nombre}` : ''}
+              {atencion.cita.paciente?.alergias ? <><br /><span style={{ color: '#b91c1c' }}>⚠️ Alergias: {atencion.cita.paciente.alergias}</span></> : ''}
+            </div>
+            {error && <div style={s.error}>{error}</div>}
+            <form onSubmit={guardarAtencion}>
+              <div style={s.campo}>
+                <label style={s.label}>Diagnóstico *</label>
+                <textarea style={s.textarea} required value={atencion.diagnostico}
+                          onChange={e => setAtencion(a => ({ ...a, diagnostico: e.target.value }))}
+                          placeholder="Diagnóstico de la consulta..." />
+              </div>
+              <div style={s.campo}>
+                <label style={s.label}>Tratamiento</label>
+                <textarea style={s.textarea} value={atencion.tratamiento}
+                          onChange={e => setAtencion(a => ({ ...a, tratamiento: e.target.value }))}
+                          placeholder="Tratamiento indicado..." />
+              </div>
+              <div style={s.campo}>
+                <label style={s.label}>Receta</label>
+                <textarea style={s.textarea} value={atencion.receta}
+                          onChange={e => setAtencion(a => ({ ...a, receta: e.target.value }))}
+                          placeholder="Medicamentos y dosis..." />
+              </div>
+              <div style={s.campo}>
+                <label style={s.label}>Observaciones</label>
+                <textarea style={s.textarea} value={atencion.observaciones}
+                          onChange={e => setAtencion(a => ({ ...a, observaciones: e.target.value }))}
+                          placeholder="Observaciones adicionales..." />
+              </div>
+              <div style={s.btnsFoot}>
+                <button type="button" style={s.btnCancelar} onClick={() => setAtencion(null)}>Cancelar</button>
+                <button type="submit" style={s.btnPrimario} disabled={guardando}>{guardando ? 'Guardando...' : 'Guardar consulta'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {reprog && (
         <div style={s.overlay} onClick={e => e.target === e.currentTarget && setReprog(null)}>

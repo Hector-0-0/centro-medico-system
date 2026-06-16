@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
 import { disponibilidadService, pacienteService } from '../services/servicios';
 import { getRol, getPacienteId } from '../services/authService';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -49,6 +52,7 @@ export default function Horarios() {
   const [horarios, setHorarios] = useState([]);
   const [pacientes, setPacientes] = useState([]);
   const [especialidad, setEspecialidad] = useState('');
+  const [buscar, setBuscar] = useState('');
   const [agendar, setAgendar] = useState(null); // { disp, fecha, pacienteId, motivo }
   const [error, setError] = useState('');
   const [ok, setOk] = useState('');
@@ -63,9 +67,10 @@ export default function Horarios() {
   useEffect(() => { cargar(); /* eslint-disable-next-line */ }, []);
 
   const especialidades = [...new Set(horarios.map(h => h.medico?.especialidad?.nombre).filter(Boolean))];
-  const visibles = especialidad
-    ? horarios.filter(h => h.medico?.especialidad?.nombre === especialidad)
-    : horarios;
+  const visibles = horarios.filter(h =>
+    (!especialidad || h.medico?.especialidad?.nombre === especialidad) &&
+    (!buscar || incluye(buscar, h.medico?.nombre, h.medico?.apellido, h.medico?.especialidad?.nombre, h.diaSemana, h.consultorio))
+  );
 
   const abrirAgendar = (disp) => {
     setError(''); setOk('');
@@ -98,6 +103,7 @@ export default function Horarios() {
       {ok && <div style={s.ok}>{ok}</div>}
 
       <div style={s.filtros}>
+        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por médico, día o consultorio..." ancho={320} />
         <select style={s.select} value={especialidad} onChange={e => setEspecialidad(e.target.value)}>
           <option value="">Todas las especialidades</option>
           {especialidades.map(e => <option key={e} value={e}>{e}</option>)}

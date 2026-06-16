@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
 import { historialService } from '../services/servicios';
 import { getPacienteId, getNombre } from '../services/authService';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const s = {
   titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b', marginBottom: 6 },
@@ -23,6 +26,7 @@ export default function MiHistorial() {
   const pacienteId = getPacienteId();
   const [historiales, setHistoriales] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [buscar, setBuscar] = useState('');
 
   useEffect(() => {
     if (!pacienteId) { setCargando(false); return; }
@@ -57,8 +61,12 @@ export default function MiHistorial() {
           <p>Aún no tienes consultas registradas. Cuando el médico atienda tu cita, aparecerá aquí.</p>
         </div>
       ) : (
+        <>
+        <div style={{ marginBottom: 16 }}>
+          <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por médico, diagnóstico o tratamiento..." ancho={400} />
+        </div>
         <div style={s.cards}>
-          {historiales.map(h => (
+          {historiales.filter(h => !buscar || incluye(buscar, h.cita?.medico?.nombre, h.cita?.medico?.apellido, h.cita?.medico?.especialidad?.nombre, h.diagnostico, h.tratamiento, h.receta)).map(h => (
             <div key={h.id} style={s.card}>
               <div style={s.cardHeader}>
                 <div>
@@ -95,6 +103,7 @@ export default function MiHistorial() {
             </div>
           ))}
         </div>
+        </>
       )}
     </Layout>
   );

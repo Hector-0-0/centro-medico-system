@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
+import ThOrden from '../components/ThOrden';
+import { useOrden } from '../components/useOrden';
 import { medicamentoService } from '../services/servicios';
+import { getRol } from '../services/authService';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
@@ -27,7 +33,10 @@ const s = {
 const FORM_VACIO = { nombre: '', principioActivo: '', presentacion: '', stockActual: 0, stockMinimo: 10, unidad: '' };
 
 export default function Medicamentos() {
+  const soloLectura = getRol() === 'MEDICO'; // el médico solo consulta el stock
   const [medicamentos, setMedicamentos] = useState([]);
+  const [buscar, setBuscar] = useState('');
+  const orden = useOrden();
   const [modal, setModal] = useState(false);
   const [modalStock, setModalStock] = useState(null);
   const [editando, setEditando] = useState(null);
@@ -72,39 +81,50 @@ export default function Medicamentos() {
     catch (err) { alert(err.response?.data?.error || 'Error'); }
   };
 
+  const visibles = orden.ordenar(
+    medicamentos.filter(m => !buscar || incluye(buscar, m.nombre, m.principioActivo, m.presentacion, m.unidad)),
+    { nombre: m => m.nombre, principio: m => m.principioActivo, presentacion: m => m.presentacion, stock: m => m.stockActual }
+  );
+
   return (
-    <Layout titulo="Medicamentos">
+    <Layout titulo={soloLectura ? 'Stock de Medicamentos' : 'Medicamentos'}>
       <div style={s.header}>
-        <div style={s.titulo}>💊 Medicamentos</div>
-        <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo medicamento</button>
+        <div style={s.titulo}>💊 {soloLectura ? 'Stock de medicamentos' : 'Medicamentos'}</div>
+        {!soloLectura && <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo medicamento</button>}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar medicamento..." ancho={360} />
       </div>
 
       <table style={s.tabla}>
         <thead>
           <tr>
-            <th style={s.th}>Nombre</th>
-            <th style={s.th}>Principio activo</th>
-            <th style={s.th}>Presentación</th>
-            <th style={s.th}>Stock</th>
+            <ThOrden label="Nombre" col="nombre" orden={orden} style={s.th} />
+            <ThOrden label="Principio activo" col="principio" orden={orden} style={s.th} />
+            <ThOrden label="Presentación" col="presentacion" orden={orden} style={s.th} />
+            <ThOrden label="Stock" col="stock" orden={orden} style={s.th} />
             <th style={s.th}>Estado</th>
-            <th style={s.th}>Acciones</th>
+            {!soloLectura && <th style={s.th}>Acciones</th>}
           </tr>
         </thead>
         <tbody>
-          {medicamentos.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No hay medicamentos registrados</td></tr>
-          ) : medicamentos.map(m => (
+          {visibles.length === 0 ? (
+            <tr><td colSpan={soloLectura ? 5 : 6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron medicamentos</td></tr>
+          ) : visibles.map(m => (
             <tr key={m.id}>
               <td style={s.td}><strong>{m.nombre}</strong></td>
               <td style={s.td}>{m.principioActivo || '—'}</td>
               <td style={s.td}>{m.presentacion || '—'}</td>
               <td style={s.td}>{m.stockActual} {m.unidad} <span style={{ color: '#94a3b8', fontSize: 12 }}>(mín. {m.stockMinimo})</span></td>
               <td style={s.td}><span style={s.badge(m.stockActual <= m.stockMinimo)}>{m.stockActual <= m.stockMinimo ? 'Stock bajo' : 'Normal'}</span></td>
-              <td style={s.td}>
-                <button style={s.btnAcc('azul')} onClick={() => abrirEditar(m)}>Editar</button>
-                <button style={s.btnAcc('amarillo')} onClick={() => { setModalStock(m); setCantidadStock(0); }}>Stock</button>
-                <button style={s.btnAcc('rojo')} onClick={() => desactivar(m.id)}>Desactivar</button>
-              </td>
+              {!soloLectura && (
+                <td style={s.td}>
+                  <button style={s.btnAcc('azul')} onClick={() => abrirEditar(m)}>Editar</button>
+                  <button style={s.btnAcc('amarillo')} onClick={() => { setModalStock(m); setCantidadStock(0); }}>Stock</button>
+                  <button style={s.btnAcc('rojo')} onClick={() => desactivar(m.id)}>Desactivar</button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

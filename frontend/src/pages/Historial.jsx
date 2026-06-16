@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
 import { historialService, pacienteService, citaService } from '../services/servicios';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
@@ -34,6 +37,7 @@ export default function Historial() {
   const [pacientes, setPacientes] = useState([]);
   const [citasPendientes, setCitasPendientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState('');
+  const [buscar, setBuscar] = useState('');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(FORM_VACIO);
   const [error, setError] = useState('');
@@ -89,8 +93,14 @@ export default function Historial() {
         </div>
       )}
 
+      {pacienteSeleccionado && historiales.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por diagnóstico, tratamiento o médico..." ancho={400} />
+        </div>
+      )}
+
       <div style={s.cards}>
-        {historiales.map(h => (
+        {historiales.filter(h => !buscar || incluye(buscar, h.diagnostico, h.tratamiento, h.receta, h.observaciones, h.cita?.medico?.nombre, h.cita?.medico?.apellido)).map(h => (
           <div key={h.id} style={s.card}>
             <div style={s.cardTit}>
               Consulta del {formatFecha(h.fechaRegistro)}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import ThOrden from '../components/ThOrden';
+import { useOrden } from '../components/useOrden';
 import { pacienteService } from '../services/servicios';
 
 /* ─── Estilos ─────────────────────────────────────────────────────────────── */
@@ -53,6 +55,7 @@ export default function Pacientes() {
   const [form, setForm] = useState(FORM_VACIO);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const orden = useOrden();
 
   const cargar = async (termino = '') => {
     try {
@@ -108,17 +111,17 @@ export default function Pacientes() {
       <table style={s.tabla}>
         <thead>
           <tr>
-            <th style={s.th}>DNI</th>
-            <th style={s.th}>Nombre completo</th>
-            <th style={s.th}>Teléfono</th>
-            <th style={s.th}>Grupo sanguíneo</th>
+            <ThOrden label="DNI" col="dni" orden={orden} style={s.th} />
+            <ThOrden label="Nombre completo" col="nombre" orden={orden} style={s.th} />
+            <ThOrden label="Teléfono" col="telefono" orden={orden} style={s.th} />
+            <ThOrden label="Grupo sanguíneo" col="grupo" orden={orden} style={s.th} />
             <th style={s.th}>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {pacientes.length === 0 ? (
             <tr><td colSpan={5} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron pacientes</td></tr>
-          ) : pacientes.map(p => (
+          ) : orden.ordenar(pacientes, { dni: p => p.dni, nombre: p => `${p.nombre} ${p.apellido}`, telefono: p => p.telefono, grupo: p => p.grupoSanguineo }).map(p => (
             <tr key={p.id}>
               <td style={s.td}>{p.dni}</td>
               <td style={s.td}><strong>{p.nombre} {p.apellido}</strong></td>

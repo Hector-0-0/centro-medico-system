@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
 import { recetaService, pacienteService, medicamentoService } from '../services/servicios';
 import { getRol, getMedicoId } from '../services/authService';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -37,6 +40,7 @@ export default function Recetas() {
   const medicoId = getMedicoId();
 
   const [recetas, setRecetas] = useState([]);
+  const [buscar, setBuscar] = useState('');
   const [pacientes, setPacientes] = useState([]);
   const [medicamentos, setMedicamentos] = useState([]);
   const [modal, setModal] = useState(false);
@@ -85,6 +89,10 @@ export default function Recetas() {
 
   const fmt = (f) => new Date(f).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
 
+  const visibles = recetas.filter(r => !buscar || incluye(buscar,
+    r.paciente?.nombre, r.paciente?.apellido, r.medico?.nombre, r.medico?.apellido, r.diagnostico,
+    ...(r.detalles || []).map(d => d.medicamento?.nombre)));
+
   return (
     <Layout titulo={esMedico ? 'Mis Recetas' : 'Recetas — Farmacia'}>
       <div style={s.header}>
@@ -92,6 +100,10 @@ export default function Recetas() {
         {esMedico && <button style={s.btnPrimario} onClick={abrirNueva}>+ Nueva receta</button>}
       </div>
       <div style={s.subtitulo}>{esMedico ? 'Emite recetas para tus pacientes.' : 'Entrega las recetas y descuenta el stock de farmacia.'}</div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por paciente, médico, diagnóstico o medicamento..." ancho={420} />
+      </div>
 
       <table style={s.tabla}>
         <thead>
@@ -106,9 +118,9 @@ export default function Recetas() {
           </tr>
         </thead>
         <tbody>
-          {recetas.length === 0 ? (
-            <tr><td colSpan={esMedico ? 5 : 7} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No hay recetas</td></tr>
-          ) : recetas.map(r => (
+          {visibles.length === 0 ? (
+            <tr><td colSpan={esMedico ? 5 : 7} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron recetas</td></tr>
+          ) : visibles.map(r => (
             <tr key={r.id}>
               <td style={s.td}>{fmt(r.fecha)}</td>
               <td style={s.td}>{r.paciente?.nombre} {r.paciente?.apellido}</td>

@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
+import ThOrden from '../components/ThOrden';
+import { useOrden } from '../components/useOrden';
 import { medicoService, especialidadService } from '../services/servicios';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
@@ -29,6 +34,8 @@ const FORM_VACIO = { cmp: '', nombre: '', apellido: '', telefono: '', especialid
 export default function Medicos() {
   const [medicos, setMedicos] = useState([]);
   const [especialidades, setEspecialidades] = useState([]);
+  const [buscar, setBuscar] = useState('');
+  const orden = useOrden();
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(FORM_VACIO);
@@ -69,6 +76,11 @@ export default function Medicos() {
     catch (err) { alert(err.response?.data?.error || 'Error al eliminar'); }
   };
 
+  const visibles = orden.ordenar(
+    medicos.filter(m => !buscar || incluye(buscar, m.cmp, m.nombre, m.apellido, m.especialidad?.nombre, m.telefono)),
+    { cmp: m => m.cmp, nombre: m => `${m.nombre} ${m.apellido}`, especialidad: m => m.especialidad?.nombre, telefono: m => m.telefono }
+  );
+
   return (
     <Layout titulo="Médicos">
       <div style={s.header}>
@@ -76,20 +88,24 @@ export default function Medicos() {
         <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo médico</button>
       </div>
 
+      <div style={{ marginBottom: 16 }}>
+        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por nombre, CMP o especialidad..." ancho={360} />
+      </div>
+
       <table style={s.tabla}>
         <thead>
           <tr>
-            <th style={s.th}>CMP</th>
-            <th style={s.th}>Nombre</th>
-            <th style={s.th}>Especialidad</th>
-            <th style={s.th}>Teléfono</th>
+            <ThOrden label="CMP" col="cmp" orden={orden} style={s.th} />
+            <ThOrden label="Nombre" col="nombre" orden={orden} style={s.th} />
+            <ThOrden label="Especialidad" col="especialidad" orden={orden} style={s.th} />
+            <ThOrden label="Teléfono" col="telefono" orden={orden} style={s.th} />
             <th style={s.th}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {medicos.length === 0 ? (
-            <tr><td colSpan={5} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No hay médicos registrados</td></tr>
-          ) : medicos.map(m => (
+          {visibles.length === 0 ? (
+            <tr><td colSpan={5} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron médicos</td></tr>
+          ) : visibles.map(m => (
             <tr key={m.id}>
               <td style={s.td}>{m.cmp}</td>
               <td style={s.td}><strong>Dr. {m.nombre} {m.apellido}</strong></td>

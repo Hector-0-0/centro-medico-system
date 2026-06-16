@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ─── Base de datos PostgreSQL ───────────────────────────────────
   db:
@@ -14,12 +12,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d centro_medico"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # ─── Backend Spring Boot ────────────────────────────────────────
+  # ─── Backend Spring Boot (API REST) ─────────────────────────────
   backend:
     build: ./backend
     container_name: centromedico-backend
@@ -33,6 +31,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # ─── Frontend React (servido por Nginx) ─────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: centromedico-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

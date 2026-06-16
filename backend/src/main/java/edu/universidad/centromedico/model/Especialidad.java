@@ -1,5 +1,6 @@
 package edu.universidad.centromedico.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +28,8 @@ public class Especialidad {
     @Column(length = 300)
     private String descripcion;
 
+    /** Evita la recursión infinita Medico → Especialidad → medicos → ... al serializar JSON. */
     @OneToMany(mappedBy = "especialidad", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Medico> medicos;
 }

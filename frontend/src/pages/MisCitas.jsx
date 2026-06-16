@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import Buscador from '../components/Buscador';
 import { citaService, medicoService, especialidadService } from '../services/servicios';
 import { getPacienteId } from '../services/authService';
+
+const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
 
 const COLORES = {
   PENDIENTE:    ['#fbece9', '#711610'],
@@ -43,6 +46,7 @@ export default function MisCitas() {
   const [error, setError]             = useState('');
   const [guardando, setGuardando]     = useState(false);
   const [cargando, setCargando]       = useState(true);
+  const [buscar, setBuscar]           = useState('');
 
   const cargar = async () => {
     if (!pacienteId) { setCargando(false); return; }
@@ -116,6 +120,10 @@ export default function MisCitas() {
           <button style={s.btnPrimario} onClick={abrirModal}>Agendar mi primera cita</button>
         </div>
       ) : (
+        <>
+        <div style={{ marginBottom: 16 }}>
+          <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por médico, especialidad, motivo o estado..." ancho={400} />
+        </div>
         <table style={s.tabla}>
           <thead>
             <tr>
@@ -128,7 +136,7 @@ export default function MisCitas() {
             </tr>
           </thead>
           <tbody>
-            {citas.map(c => (
+            {citas.filter(c => !buscar || incluye(buscar, c.medico?.nombre, c.medico?.apellido, c.medico?.especialidad?.nombre, c.motivo, c.estado)).map(c => (
               <tr key={c.id}>
                 <td style={s.td}><strong>{formatFecha(c.fechaHora)}</strong></td>
                 <td style={s.td}>Dr. {c.medico?.nombre} {c.medico?.apellido}</td>
@@ -147,6 +155,7 @@ export default function MisCitas() {
             ))}
           </tbody>
         </table>
+        </>
       )}
 
       {/* Modal nueva cita */}
