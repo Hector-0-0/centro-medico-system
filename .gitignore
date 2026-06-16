@@ -18,6 +18,13 @@ src/main/resources/config.properties
 .classpath
 .project
 .settings/
+nbproject/private/
+
+# Claude Code (configuración local)
+.claude/
+
+# Maven wrapper (sí versionado: !.mvn excepción)
+!.mvn/wrapper/maven-wrapper.properties
 
 # Node.js / React
 node_modules/

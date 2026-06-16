@@ -5,12 +5,12 @@ import { medicoService, especialidadService } from '../services/servicios';
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b' },
-  btnPrimario: { padding: '10px 20px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  btnPrimario: { padding: '10px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   tabla: { width: '100%', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderCollapse: 'collapse' },
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0', background: '#f8fafc' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1f5f9' },
-  badge: { display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: '#eff6ff', color: '#1a73e8' },
-  btnAccion: (color) => ({ padding: '5px 12px', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: 6, background: color === 'azul' ? '#eff6ff' : '#fee2e2', color: color === 'azul' ? '#1a73e8' : '#dc2626' }),
+  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#8b1414', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8ddd8', background: '#f4ece4' },
+  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1e9e2' },
+  badge: { display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: '#fbece9', color: '#711610' },
+  btnAccion: (color) => ({ padding: '5px 12px', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: 6, background: color === 'azul' ? '#fbece9' : '#fee2e2', color: color === 'azul' ? '#711610' : '#dc2626' }),
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
   modal: { background: '#fff', borderRadius: 16, padding: 32, width: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
   modalTit: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24 },
@@ -20,7 +20,7 @@ const s = {
   input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none' },
   select: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff' },
   btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
+  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
   error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
 };
 
@@ -70,7 +70,7 @@ export default function Medicos() {
   };
 
   return (
-    <Layout>
+    <Layout titulo="Médicos">
       <div style={s.header}>
         <div style={s.titulo}>👨‍⚕️ Médicos</div>
         <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo médico</button>

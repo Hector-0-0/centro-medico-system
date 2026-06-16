@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * Inicializa datos de prueba al arrancar la aplicación.
@@ -21,6 +22,8 @@ public class DataInitializer implements CommandLineRunner {
     private final EspecialidadRepository especialidadRepository;
     private final MedicoRepository     medicoRepository;
     private final PacienteRepository   pacienteRepository;
+    private final MedicamentoRepository medicamentoRepository;
+    private final DisponibilidadRepository disponibilidadRepository;
     private final PasswordEncoder      passwordEncoder;
 
     @Override
@@ -40,12 +43,29 @@ public class DataInitializer implements CommandLineRunner {
         Especialidad nutr  = crearEspecialidad("Nutrición",         "Orientación nutricional");
 
         // ── Médicos ───────────────────────────────────────────────
-        crearMedico("CMP-12345", "Carlos",   "García",  "987654321", med,   uMed1);
-        crearMedico("CMP-67890", "Patricia", "Torres",  "976543210", odont, uMed2);
+        Medico mGarcia = crearMedico("CMP-12345", "Carlos",   "García",  "987654321", med,   uMed1);
+        Medico mTorres = crearMedico("CMP-67890", "Patricia", "Torres",  "976543210", odont, uMed2);
 
         // ── Pacientes vinculados a sus usuarios ───────────────────
         crearPaciente("70123456", "Juan",  "Pérez",  LocalDate.of(2000,5,15), "991234567", "O+",  null,          uPac1);
         crearPaciente("70654321", "María", "López",  LocalDate.of(1999,11,20),"992345678", "A+",  "Penicilina",  uPac2);
+
+        // ── Medicamentos (inventario de farmacia) ─────────────────
+        if (medicamentoRepository.count() == 0) {
+            crearMedicamento("Paracetamol 500mg", "Paracetamol", "Tabletas", 120, 20, "tableta");
+            crearMedicamento("Ibuprofeno 400mg",  "Ibuprofeno",  "Tabletas",  80, 20, "tableta");
+            crearMedicamento("Amoxicilina 500mg", "Amoxicilina", "Cápsulas",  15, 20, "cápsula");
+            crearMedicamento("Loratadina 10mg",   "Loratadina",  "Tabletas",  60, 15, "tableta");
+            crearMedicamento("Suero oral",        "Electrolitos","Sobre",      8, 10, "sobre");
+        }
+
+        // ── Disponibilidades de los médicos ───────────────────────
+        if (disponibilidadRepository.count() == 0 && mGarcia != null && mTorres != null) {
+            crearDisponibilidad(mGarcia, "LUNES",     LocalTime.of(8, 0),  LocalTime.of(12, 0), "Consultorio 1");
+            crearDisponibilidad(mGarcia, "MIERCOLES", LocalTime.of(14, 0), LocalTime.of(18, 0), "Consultorio 1");
+            crearDisponibilidad(mTorres, "MARTES",    LocalTime.of(9, 0),  LocalTime.of(13, 0), "Consultorio 2");
+            crearDisponibilidad(mTorres, "JUEVES",    LocalTime.of(8, 0),  LocalTime.of(12, 0), "Consultorio 2");
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────
@@ -76,19 +96,48 @@ public class DataInitializer implements CommandLineRunner {
             });
     }
 
-    private void crearMedico(String cmp, String nombre, String apellido,
+    private Medico crearMedico(String cmp, String nombre, String apellido,
                               String tel, Especialidad esp, Usuario usuario) {
-        if (!medicoRepository.existsByCmp(cmp)) {
-            Medico m = new Medico();
-            m.setCmp(cmp);
-            m.setNombre(nombre);
-            m.setApellido(apellido);
-            m.setTelefono(tel);
-            m.setEspecialidad(esp);
-            m.setUsuario(usuario);
-            medicoRepository.save(m);
-            System.out.println("✅ Médico creado: Dr. " + nombre + " " + apellido);
-        }
+        return medicoRepository.findAll().stream()
+            .filter(m -> cmp.equals(m.getCmp()))
+            .findFirst()
+            .orElseGet(() -> {
+                Medico m = new Medico();
+                m.setCmp(cmp);
+                m.setNombre(nombre);
+                m.setApellido(apellido);
+                m.setTelefono(tel);
+                m.setEspecialidad(esp);
+                m.setUsuario(usuario);
+                Medico guardado = medicoRepository.save(m);
+                System.out.println("✅ Médico creado: Dr. " + nombre + " " + apellido);
+                return guardado;
+            });
+    }
+
+    private void crearMedicamento(String nombre, String principio, String presentacion,
+                                  int stock, int minimo, String unidad) {
+        Medicamento m = new Medicamento();
+        m.setNombre(nombre);
+        m.setPrincipioActivo(principio);
+        m.setPresentacion(presentacion);
+        m.setStockActual(stock);
+        m.setStockMinimo(minimo);
+        m.setUnidad(unidad);
+        m.setActivo(true);
+        medicamentoRepository.save(m);
+    }
+
+    private void crearDisponibilidad(Medico medico, String dia,
+                                     LocalTime inicio, LocalTime fin, String consultorio) {
+        Disponibilidad d = new Disponibilidad();
+        d.setMedico(medico);
+        d.setDiaSemana(dia);
+        d.setHoraInicio(inicio);
+        d.setHoraFin(fin);
+        d.setConsultorio(consultorio);
+        d.setActivo(true);
+        disponibilidadRepository.save(d);
     }
 
     private void crearPaciente(String dni, String nombre, String apellido,

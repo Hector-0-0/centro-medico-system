@@ -4,7 +4,7 @@ import { citaService, medicoService, especialidadService } from '../services/ser
 import { getPacienteId } from '../services/authService';
 
 const COLORES = {
-  PENDIENTE:    ['#e0f2fe', '#0369a1'],
+  PENDIENTE:    ['#fbece9', '#711610'],
   ATENDIDA:     ['#dcfce7', '#166534'],
   CANCELADA:    ['#fee2e2', '#dc2626'],
   REPROGRAMADA: ['#fef3c7', '#92400e'],
@@ -14,11 +14,11 @@ const s = {
   titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b', marginBottom: 6 },
   subtitulo: { fontSize: 14, color: '#64748b', marginBottom: 28 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  btnPrimario: { padding: '10px 20px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  btnPrimario: { padding: '10px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   tabla: { width: '100%', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderCollapse: 'collapse' },
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0', background: '#f8fafc' },
-  td: { padding: '14px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1f5f9' },
-  badge: (estado) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: COLORES[estado]?.[0] || '#f1f5f9', color: COLORES[estado]?.[1] || '#475569' }),
+  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#8b1414', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8ddd8', background: '#f4ece4' },
+  td: { padding: '14px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1e9e2' },
+  badge: (estado) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: COLORES[estado]?.[0] || '#f1e9e2', color: COLORES[estado]?.[1] || '#475569' }),
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
   modal: { background: '#fff', borderRadius: 16, padding: 32, width: 500, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
   modalTit: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24 },
@@ -27,7 +27,7 @@ const s = {
   input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' },
   select: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' },
   btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
+  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
   error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
   vacio: { background: '#fff', borderRadius: 12, padding: '60px 24px', textAlign: 'center', color: '#94a3b8', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' },
 };
@@ -88,7 +88,7 @@ export default function MisCitas() {
   const formatFecha = (f) => new Date(f).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
 
   if (!pacienteId) return (
-    <Layout>
+    <Layout titulo="Mis Citas">
       <div style={{ background: '#fef3c7', borderRadius: 12, padding: 32, border: '1px solid #fcd34d' }}>
         <div style={{ fontSize: 18, fontWeight: 700, color: '#92400e', marginBottom: 8 }}>⚠️ Perfil incompleto</div>
         <p style={{ color: '#78350f' }}>Tu cuenta no tiene un perfil de paciente asociado. Por favor contacta con administración para que completen tu registro.</p>
@@ -97,7 +97,7 @@ export default function MisCitas() {
   );
 
   return (
-    <Layout>
+    <Layout titulo="Mis Citas">
       <div style={s.header}>
         <div>
           <div style={s.titulo}>📅 Mis citas</div>

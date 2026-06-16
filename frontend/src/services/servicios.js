@@ -56,3 +56,23 @@ export const medicamentoService = {
   actualizarStock: (id, cantidad) => api.patch(`/medicamentos/${id}/stock`, { cantidad }),
   desactivar: (id) => api.delete(`/medicamentos/${id}`),
 };
+
+// ─── DISPONIBILIDAD / HORARIOS ────────────────────────────────────────────────
+export const disponibilidadService = {
+  listar: () => api.get('/disponibilidades'),
+  listarPorMedico: (medicoId) => api.get(`/disponibilidades/medico/${medicoId}`),
+  crear: (data) => api.post('/disponibilidades', data),
+  actualizar: (id, data) => api.put(`/disponibilidades/${id}`, data),
+  eliminar: (id) => api.delete(`/disponibilidades/${id}`),
+  agendar: (data) => api.post('/disponibilidades/agendar', data),
+};
+
+// ─── RECETAS / FARMACIA ───────────────────────────────────────────────────────
+export const recetaService = {
+  listar: () => api.get('/recetas'),
+  pendientes: () => api.get('/recetas/pendientes'),
+  listarPorPaciente: (id) => api.get(`/recetas/paciente/${id}`),
+  listarPorMedico: (id) => api.get(`/recetas/medico/${id}`),
+  emitir: (data) => api.post('/recetas', data),
+  entregar: (id) => api.put(`/recetas/${id}/entregar`),
+};

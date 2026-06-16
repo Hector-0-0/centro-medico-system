@@ -5,12 +5,12 @@ import { medicamentoService } from '../services/servicios';
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b' },
-  btnPrimario: { padding: '10px 20px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  btnPrimario: { padding: '10px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   tabla: { width: '100%', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderCollapse: 'collapse' },
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e2e8f0', background: '#f8fafc' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1f5f9' },
+  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#8b1414', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8ddd8', background: '#f4ece4' },
+  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1e9e2' },
   badge: (bajo) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: bajo ? '#fee2e2' : '#dcfce7', color: bajo ? '#dc2626' : '#166534' }),
-  btnAcc: (color) => ({ padding: '5px 10px', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', marginRight: 4, background: color === 'azul' ? '#eff6ff' : color === 'rojo' ? '#fee2e2' : '#fef3c7', color: color === 'azul' ? '#1a73e8' : color === 'rojo' ? '#dc2626' : '#92400e' }),
+  btnAcc: (color) => ({ padding: '5px 10px', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', marginRight: 4, background: color === 'azul' ? '#fbece9' : color === 'rojo' ? '#fee2e2' : '#fef3c7', color: color === 'azul' ? '#711610' : color === 'rojo' ? '#dc2626' : '#92400e' }),
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
   modal: { background: '#fff', borderRadius: 16, padding: 32, width: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
   modalTit: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24 },
@@ -20,7 +20,7 @@ const s = {
   label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
   input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none' },
   btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
+  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
   error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
 };
 
@@ -73,7 +73,7 @@ export default function Medicamentos() {
   };
 
   return (
-    <Layout>
+    <Layout titulo="Medicamentos">
       <div style={s.header}>
         <div style={s.titulo}>💊 Medicamentos</div>
         <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo medicamento</button>

@@ -1,8 +1,17 @@
 # 🏥 Centro Médico UNI — Sistema de Gestión
 
-Sistema web completo para el Centro Médico de la Universidad Nacional de Ingeniería (UNI).
+Sistema de gestión para el Centro Médico de la Universidad Nacional de Ingeniería (UNI).
+El proyecto se entrega en **dos versiones** que comparten el mismo dominio, branding y datos:
 
-## Tecnologías
+| Versión | Carpeta | Stack |
+|---------|---------|-------|
+| 🖥️ **Escritorio** | [`desktop/`](desktop/) | Java 21 + Swing (FlatLaf) + JDBC + PostgreSQL |
+| 🌐 **Web** | [`backend/`](backend/) + [`frontend/`](frontend/) | Spring Boot 3.2 (REST + JWT) + React 18 |
+
+Ambas comparten la identidad visual institucional de la UNI (color guinda `#711610` y el
+logotipo oficial), de modo que la experiencia es equivalente en escritorio y web.
+
+## Tecnologías (versión web)
 
 | Capa | Tecnología |
 |------|-----------|
@@ -21,6 +30,8 @@ Sistema web completo para el Centro Médico de la Universidad Nacional de Ingeni
 - **Citas** — Agenda, cancelación, atención y reprogramación
 - **Historial médico** — Diagnóstico, tratamiento y recetas por cita
 - **Medicamentos** — Inventario con alertas de stock bajo
+- **Horarios / Disponibilidad** — El médico publica sus horarios; el paciente agenda sobre ellos
+- **Recetas / Farmacia** — El médico emite recetas; la farmacia las entrega y descuenta stock
 
 ## Roles del sistema
 
@@ -101,7 +112,19 @@ docker-compose logs -f backend
 
 ```
 centro-medico-system/
+├── desktop/                    ← Aplicación de escritorio (Java Swing + JDBC)
+│   └── src/main/
+│       ├── java/pe/edu/uni/centromedico/
+│       │   ├── models/         ← Entidades del dominio
+│       │   ├── db/dao/         ← Acceso a datos (JDBC)
+│       │   ├── service/        ← Lógica de negocio
+│       │   ├── controller/     ← Coordinadores de UI
+│       │   ├── ui/             ← frames, panels, dialogs, components
+│       │   └── util/           ← Configuración y utilidades
+│       └── resources/Images/   ← Logo y banners institucionales UNI
+│
 ├── backend/                    ← Spring Boot API REST
+│   ├── mvnw / mvnw.cmd         ← Maven wrapper (no requiere Maven instalado)
 │   └── src/main/java/.../
 │       ├── config/             ← JWT, Security, CORS
 │       ├── model/              ← Entidades JPA
@@ -110,16 +133,29 @@ centro-medico-system/
 │       ├── controller/         ← Endpoints REST
 │       ├── dto/                ← Objetos de transferencia
 │       └── exception/          ← Manejo global de errores
-├── frontend/                   ← React
+│
+├── frontend/                   ← React (mismo branding que el desktop)
+│   ├── public/images/          ← Logo y banner UNI compartidos
 │   └── src/
 │       ├── services/           ← Llamadas HTTP a la API
 │       ├── context/            ← Estado global (AuthContext)
 │       ├── components/         ← Sidebar, Layout, ProtectedRoute
 │       └── pages/              ← Login, Dashboard, Pacientes...
-├── docs/
-│   └── seed.sql                ← Datos iniciales de prueba
+│
+├── docs/                       ← Esquema BD, seed, colección Postman, diagramas
 └── docker-compose.yml
 ```
+
+## Versión de escritorio
+
+```bash
+cd desktop
+mvn clean compile
+mvn exec:java          # o ejecutar AplicativoCentroMedico desde NetBeans
+```
+
+> La ruta de las imágenes se configura en `desktop/SGH.config`. Si el archivo no existe,
+> la app usa las imágenes embebidas en el classpath.
 
 ## Endpoints principales de la API
 
@@ -140,4 +176,12 @@ POST   /api/historiales
 GET    /api/medicamentos
 GET    /api/medicamentos/stock-bajo
 PATCH  /api/medicamentos/{id}/stock
+GET    /api/disponibilidades
+GET    /api/disponibilidades/medico/{medicoId}
+POST   /api/disponibilidades
+POST   /api/disponibilidades/agendar
+GET    /api/recetas
+GET    /api/recetas/pendientes
+POST   /api/recetas
+PUT    /api/recetas/{id}/entregar
 ```

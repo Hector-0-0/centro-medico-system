@@ -8,7 +8,7 @@ const CONFIG = {
     titulo: 'Portal del Estudiante',
     subtitulo: 'Accede a tu historial y agenda citas',
     icono: '🎓',
-    color: '#1a73e8',
+    color: '#711610',
     hint: { user: 'paciente1', pass: 'admin123' },
     rolesPermitidos: ['PACIENTE', 'ADMIN'],
   },
@@ -71,7 +71,8 @@ export default function LoginRol() {
         width: 380, background: cfg.color, display: 'flex', flexDirection: 'column',
         justifyContent: 'center', padding: '48px 40px', color: '#fff',
       }}>
-        <div style={{ fontSize: 56, marginBottom: 24 }}>{cfg.icono}</div>
+        <img src="/images/logo-uni.png" alt="UNI" style={{ width: 64, height: 'auto', marginBottom: 20, background: '#fff', borderRadius: 12, padding: 8 }} />
+        <div style={{ fontSize: 44, marginBottom: 16 }}>{cfg.icono}</div>
         <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, lineHeight: 1.3 }}>{cfg.titulo}</h2>
         <p style={{ fontSize: 15, opacity: 0.85, lineHeight: 1.6, marginBottom: 32 }}>{cfg.subtitulo}</p>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: 24 }}>
@@ -140,7 +141,7 @@ export default function LoginRol() {
           </div>
 
           {/* Otros portales */}
-          <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid #e8ddd8' }}>
             <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10, textAlign: 'center' }}>¿Buscas otro portal?</div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
               {Object.entries(CONFIG).filter(([key]) => key !== tipo).map(([key, c]) => (

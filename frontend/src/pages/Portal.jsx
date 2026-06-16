@@ -6,7 +6,7 @@ const s = {
   page: { minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' },
   nav: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '16px 48px', borderBottom: '1px solid #e2e8f0',
+    padding: '16px 48px', borderBottom: '1px solid #e8ddd8',
     background: '#fff', position: 'sticky', top: 0, zIndex: 100,
   },
   logo: { display: 'flex', alignItems: 'center', gap: 10 },
@@ -16,12 +16,12 @@ const s = {
   hero: {
     flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
     justifyContent: 'center', padding: '80px 24px 60px',
-    background: 'linear-gradient(160deg, #eff6ff 0%, #fff 60%)',
+    background: 'linear-gradient(160deg, #fbece9 0%, #fff 60%)',
     textAlign: 'center',
   },
   badge: {
-    display: 'inline-block', padding: '6px 16px', background: '#dbeafe',
-    color: '#1d4ed8', borderRadius: 20, fontSize: 13, fontWeight: 600,
+    display: 'inline-block', padding: '6px 16px', background: '#f6dad6',
+    color: '#8a1b13', borderRadius: 20, fontSize: 13, fontWeight: 600,
     marginBottom: 24,
   },
   heroTit: { fontSize: 42, fontWeight: 800, color: '#0f172a', lineHeight: 1.2, maxWidth: 600, marginBottom: 16 },
@@ -44,14 +44,14 @@ const s = {
     borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer',
   }),
   info: {
-    background: '#f8fafc', borderTop: '1px solid #e2e8f0',
+    background: '#f4ece4', borderTop: '1px solid #e8ddd8',
     padding: '48px 48px', display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, textAlign: 'center',
   },
-  infoNum: { fontSize: 32, fontWeight: 800, color: '#1a73e8', marginBottom: 6 },
+  infoNum: { fontSize: 32, fontWeight: 800, color: '#711610', marginBottom: 6 },
   infoLabel: { fontSize: 13, color: '#64748b' },
   footer: {
-    padding: '20px 48px', borderTop: '1px solid #e2e8f0',
+    padding: '20px 48px', borderTop: '1px solid #e8ddd8',
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     fontSize: 13, color: '#94a3b8',
   },
@@ -61,7 +61,7 @@ const PORTALES = [
   {
     icono: '🎓', titulo: 'Estudiante / Paciente',
     desc: 'Agenda tu cita médica, consulta tu historial y accede a tus recetas.',
-    color: '#1a73e8', ruta: '/login/paciente',
+    color: '#711610', ruta: '/login/paciente',
     items: ['Agendar citas', 'Ver historial médico', 'Descargar recetas'],
   },
   {
@@ -92,7 +92,7 @@ export default function Portal() {
       {/* Navbar */}
       <nav style={s.nav}>
         <div style={s.logo}>
-          <span style={s.logoIcon}>🏥</span>
+          <img src="/images/logo-uni.png" alt="UNI" style={{ height: 40, width: 'auto' }} />
           <div>
             <div style={s.logoText}>Centro Médico UNI</div>
             <div style={s.logoSub}>Universidad Nacional de Ingeniería</div>
@@ -102,7 +102,7 @@ export default function Portal() {
           <span style={{ fontSize: 13, color: '#64748b' }}>¿Ya tienes cuenta?</span>
           <button
             onClick={() => navigate('/login')}
-            style={{ padding: '9px 20px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            style={{ padding: '9px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
           >
             Iniciar sesión
           </button>

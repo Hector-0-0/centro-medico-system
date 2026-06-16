@@ -13,6 +13,10 @@ import Historial    from './pages/Historial';
 import Medicamentos from './pages/Medicamentos';
 import MisCitas     from './pages/MisCitas';
 import MiHistorial  from './pages/MiHistorial';
+import Perfil       from './pages/Perfil';
+import Horarios      from './pages/Horarios';
+import Disponibilidad from './pages/Disponibilidad';
+import Recetas       from './pages/Recetas';
 
 export default function App() {
   return (
@@ -26,6 +30,10 @@ export default function App() {
 
           {/* ── Panel principal (todos los roles) ──────────────── */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/perfil"    element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+          <Route path="/horarios"       element={<ProtectedRoute><Horarios /></ProtectedRoute>} />
+          <Route path="/disponibilidad" element={<ProtectedRoute><Disponibilidad /></ProtectedRoute>} />
+          <Route path="/recetas"        element={<ProtectedRoute><Recetas /></ProtectedRoute>} />
 
           {/* ── Rutas del PACIENTE ─────────────────────────────── */}
           <Route path="/mis-citas"    element={<ProtectedRoute><MisCitas /></ProtectedRoute>} />

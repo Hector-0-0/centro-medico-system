@@ -5,14 +5,14 @@ import { historialService, pacienteService, citaService } from '../services/serv
 const s = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b' },
-  btnPrimario: { padding: '10px 20px', background: '#1a73e8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  btnPrimario: { padding: '10px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   select: { padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', minWidth: 260 },
   cards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 16 },
-  card: { background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' },
+  card: { background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #e8ddd8' },
   cardTit: { fontSize: 15, fontWeight: 700, color: '#1e293b', marginBottom: 4 },
   cardSub: { fontSize: 13, color: '#64748b', marginBottom: 16 },
   seccion: { marginBottom: 12 },
-  seccionTit: { fontSize: 12, fontWeight: 700, color: '#1a73e8', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  seccionTit: { fontSize: 12, fontWeight: 700, color: '#711610', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
   seccionTxt: { fontSize: 14, color: '#374151', lineHeight: 1.5 },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
   modal: { background: '#fff', borderRadius: 16, padding: 32, width: 540, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
@@ -23,7 +23,7 @@ const s = {
   textarea: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 80 },
   selectMod: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff' },
   btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
+  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
   error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
 };
 
@@ -65,7 +65,7 @@ export default function Historial() {
   const formatFecha = (f) => new Date(f).toLocaleDateString('es-PE', { dateStyle: 'long' });
 
   return (
-    <Layout>
+    <Layout titulo="Historial médico">
       <div style={s.header}>
         <div style={s.titulo}>📋 Historial médico</div>
         <div style={{ display: 'flex', gap: 12 }}>
