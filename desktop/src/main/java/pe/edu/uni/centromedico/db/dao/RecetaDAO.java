@@ -11,13 +11,20 @@ import java.util.List;
 public class RecetaDAO {
 
     // Recetas pendientes con datos de estudiante y cita para mostrar en tabla
+    // Muestra códigos CIE concatenados, o el texto antiguo si no hay CIE.
     public List<Receta> obtenerPendientes() {
         List<Receta> lista = new ArrayList<>();
         String sql = """
                 SELECT r.id AS id_receta,
                        e.nombre AS nombre_estudiante,
                        c.id     AS id_cita,
-                       a.diagnostico,
+                       COALESCE(
+                           (SELECT STRING_AGG(cc.codigo + ' - ' + cc.descripcion, ' | ')
+                            FROM atencion_diagnostico ad
+                            JOIN codigos_cie cc ON ad.id_cie = cc.id
+                            WHERE ad.id_atencion = a.id),
+                           a.diagnostico
+                       ) AS diagnostico,
                        r.estado,
                        r.id_atencion
                 FROM recetas r

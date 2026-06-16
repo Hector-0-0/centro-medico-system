@@ -171,6 +171,76 @@ CREATE TABLE receta_detalle (
 GO
 
 -- ─────────────────────────────────────────────────────────────────────────
+-- CATÁLOGO CIE-10 (códigos internacionales de enfermedades)
+-- ─────────────────────────────────────────────────────────────────────────
+
+IF OBJECT_ID('codigos_cie', 'U') IS NULL
+CREATE TABLE codigos_cie (
+    id          INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    codigo      VARCHAR(10)  NOT NULL UNIQUE,
+    descripcion VARCHAR(300) NOT NULL
+);
+GO
+
+-- Tabla puente: 1 atención → N diagnósticos CIE
+IF OBJECT_ID('atencion_diagnostico', 'U') IS NULL
+CREATE TABLE atencion_diagnostico (
+    id           INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    id_atencion  INT NOT NULL,
+    id_cie       INT NOT NULL,
+    observacion  VARCHAR(255) NULL,
+    CONSTRAINT uq_atencion_cie UNIQUE (id_atencion, id_cie),
+    CONSTRAINT fk_diag_atencion
+        FOREIGN KEY (id_atencion) REFERENCES atencion_cita(id),
+    CONSTRAINT fk_diag_cie
+        FOREIGN KEY (id_cie)      REFERENCES codigos_cie(id)
+);
+GO
+
+-- Seed de códigos CIE-10 más comunes para las especialidades del sistema
+IF NOT EXISTS (SELECT 1 FROM codigos_cie WHERE codigo = 'E10')
+BEGIN
+    INSERT INTO codigos_cie (codigo, descripcion) VALUES
+    -- Endocrinología
+    ('E10', 'Diabetes mellitus tipo 1'),
+    ('E11', 'Diabetes mellitus tipo 2'),
+    ('E78', 'Hiperlipidemia mixta'),
+    ('E03', 'Hipotiroidismo'),
+    ('E66', 'Obesidad'),
+    ('E04', 'Bocio nodular no tóxico'),
+    ('E07', 'Trastornos de la glándula tiroides'),
+    -- Odontología
+    ('K02', 'Caries dental'),
+    ('K04', 'Enfermedades de la pulpa y periapicales'),
+    ('K05', 'Gingivitis y enfermedades periodontales'),
+    ('K08', 'Trastornos de los dientes y estructuras de apoyo'),
+    ('K01', 'Dientes incluidos e impactados'),
+    ('K12', 'Estomatitis y lesiones relacionadas'),
+    -- Cardiología
+    ('I10', 'Hipertensión esencial (primaria)'),
+    ('I11', 'Cardiopatía hipertensiva'),
+    ('I20', 'Angina de pecho'),
+    ('I25', 'Cardiopatía isquémica crónica'),
+    ('I48', 'Fibrilación y aleteo auricular'),
+    ('I50', 'Insuficiencia cardíaca'),
+    ('I70', 'Aterosclerosis'),
+    -- Radiología
+    ('M81', 'Osteoporosis sin fractura patológica'),
+    ('J90', 'Derrame pleural'),
+    ('J91', 'Derrame pleural en afecciones clasificadas'),
+    ('S22', 'Fractura de costilla(s) o esternón'),
+    ('S42', 'Fractura del húmero'),
+    -- Medicina general / otras
+    ('J45', 'Asma'),
+    ('J15', 'Neumonía bacteriana'),
+    ('N39', 'Infección del tracto urinario'),
+    ('M54', 'Dolor de espalda'),
+    ('R51', 'Cefalea'),
+    ('A09', 'Gastroenteritis de presunto origen infeccioso');
+END;
+GO
+
+-- ─────────────────────────────────────────────────────────────────────────
 -- DATOS DE PRUEBA (idempotentes con NOT EXISTS)
 -- ─────────────────────────────────────────────────────────────────────────
 

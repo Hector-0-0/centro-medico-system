@@ -6,7 +6,8 @@ target/
 *.list
 
 #desktop 
-src/main/resources/config.properties
+desktop/src/main/resources/config.properties
+desktop/SGH.config
 
 # Spring Boot
 *.log

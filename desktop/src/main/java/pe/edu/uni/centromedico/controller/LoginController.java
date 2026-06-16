@@ -20,6 +20,7 @@ public class LoginController {
     }
 
     private void conectarEventos() {
+        vista.getRootPane().setDefaultButton(vista.getBtnIngresar());
         vista.getBtnIngresar().addActionListener(e ->
             ErrorHandler.ejecutarSeguro(vista, this::autenticar));
     }

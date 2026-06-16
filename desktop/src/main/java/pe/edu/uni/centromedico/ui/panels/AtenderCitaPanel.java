@@ -18,7 +18,7 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
         pnl_paciente.add(lbl_alergias_titulo,  "wrap");
         pnl_paciente.add(lbl_alergias,         "wrap");
 
-        // Formulario de atención (columna derecha)
+        // Botones inferiores
         pnl_botones.setLayout(new net.miginfocom.swing.MigLayout(
             "fillx, insets 0", "[grow][grow]", "[]"
         ));
@@ -26,16 +26,41 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
         pnl_botones.add(btn_cancelar_aten, "growx, h 40!");
         pnl_botones.add(btn_guardar_aten,  "growx, h 40!");
 
+        // Formulario de atención (columna derecha)
         pnl_formulario.setLayout(new net.miginfocom.swing.MigLayout(
-            "fill, insets 20", "[grow]",
-            "[]6[80!]16[]6[80!]16[]6[100!]8[]16[]"
+            "fillx, insets 20", "[grow]",
+            "[]4[]4[120!]4[]4[100!]4[]6[80!]10[]6[100!]4[]16[]"
         ));
         pnl_formulario.removeAll();
-        pnl_formulario.add(lbl_diag,    "wrap");
-        pnl_formulario.add(scrl_diag,   "growx, wrap");
-        pnl_formulario.add(lbl_trat,    "wrap");
-        pnl_formulario.add(scrl_trat,   "growx, wrap");
-        pnl_formulario.add(lbl_receta,  "wrap");
+
+        // Sección CIE: buscador
+        pnl_formulario.add(lbl_cie, "wrap");
+        javax.swing.JPanel pnlBuscarCie = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout("fillx, insets 0", "[grow][]", "[]"));
+        pnlBuscarCie.add(txtBuscarCie, "growx, h 30!");
+        pnlBuscarCie.add(btnBuscarCie, "w 100!, h 30!");
+        pnl_formulario.add(pnlBuscarCie, "growx, wrap");
+
+        // Sección CIE: resultados + botón agregar
+        javax.swing.JPanel pnlResultadosCie = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout("fillx, insets 0", "[grow][]", "[120!]"));
+        pnlResultadosCie.add(scrlResultadosCie, "grow");
+        pnlResultadosCie.add(btnAgregarCie, "w 90!, h 30!, top");
+        pnl_formulario.add(pnlResultadosCie, "growx, wrap");
+
+        // Sección CIE: tabla de diagnósticos seleccionados + quitar
+        javax.swing.JPanel pnlDiagSel = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout("fillx, insets 0", "[grow][]", "[100!]"));
+        pnlDiagSel.add(scrlDiagnosticos, "grow");
+        pnlDiagSel.add(btnQuitarCie, "w 90!, h 30!, top");
+        pnl_formulario.add(pnlDiagSel, "growx, wrap");
+
+        // Comentarios / Observaciones
+        pnl_formulario.add(lbl_comentarios, "wrap");
+        pnl_formulario.add(scrl_comentarios, "growx, h 80!, wrap");
+
+        // Receta Médica
+        pnl_formulario.add(lbl_receta, "wrap");
         pnl_formulario.add(scrl_receta, "growx, h 100!, wrap");
 
         // Fila de controles para agregar medicamentos a la receta
@@ -81,12 +106,18 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
         lbl_alergias_titulo = new javax.swing.JLabel();
         lbl_alergias = new javax.swing.JLabel();
         pnl_formulario = new javax.swing.JPanel();
-        lbl_diag = new javax.swing.JLabel();
-        scrl_diag = new javax.swing.JScrollPane();
-        ta_diagnostico = new javax.swing.JTextArea();
-        lbl_trat = new javax.swing.JLabel();
-        scrl_trat = new javax.swing.JScrollPane();
-        ta_tratamiento = new javax.swing.JTextArea();
+        lbl_cie = new javax.swing.JLabel();
+        txtBuscarCie = new javax.swing.JTextField();
+        btnBuscarCie = new javax.swing.JButton();
+        scrlResultadosCie = new javax.swing.JScrollPane();
+        lstResultadosCie = new javax.swing.JList<>();
+        btnAgregarCie = new javax.swing.JButton();
+        btnQuitarCie = new javax.swing.JButton();
+        scrlDiagnosticos = new javax.swing.JScrollPane();
+        tblDiagnosticos = new javax.swing.JTable();
+        lbl_comentarios = new javax.swing.JLabel();
+        scrl_comentarios = new javax.swing.JScrollPane();
+        ta_comentarios = new javax.swing.JTextArea();
         lbl_receta = new javax.swing.JLabel();
         scrl_receta = new javax.swing.JScrollPane();
         tbl_receta = new javax.swing.JTable();
@@ -96,7 +127,7 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
 
         pnl_paciente.setBackground(new java.awt.Color(249, 245, 240));
 
-        lbl_nombre_pac.setFont(new java.awt.Font("Liberation Sans", 1, 15)); // NOI18N
+        lbl_nombre_pac.setFont(new java.awt.Font("Liberation Sans", 1, 15));
         lbl_nombre_pac.setText("Nombre del Paciente");
 
         lbl_codigo_pac.setText("Código: —");
@@ -111,61 +142,76 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
         pnl_paciente.setLayout(pnl_pacienteLayout);
         pnl_pacienteLayout.setHorizontalGroup(
             pnl_pacienteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_pacienteLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(lbl_nombre_pac)
-                .addGap(24, 24, 24))
             .addGroup(pnl_pacienteLayout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(pnl_pacienteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnl_pacienteLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(lbl_alergias)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lbl_codigo_pac)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lbl_alergias_titulo))
-                    .addGroup(pnl_pacienteLayout.createSequentialGroup()
-                        .addGap(43, 43, 43)
-                        .addComponent(lbl_edad_pac)
-                        .addGap(18, 18, 18)
-                        .addComponent(sep_datos, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(lbl_alergias)
+                    .addComponent(lbl_nombre_pac)
+                    .addComponent(lbl_edad_pac)
+                    .addComponent(lbl_codigo_pac)
+                    .addComponent(sep_datos, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lbl_alergias_titulo))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         pnl_pacienteLayout.setVerticalGroup(
             pnl_pacienteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnl_pacienteLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(pnl_pacienteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(lbl_edad_pac)
-                    .addComponent(sep_datos, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(lbl_edad_pac)
                 .addGap(14, 14, 14)
                 .addComponent(lbl_nombre_pac)
-                .addGroup(pnl_pacienteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnl_pacienteLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(pnl_pacienteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lbl_codigo_pac)
-                            .addComponent(lbl_alergias_titulo))
-                        .addContainerGap(20, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_pacienteLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lbl_alergias)
-                        .addContainerGap())))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lbl_codigo_pac)
+                .addGap(18, 18, 18)
+                .addComponent(lbl_alergias_titulo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lbl_alergias)
+                .addGap(18, 18, 18)
+                .addComponent(sep_datos, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(20, Short.MAX_VALUE))
         );
 
         pnl_formulario.setBackground(new java.awt.Color(255, 255, 255));
 
-        lbl_diag.setText("Diagnóstico");
+        lbl_cie.setText("Diagnósticos CIE (código internacional)");
 
-        ta_diagnostico.setColumns(20);
-        ta_diagnostico.setRows(5);
-        scrl_diag.setViewportView(ta_diagnostico);
+        btnBuscarCie.setText("Buscar");
 
-        lbl_trat.setText("Tratamiento");
+        lstResultadosCie.setModel(new javax.swing.AbstractListModel<>() {
+            String[] strings = { };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        scrlResultadosCie.setViewportView(lstResultadosCie);
 
-        ta_tratamiento.setColumns(20);
-        ta_tratamiento.setRows(5);
-        scrl_trat.setViewportView(ta_tratamiento);
+        btnAgregarCie.setText("Agregar >>");
+        btnAgregarCie.setBackground(new java.awt.Color(139, 20, 20));
+        btnAgregarCie.setForeground(java.awt.Color.WHITE);
+        btnAgregarCie.setBorderPainted(false);
+        btnAgregarCie.setFocusPainted(false);
+
+        btnQuitarCie.setText("Quitar");
+        btnQuitarCie.setBackground(new java.awt.Color(180, 120, 110));
+        btnQuitarCie.setForeground(java.awt.Color.WHITE);
+        btnQuitarCie.setBorderPainted(false);
+        btnQuitarCie.setFocusPainted(false);
+
+        tblDiagnosticos.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] { },
+            new String [] { "Código", "Descripción", "Observación" }
+        ) {
+            Class<?>[] types = new Class<?>[] { String.class, String.class, String.class };
+            boolean[] canEdit = new boolean[] { false, false, true };
+            public Class<?> getColumnClass(int idx) { return types[idx]; }
+            public boolean isCellEditable(int r, int c) { return canEdit[c]; }
+        });
+        scrlDiagnosticos.setViewportView(tblDiagnosticos);
+
+        lbl_comentarios.setText("Comentarios / Observaciones");
+
+        ta_comentarios.setColumns(20);
+        ta_comentarios.setRows(5);
+        scrl_comentarios.setViewportView(ta_comentarios);
 
         lbl_receta.setText("Receta Médica");
 
@@ -182,119 +228,50 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
         ));
         scrl_receta.setViewportView(tbl_receta);
 
-        javax.swing.GroupLayout pnl_formularioLayout = new javax.swing.GroupLayout(pnl_formulario);
-        pnl_formulario.setLayout(pnl_formularioLayout);
-        pnl_formularioLayout.setHorizontalGroup(
-            pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_formularioLayout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addComponent(lbl_diag)
-                .addGap(18, 18, 18)
-                .addComponent(lbl_receta)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_formularioLayout.createSequentialGroup()
-                .addContainerGap(24, Short.MAX_VALUE)
-                .addGroup(pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_formularioLayout.createSequentialGroup()
-                        .addComponent(scrl_receta, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(scrl_diag, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(scrl_trat, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_formularioLayout.createSequentialGroup()
-                        .addComponent(lbl_trat)
-                        .addGap(18, 18, 18))))
-        );
-        pnl_formularioLayout.setVerticalGroup(
-            pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_formularioLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(scrl_receta, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(pnl_formularioLayout.createSequentialGroup()
-                        .addComponent(lbl_trat)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lbl_diag)
-                            .addComponent(lbl_receta))
-                        .addGroup(pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(pnl_formularioLayout.createSequentialGroup()
-                                .addGap(27, 27, 27)
-                                .addComponent(scrl_diag, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(pnl_formularioLayout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(scrl_trat, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap(42, Short.MAX_VALUE))
-        );
-
         btn_guardar_aten.setText("Guardar Consulta");
 
         btn_cancelar_aten.setText("Cancelar");
 
-        javax.swing.GroupLayout pnl_botonesLayout = new javax.swing.GroupLayout(pnl_botones);
-        pnl_botones.setLayout(pnl_botonesLayout);
-        pnl_botonesLayout.setHorizontalGroup(
-            pnl_botonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_botonesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(pnl_botonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btn_guardar_aten)
-                    .addComponent(btn_cancelar_aten))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        javax.swing.GroupLayout pnl_formularioLayout = new javax.swing.GroupLayout(pnl_formulario);
+        pnl_formulario.setLayout(pnl_formularioLayout);
+        pnl_formularioLayout.setHorizontalGroup(
+            pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
         );
-        pnl_botonesLayout.setVerticalGroup(
-            pnl_botonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_botonesLayout.createSequentialGroup()
-                .addGap(19, 19, 19)
-                .addComponent(btn_cancelar_aten)
-                .addGap(18, 18, 18)
-                .addComponent(btn_guardar_aten)
-                .addContainerGap(23, Short.MAX_VALUE))
+        pnl_formularioLayout.setVerticalGroup(
+            pnl_formularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(25, 25, 25)
-                        .addComponent(pnl_paciente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(pnl_botones, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(77, 77, 77)
-                        .addComponent(pnl_formulario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(53, Short.MAX_VALUE))
+            .addGap(0, 100, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(56, 56, 56)
-                        .addComponent(pnl_paciente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(30, 30, 30)
-                        .addComponent(pnl_botones, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(pnl_formulario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGap(0, 100, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // ── API pública para AtenderCitaController ───────────────────────────
     public javax.swing.JButton               getBtnGuardar()      { return btn_guardar_aten; }
     public javax.swing.JButton               getBtnCancelar()     { return btn_cancelar_aten; }
-    public javax.swing.JTextArea             getTaDiagnostico()   { return ta_diagnostico; }
-    public javax.swing.JTextArea             getTaTratamiento()   { return ta_tratamiento; }
+    public javax.swing.JTextArea             getTaComentarios()   { return ta_comentarios; }
     public javax.swing.JTable                getTblReceta()       { return tbl_receta; }
     public javax.swing.JComboBox<String>     getCbMedicamento()   { return cbMedicamento; }
     public javax.swing.JTextField            getTxtDosisMed()     { return txtDosisMed; }
     public javax.swing.JTextField            getTxtDuraMed()      { return txtDuraMed; }
     public javax.swing.JButton               getBtnAgregarMed()   { return btnAgregarMed; }
+
+    // Nuevos getters para CIE
+    public javax.swing.JTextField            getTxtBuscarCie()    { return txtBuscarCie; }
+    public javax.swing.JButton               getBtnBuscarCie()    { return btnBuscarCie; }
+    public javax.swing.JList<String>         getLstResultadosCie(){ return lstResultadosCie; }
+    public javax.swing.JButton               getBtnAgregarCie()   { return btnAgregarCie; }
+    public javax.swing.JTable                getTblDiagnosticos() { return tblDiagnosticos; }
+    public javax.swing.JButton               getBtnQuitarCie()    { return btnQuitarCie; }
 
     public void setDatosPaciente(String nombre, String codigo, String edad) {
         lbl_nombre_pac.setText(nombre);
@@ -313,21 +290,27 @@ public class AtenderCitaPanel extends javax.swing.JPanel {
     private javax.swing.JButton btn_guardar_aten;
     private javax.swing.JLabel lbl_alergias;
     private javax.swing.JLabel lbl_alergias_titulo;
+    private javax.swing.JLabel lbl_cie;
     private javax.swing.JLabel lbl_codigo_pac;
-    private javax.swing.JLabel lbl_diag;
+    private javax.swing.JLabel lbl_comentarios;
     private javax.swing.JLabel lbl_edad_pac;
     private javax.swing.JLabel lbl_nombre_pac;
     private javax.swing.JLabel lbl_receta;
-    private javax.swing.JLabel lbl_trat;
+    private javax.swing.JButton btnAgregarCie;
+    private javax.swing.JButton btnBuscarCie;
+    private javax.swing.JButton btnQuitarCie;
+    private javax.swing.JList<String> lstResultadosCie;
     private javax.swing.JPanel pnl_botones;
     private javax.swing.JPanel pnl_formulario;
     private javax.swing.JPanel pnl_paciente;
-    private javax.swing.JScrollPane scrl_diag;
+    private javax.swing.JScrollPane scrl_comentarios;
+    private javax.swing.JScrollPane scrlDiagnosticos;
     private javax.swing.JScrollPane scrl_receta;
-    private javax.swing.JScrollPane scrl_trat;
+    private javax.swing.JScrollPane scrlResultadosCie;
     private javax.swing.JSeparator sep_datos;
-    private javax.swing.JTextArea ta_diagnostico;
-    private javax.swing.JTextArea ta_tratamiento;
+    private javax.swing.JTextArea ta_comentarios;
+    private javax.swing.JTable tblDiagnosticos;
     private javax.swing.JTable tbl_receta;
+    private javax.swing.JTextField txtBuscarCie;
     // End of variables declaration//GEN-END:variables
 }
