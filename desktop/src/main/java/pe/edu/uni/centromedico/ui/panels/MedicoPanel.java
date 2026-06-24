@@ -1,88 +1,52 @@
 package pe.edu.uni.centromedico.ui.panels;
 
+import pe.edu.uni.centromedico.util.UIConstants;
+
 public class MedicoPanel extends javax.swing.JPanel {
 
-    private javax.swing.JLabel     lbl_titulo;
-    private javax.swing.JTextField txt_buscar;
-    private javax.swing.JButton    btn_buscar;
-    private javax.swing.JButton    btn_nuevo;
-    private javax.swing.JScrollPane scrl_medicos;
-    private javax.swing.JTable     tbl_medicos;
+    private final javax.swing.JLabel lbl_titulo;
+    private final javax.swing.JTextField txt_buscar;
+    private final javax.swing.JButton btn_buscar;
+    private final javax.swing.JButton btn_nuevo;
+    private final javax.swing.JScrollPane scrl_medicos;
+    private final javax.swing.JTable tbl_medicos;
 
     public MedicoPanel() {
-        initComponents();
+        setBackground(UIConstants.FONDO_PANEL);
 
-        this.setBackground(new java.awt.Color(249, 245, 240));
-        this.setLayout(new net.miginfocom.swing.MigLayout(
-            "fill, insets 24", "[grow]", "[]12[]12[grow]"));
+        lbl_titulo = new javax.swing.JLabel("Gestión de Médicos");
+        lbl_titulo.setFont(UIConstants.FUENTE_TITULO);
+        lbl_titulo.setForeground(UIConstants.TEXTO_TITULO);
 
-        javax.swing.JPanel pnl_top = new javax.swing.JPanel(
-            new net.miginfocom.swing.MigLayout("fillx, insets 0", "[grow][][][]", "[36!]"));
-        pnl_top.setOpaque(false);
-        pnl_top.add(txt_buscar, "growx, h 36!");
-        pnl_top.add(btn_buscar,  "h 36!, gapleft 8");
-        pnl_top.add(btn_nuevo,   "h 36!, gapleft 4");
+        txt_buscar = new javax.swing.JTextField();
+        txt_buscar.putClientProperty("JTextField.placeholderText", "Buscar por nombre...");
 
-        tbl_medicos.setRowHeight(36);
-        scrl_medicos.setBorder(
-            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(232, 221, 216)));
+        btn_buscar = new javax.swing.JButton("Buscar");
+        btn_nuevo = new javax.swing.JButton("+ Nuevo Médico");
+        btn_nuevo.putClientProperty("FlatLaf.style", UIConstants.ESTILO_BTN_PRIMARIO);
+        btn_nuevo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
-        this.add(lbl_titulo,  "wrap");
-        this.add(pnl_top,     "growx, wrap");
-        this.add(scrl_medicos,"grow");
+        tbl_medicos = new javax.swing.JTable();
+        scrl_medicos = new javax.swing.JScrollPane(tbl_medicos);
+        UIConstants.configurarTabla(tbl_medicos, scrl_medicos);
+
+        setLayout(new net.miginfocom.swing.MigLayout("fill, insets 16", "[grow]", "[]12[]12[grow]"));
+
+        javax.swing.JPanel pnlTop = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout("fillx, insets 0", "[grow][][]", "[36!]"));
+        pnlTop.setOpaque(false);
+        pnlTop.add(txt_buscar, "growx, h 36!");
+        pnlTop.add(btn_buscar, "h 36!, gapleft 8");
+        pnlTop.add(btn_nuevo,  "h 36!, gapleft 4");
+
+        add(lbl_titulo, "wrap");
+        add(pnlTop,    "growx, wrap");
+        add(scrl_medicos, "grow");
     }
 
-    // ── API pública para MedicoController ────────────────────────────────
     public javax.swing.JTable     getTblMedicos()   { return tbl_medicos; }
     public javax.swing.JButton    getBtnBuscar()    { return btn_buscar; }
     public javax.swing.JButton    getBtnNuevo()     { return btn_nuevo; }
     public javax.swing.JTextField getTxtBuscar()    { return txt_buscar; }
     public int getFilaSeleccionada()                { return tbl_medicos.getSelectedRow(); }
-
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        lbl_titulo  = new javax.swing.JLabel();
-        txt_buscar  = new javax.swing.JTextField();
-        btn_buscar  = new javax.swing.JButton();
-        btn_nuevo   = new javax.swing.JButton();
-        tbl_medicos = new javax.swing.JTable();
-        scrl_medicos = new javax.swing.JScrollPane();
-
-        lbl_titulo.setFont(new java.awt.Font("Liberation Sans", 1, 20)); // NOI18N
-        lbl_titulo.setForeground(new java.awt.Color(30, 41, 59));
-        lbl_titulo.setText("Gestión de Médicos");
-
-        txt_buscar.setFont(new java.awt.Font("Liberation Sans", 0, 12)); // NOI18N
-        txt_buscar.setText("Buscar por nombre...");
-
-        btn_buscar.setFont(new java.awt.Font("Liberation Sans", 0, 12)); // NOI18N
-        btn_buscar.setText("Buscar");
-
-        btn_nuevo.setBackground(new java.awt.Color(113, 22, 16));
-        btn_nuevo.setFont(new java.awt.Font("Liberation Sans", 1, 12)); // NOI18N
-        btn_nuevo.setForeground(java.awt.Color.WHITE);
-        btn_nuevo.setText("+ Nuevo Médico");
-        btn_nuevo.setBorderPainted(false);
-        btn_nuevo.setFocusPainted(false);
-
-        tbl_medicos.setBackground(java.awt.Color.WHITE);
-        tbl_medicos.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        scrl_medicos.setViewportView(tbl_medicos);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 600, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-        );
-    }// </editor-fold>//GEN-END:initComponents
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    // End of variables declaration//GEN-END:variables
 }

@@ -26,7 +26,7 @@ public class AdminCitasController {
     }
 
     private void cargarEspecialidades() {
-        vista.setEspecialidades(doctorDAO.obtenerEspecialidades());
+        vista.setEspecialidades(doctorDAO.obtenerNombresEspecialidad());
     }
 
     private void cargarDatos() {

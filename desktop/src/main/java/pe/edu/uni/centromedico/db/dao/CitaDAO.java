@@ -52,12 +52,13 @@ public class CitaDAO {
         List<Cita> lista = new ArrayList<>();
         String sql = """
                 SELECT c.id, c.id_estudiante, c.id_doctor, c.id_slot,
-                       c.motivo, c.estado,
+                       c.motivo, c.estado, c.fecha_creacion,
                        d.nombre       AS nombre_doctor,
-                       d.especialidad,
+                       e.nombre       AS especialidad,
                        s.dia_semana, s.hora_inicio, s.hora_fin
                 FROM citas c
                 JOIN doctores              d ON c.id_doctor = d.id_usuario
+                LEFT JOIN especialidades   e ON d.especialidad_id = e.id
                 JOIN slots_disponibilidad  s ON c.id_slot   = s.id
                 WHERE c.id_estudiante = ? AND c.eliminado = 0
                 ORDER BY c.id DESC
@@ -80,15 +81,16 @@ public class CitaDAO {
         List<Cita> lista = new ArrayList<>();
         String sql = """
                 SELECT c.id, c.id_estudiante, c.id_doctor, c.id_slot,
-                       c.motivo, c.estado,
-                       e.nombre AS nombre_estudiante,
-                       d.nombre AS nombre_doctor,
-                       d.especialidad,
+                       c.motivo, c.estado, c.fecha_creacion,
+                       est.nombre AS nombre_estudiante,
+                       d.nombre   AS nombre_doctor,
+                       e.nombre   AS especialidad,
                        s.dia_semana, s.hora_inicio, s.hora_fin
                 FROM citas c
-                JOIN estudiantes           e ON c.id_estudiante = e.id_usuario
-                JOIN doctores              d ON c.id_doctor     = d.id_usuario
-                JOIN slots_disponibilidad  s ON c.id_slot       = s.id
+                JOIN estudiantes           est ON c.id_estudiante = est.id_usuario
+                JOIN doctores              d   ON c.id_doctor     = d.id_usuario
+                LEFT JOIN especialidades   e   ON d.especialidad_id = e.id
+                JOIN slots_disponibilidad  s   ON c.id_slot       = s.id
                 WHERE c.eliminado = 0
                 ORDER BY c.id DESC
                 """;
@@ -109,7 +111,7 @@ public class CitaDAO {
         List<Cita> lista = new ArrayList<>();
         String sql = """
                 SELECT c.id, c.id_estudiante, c.id_doctor, c.id_slot,
-                       c.motivo, c.estado,
+                       c.motivo, c.estado, c.fecha_creacion,
                        e.nombre AS nombre_estudiante,
                        s.dia_semana, s.hora_inicio, s.hora_fin
                 FROM citas c
@@ -141,6 +143,7 @@ public class CitaDAO {
         c.setIdSlot(rs.getInt("id_slot"));
         c.setMotivo(rs.getString("motivo"));
         c.setEstado(rs.getString("estado"));
+        c.setFechaCreacion(rs.getString("fecha_creacion"));
         c.setDiaSemana(rs.getString("dia_semana"));
         c.setHoraInicio(rs.getString("hora_inicio"));
         c.setHoraFin(rs.getString("hora_fin"));
@@ -152,5 +155,44 @@ public class CitaDAO {
             c.setNombreEstudiante(rs.getString("nombre_estudiante"));
         }
         return c;
+    }
+
+    public boolean cancelarCita(int idCita) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.getConnection();
+            conn.setAutoCommit(false);
+
+            // Obtener id_slot de la cita
+            int idSlot;
+            try (PreparedStatement st = conn.prepareStatement(
+                    "SELECT id_slot FROM citas WHERE id = ? AND eliminado = 0")) {
+                st.setInt(1, idCita);
+                ResultSet rs = st.executeQuery();
+                if (!rs.next()) return false;
+                idSlot = rs.getInt("id_slot");
+            }
+
+            try (PreparedStatement st = conn.prepareStatement(
+                    "UPDATE citas SET estado = 'CANCELADA' WHERE id = ? AND estado = 'PENDIENTE'")) {
+                st.setInt(1, idCita);
+                if (st.executeUpdate() == 0) return false;
+            }
+
+            try (PreparedStatement st = conn.prepareStatement(
+                    "UPDATE slots_disponibilidad SET disponible = 1 WHERE id = ?")) {
+                st.setInt(1, idSlot);
+                st.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error al cancelar cita: " + e.getMessage());
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { /* ignorar */ }
+            return false;
+        } finally {
+            try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { /* ignorar */ }
+        }
     }
 }

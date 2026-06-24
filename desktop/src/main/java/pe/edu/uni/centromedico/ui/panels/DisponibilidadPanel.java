@@ -1,56 +1,46 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
 package pe.edu.uni.centromedico.ui.panels;
 
-/**
- *
- * @author hector0-0
- */
+import pe.edu.uni.centromedico.util.UIConstants;
+
 public class DisponibilidadPanel extends javax.swing.JPanel {
 
-    /**
-     * Creates new form DisponibilidadPanel
-     */
-    public DisponibilidadPanel() {
-        initComponents();
+    private final javax.swing.JLabel lbl_titulo;
+    private final javax.swing.JLabel lbl_instruccion;
+    private final javax.swing.JPanel pnl_dias;
+    private final javax.swing.JButton btn_guardar_disp;
 
-        // Los componentes del Builder quedaron como JLabel (error de tipado en NetBeans).
-        // Creamos todos los checkboxes y combos programáticamente.
+    public DisponibilidadPanel() {
+        setBackground(UIConstants.FONDO_PANEL);
+
+        lbl_titulo = new javax.swing.JLabel("Mi Disponibilidad — Próximo Mes");
+        lbl_titulo.setFont(UIConstants.FUENTE_TITULO);
+        lbl_instruccion = new javax.swing.JLabel("Marca los días y horarios en los que estarás disponible");
+
         String[] horas = {
             "08:00","08:30","09:00","09:30","10:00","10:30",
             "11:00","11:30","12:00","14:00","14:30","15:00",
             "15:30","16:00","16:30","17:00","17:30","18:00"
         };
-        String[][] dias = {
-            {"Lunes"},{"Martes"},{"Miércoles"},{"Jueves"},{"Viernes"},{"Sábado"}
-        };
+        String[][] dias = {{"Lunes"},{"Martes"},{"Miércoles"},{"Jueves"},{"Viernes"},{"Sábado"}};
 
-        // Grilla de disponibilidad
-        pnl_dias.setBackground(java.awt.Color.WHITE);
-        pnl_dias.setLayout(new net.miginfocom.swing.MigLayout(
+        pnl_dias = new javax.swing.JPanel(new net.miginfocom.swing.MigLayout(
             "fillx, insets 20, gapy 10",
-            "[160!][80!][grow][80!][grow]",
-            "[]12[]12[]12[]12[]12[]12[]"
-        ));
-        pnl_dias.removeAll();
+            "[160!][80!][grow][80!][grow]", "[]12[]12[]12[]12[]12[]12[]"));
+        pnl_dias.setBackground(java.awt.Color.WHITE);
 
-        // Encabezados
-        javax.swing.JLabel hDia   = new javax.swing.JLabel("Día");
-        javax.swing.JLabel hFlecha = new javax.swing.JLabel("");
-        javax.swing.JLabel hIni   = new javax.swing.JLabel("Hora inicio");
-        javax.swing.JLabel hSep   = new javax.swing.JLabel("");
-        javax.swing.JLabel hFin   = new javax.swing.JLabel("Hora fin");
+        javax.swing.JLabel hDia = new javax.swing.JLabel("Día");
+        javax.swing.JLabel hIni = new javax.swing.JLabel("Hora inicio");
+        javax.swing.JLabel hFin = new javax.swing.JLabel("Hora fin");
         for (javax.swing.JLabel h : new javax.swing.JLabel[]{hDia, hIni, hFin}) {
             h.setFont(new java.awt.Font("Liberation Sans", java.awt.Font.BOLD, 11));
             h.setForeground(new java.awt.Color(100, 116, 139));
         }
-        pnl_dias.add(hDia, ""); pnl_dias.add(hFlecha, "");
-        pnl_dias.add(hIni, ""); pnl_dias.add(hSep, "");
+        pnl_dias.add(hDia, "");
+        pnl_dias.add(new javax.swing.JLabel(""), "");
+        pnl_dias.add(hIni, "");
+        pnl_dias.add(new javax.swing.JLabel(""), "");
         pnl_dias.add(hFin, "wrap");
 
-        // Fila por cada día
         for (String[] dia : dias) {
             javax.swing.JCheckBox chk = new javax.swing.JCheckBox(dia[0]);
             chk.setFont(new java.awt.Font("Liberation Sans", java.awt.Font.BOLD, 13));
@@ -68,250 +58,28 @@ public class DisponibilidadPanel extends javax.swing.JPanel {
                 cmbFin.setEnabled(sel);
             });
 
-            pnl_dias.add(chk,    "");
+            pnl_dias.add(chk, "");
             pnl_dias.add(new javax.swing.JLabel("→"), "center");
             pnl_dias.add(cmbIni, "growx");
             pnl_dias.add(new javax.swing.JLabel("—"), "center");
             pnl_dias.add(cmbFin, "growx, wrap");
         }
 
-        // Layout principal: usa lbl_titulo, pnl_dias y btn_guardar_disp del GEN block
-        this.setBackground(new java.awt.Color(249, 245, 240));
-        this.setLayout(new net.miginfocom.swing.MigLayout(
-            "fill, insets 24", "[grow]", "[]6[]16[grow]16[]"
-        ));
-        this.removeAll();
-        this.add(lbl_titulo,       "wrap");
-        this.add(lbl_instruccion,  "wrap");
-        this.add(pnl_dias,         "grow, wrap");
-        this.add(btn_guardar_disp, "right, h 44!, w 220!");
-
+        btn_guardar_disp = new javax.swing.JButton("Guardar Disponibilidad");
+        btn_guardar_disp.putClientProperty("FlatLaf.style", UIConstants.ESTILO_BTN_PRIMARIO);
+        btn_guardar_disp.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btn_guardar_disp.addActionListener(e ->
             javax.swing.JOptionPane.showMessageDialog(this,
                 "Disponibilidad guardada correctamente.",
                 "Disponibilidad", javax.swing.JOptionPane.INFORMATION_MESSAGE));
+
+        setLayout(new net.miginfocom.swing.MigLayout("fill, insets 16", "[grow]", "[]6[]16[grow]16[]"));
+        add(lbl_titulo, "wrap");
+        add(lbl_instruccion, "wrap");
+        add(pnl_dias, "grow, wrap");
+        add(btn_guardar_disp, "right, h 44!, w 220!");
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        lbl_titulo = new javax.swing.JLabel();
-        lbl_instruccion = new javax.swing.JLabel();
-        pnl_dias = new javax.swing.JPanel();
-        chk_lunes = new javax.swing.JLabel();
-        cmb_fin_lunes = new javax.swing.JLabel();
-        cmb_ini_lunes = new javax.swing.JLabel();
-        chk_martes = new javax.swing.JLabel();
-        cmb_ini_martes = new javax.swing.JLabel();
-        cmb_fin_martes = new javax.swing.JLabel();
-        chk_miercoles = new javax.swing.JLabel();
-        cmb_ini_miercoles = new javax.swing.JLabel();
-        cmb_fin_miercoles = new javax.swing.JLabel();
-        chk_jueves = new javax.swing.JLabel();
-        cmb_ini_jueves = new javax.swing.JLabel();
-        cmb_fin_jueves = new javax.swing.JLabel();
-        chk_viernes = new javax.swing.JLabel();
-        cmb_ini_viernes = new javax.swing.JLabel();
-        cmb_fin_viernes = new javax.swing.JLabel();
-        btn_guardar_disp = new javax.swing.JButton();
-
-        lbl_titulo.setText("Mi Disponibilidad — Próximo Mes");
-
-        lbl_instruccion.setText("Marca los días y horarios en los que estarás disponible");
-
-        pnl_dias.setToolTipText("(contenedor de la grilla)");
-
-        chk_lunes.setText("Lunes");
-
-        cmb_fin_lunes.setText("— ");
-
-        cmb_ini_lunes.setText("— ");
-
-        chk_martes.setText("Martes");
-
-        cmb_ini_martes.setText("—");
-
-        cmb_fin_martes.setText("—");
-
-        chk_miercoles.setText("Miercoles");
-
-        cmb_ini_miercoles.setText("—");
-
-        cmb_fin_miercoles.setText("—");
-
-        chk_jueves.setText("Jueves");
-
-        cmb_ini_jueves.setText("—");
-
-        cmb_fin_jueves.setText("—");
-
-        chk_viernes.setText("Viernes");
-
-        cmb_ini_viernes.setText("—");
-
-        cmb_fin_viernes.setText("—");
-
-        javax.swing.GroupLayout pnl_diasLayout = new javax.swing.GroupLayout(pnl_dias);
-        pnl_dias.setLayout(pnl_diasLayout);
-        pnl_diasLayout.setHorizontalGroup(
-            pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_diasLayout.createSequentialGroup()
-                .addGap(19, 19, 19)
-                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnl_diasLayout.createSequentialGroup()
-                        .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(chk_lunes)
-                            .addGroup(pnl_diasLayout.createSequentialGroup()
-                                .addGap(6, 6, 6)
-                                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cmb_fin_lunes)
-                                    .addComponent(cmb_ini_lunes))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(chk_martes)
-                            .addGroup(pnl_diasLayout.createSequentialGroup()
-                                .addComponent(cmb_ini_martes)
-                                .addGap(18, 18, 18)
-                                .addComponent(cmb_ini_miercoles)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(cmb_fin_viernes)))
-                        .addGap(11, 11, 11))
-                    .addGroup(pnl_diasLayout.createSequentialGroup()
-                        .addGap(14, 14, 14)
-                        .addComponent(cmb_ini_viernes)
-                        .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_diasLayout.createSequentialGroup()
-                                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(pnl_diasLayout.createSequentialGroup()
-                                        .addGap(18, 18, 18)
-                                        .addComponent(cmb_fin_martes)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(chk_viernes)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_diasLayout.createSequentialGroup()
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(chk_miercoles)
-                                        .addGap(32, 32, 32)))
-                                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cmb_ini_jueves)
-                                    .addComponent(chk_jueves)))
-                            .addGroup(pnl_diasLayout.createSequentialGroup()
-                                .addGap(37, 37, 37)
-                                .addComponent(cmb_fin_jueves)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(cmb_fin_miercoles)
-                                .addGap(18, 18, 18)))))
-                .addGap(25, 25, 25))
-        );
-        pnl_diasLayout.setVerticalGroup(
-            pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnl_diasLayout.createSequentialGroup()
-                .addGap(22, 22, 22)
-                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chk_lunes)
-                    .addComponent(chk_martes))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(cmb_ini_martes)
-                        .addComponent(cmb_fin_viernes)
-                        .addComponent(cmb_ini_miercoles))
-                    .addComponent(cmb_ini_lunes, javax.swing.GroupLayout.Alignment.TRAILING))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cmb_fin_martes)
-                    .addGroup(pnl_diasLayout.createSequentialGroup()
-                        .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(cmb_fin_lunes)
-                            .addComponent(chk_jueves))
-                        .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(pnl_diasLayout.createSequentialGroup()
-                                .addGap(36, 36, 36)
-                                .addComponent(cmb_ini_viernes))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnl_diasLayout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmb_fin_miercoles)
-                                .addGap(12, 12, 12))))
-                    .addGroup(pnl_diasLayout.createSequentialGroup()
-                        .addGap(10, 10, 10)
-                        .addComponent(chk_viernes)
-                        .addGap(32, 32, 32)
-                        .addComponent(cmb_fin_jueves)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(pnl_diasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cmb_ini_jueves)
-                    .addComponent(chk_miercoles))
-                .addContainerGap())
-        );
-
-        btn_guardar_disp.setText("Guardar Disponibilidad");
-        btn_guardar_disp.addActionListener(this::btn_guardar_dispActionPerformed);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(35, 35, 35)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lbl_instruccion)
-                    .addComponent(lbl_titulo)
-                    .addComponent(btn_guardar_disp))
-                .addContainerGap(10, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(pnl_dias, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(99, 99, 99))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addComponent(lbl_titulo)
-                .addGap(18, 18, 18)
-                .addComponent(lbl_instruccion)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(pnl_dias, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addComponent(btn_guardar_disp)
-                .addGap(20, 20, 20))
-        );
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void btn_guardar_dispActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_guardar_dispActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btn_guardar_dispActionPerformed
-
-
-    // ── API pública para DisponibilidadController ────────────────────────
     public javax.swing.JPanel getPnlDias()          { return pnl_dias; }
     public javax.swing.JButton getBtnGuardar()      { return btn_guardar_disp; }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btn_guardar_disp;
-    private javax.swing.JLabel chk_jueves;
-    private javax.swing.JLabel chk_lunes;
-    private javax.swing.JLabel chk_martes;
-    private javax.swing.JLabel chk_miercoles;
-    private javax.swing.JLabel chk_viernes;
-    private javax.swing.JLabel cmb_fin_jueves;
-    private javax.swing.JLabel cmb_fin_lunes;
-    private javax.swing.JLabel cmb_fin_martes;
-    private javax.swing.JLabel cmb_fin_miercoles;
-    private javax.swing.JLabel cmb_fin_viernes;
-    private javax.swing.JLabel cmb_ini_jueves;
-    private javax.swing.JLabel cmb_ini_lunes;
-    private javax.swing.JLabel cmb_ini_martes;
-    private javax.swing.JLabel cmb_ini_miercoles;
-    private javax.swing.JLabel cmb_ini_viernes;
-    private javax.swing.JLabel lbl_instruccion;
-    private javax.swing.JLabel lbl_titulo;
-    private javax.swing.JPanel pnl_dias;
-    // End of variables declaration//GEN-END:variables
 }

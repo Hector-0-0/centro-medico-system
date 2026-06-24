@@ -6,13 +6,14 @@ public class Cita {
     private String idDoctor;
     private int idSlot;
     private String motivo;
-    private String estado; // PENDIENTE, ATENDIDA, CANCELADA
+    private String estado; // PENDIENTE, ATENDIDA, CANCELADA, NO_ASISTIO
     private String nombreEstudiante;
     private String nombreDoctor;
     private String especialidad;
     private String diaSemana;
     private String horaInicio;
     private String horaFin;
+    private String fechaCreacion;
 
     public Cita() {}
 
@@ -51,4 +52,6 @@ public class Cita {
     public void setDiaSemana(String d)         { this.diaSemana = d; }
     public void setHoraInicio(String h)        { this.horaInicio = h; }
     public void setHoraFin(String h)           { this.horaFin = h; }
+    public String getFechaCreacion()             { return fechaCreacion; }
+    public void setFechaCreacion(String fc)      { this.fechaCreacion = fc; }
 }

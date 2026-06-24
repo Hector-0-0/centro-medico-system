@@ -1,238 +1,190 @@
 package pe.edu.uni.centromedico.ui.dialogs;
 
+import pe.edu.uni.centromedico.util.UIConstants;
+import pe.edu.uni.centromedico.util.Validador;
+import pe.edu.uni.centromedico.models.Estudiante;
+import pe.edu.uni.centromedico.db.dao.EstudianteDAO;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
+
 public class NuevoPacienteDialog extends javax.swing.JDialog {
 
-        public NuevoPacienteDialog(java.awt.Frame parent, boolean modal) {
-                super(parent, modal);
-                initComponents();
+    private static final List<String> CARRERAS = Arrays.asList(
+        "Ingenieria Civil", "Ingenieria de Sistemas", "Ingenieria Industrial",
+        "Ingenieria Electronica", "Ingenieria Electrica", "Ingenieria Mecanica",
+        "Ingenieria Mecatronica", "Ingenieria Quimica", "Ingenieria de Petroleo",
+        "Ingenieria de Minas", "Ingenieria Ambiental", "Ingenieria Textil",
+        "Arquitectura", "Ciencias de la Computacion", "Matematicas",
+        "Fisica", "Quimica", "Economia", "Estadistica"
+    );
 
-                this.getContentPane().removeAll();
-                this.getContentPane().setLayout(
-                        new net.miginfocom.swing.MigLayout(
-                                "fill, insets 0", "[grow]", "[54!][grow,fill][50!]"));
+    private final javax.swing.JTextField txtCodigo;
+    private final javax.swing.JTextField txtNombre;
+    private final javax.swing.JTextField txtFechaNac;
+    private final javax.swing.JComboBox<String> comboCarrera;
+    private final javax.swing.JTextField txtEmail;
+    private final javax.swing.JPasswordField txtPass;
+    private final javax.swing.JLabel lblError;
 
-                // ── Formulario ────────────────────────────────────────────
-                panelFormulario.removeAll();
-                panelFormulario.setLayout(
-                        new net.miginfocom.swing.MigLayout(
-                                "fill, insets 24", "[130!][grow]", "[]10[]10[]10[]10[]10[]10[]"));
+    public NuevoPacienteDialog(java.awt.Frame parent, boolean modal) {
+        super(parent, modal);
+        setTitle("Registrar Paciente");
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setResizable(true);
 
-                javax.swing.JTextField txtCodigo  = new javax.swing.JTextField();
-                javax.swing.JTextField txtNombre  = new javax.swing.JTextField();
-                javax.swing.JTextField txtEdad    = new javax.swing.JTextField();
-                javax.swing.JTextField txtCarrera = new javax.swing.JTextField();
-                javax.swing.JTextField txtEmail   = new javax.swing.JTextField();
-                javax.swing.JPasswordField txtPass = new javax.swing.JPasswordField();
+        getContentPane().setLayout(
+            new net.miginfocom.swing.MigLayout(
+                "fill, insets 0", "[grow]", "[54!][grow,fill][50!]"));
 
-                panelFormulario.add(new javax.swing.JLabel("Código"),      "growx");
-                panelFormulario.add(txtCodigo,  "growx, wrap");
-                panelFormulario.add(new javax.swing.JLabel("Nombre"),      "growx");
-                panelFormulario.add(txtNombre,  "growx, wrap");
-                panelFormulario.add(new javax.swing.JLabel("Edad"),        "growx");
-                panelFormulario.add(txtEdad,    "growx, wrap");
-                panelFormulario.add(new javax.swing.JLabel("Carrera"),     "growx");
-                panelFormulario.add(txtCarrera, "growx, wrap");
-                panelFormulario.add(new javax.swing.JLabel("Email"),       "growx");
-                panelFormulario.add(txtEmail,   "growx, wrap");
-                panelFormulario.add(new javax.swing.JLabel("Contraseña"),  "growx");
-                panelFormulario.add(txtPass,    "growx, wrap");
+        javax.swing.JPanel panelHeader = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout("fill, insets 0 20 0 20", "[grow]", "[center]"));
+        panelHeader.setBackground(UIConstants.CARMESI);
+        javax.swing.JLabel titulo = new javax.swing.JLabel("Registrar Paciente");
+        titulo.setForeground(UIConstants.BLANCO);
+        titulo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        panelHeader.add(titulo, "align left");
+        panelHeader.setPreferredSize(new java.awt.Dimension(0, UIConstants.HEADER_HEIGHT));
 
-                // ── Footer ────────────────────────────────────────────────
-                panelFooter.removeAll();
-                panelFooter.setLayout(
-                        new net.miginfocom.swing.MigLayout(
-                                "fillx, insets 10 20 10 20", "[grow][][]", "[38!]"));
-                panelFooter.add(new javax.swing.JLabel(), "growx");
+        javax.swing.JPanel panelFormulario = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout(
+                "fill, insets 24", "[130!][grow]", "[]8[]8[]8[]8[]8[]8[]0[]"));
 
-                javax.swing.JButton btnCancelar = new javax.swing.JButton("Cancelar");
-                btnCancelar.setBackground(new java.awt.Color(139, 20, 20));
-                btnCancelar.setForeground(java.awt.Color.WHITE);
-                btnCancelar.setBorderPainted(false);
-                btnCancelar.setFocusPainted(false);
-                btnCancelar.addActionListener(e -> this.dispose());
-                panelFooter.add(btnCancelar);
+        txtCodigo   = new javax.swing.JTextField();
+        txtNombre   = new javax.swing.JTextField();
+        txtFechaNac = new javax.swing.JTextField();
+        txtFechaNac.putClientProperty("JTextField.placeholderText", "dd/mm/aaaa");
+        comboCarrera = new javax.swing.JComboBox<>(CARRERAS.toArray(new String[0]));
+        comboCarrera.setSelectedIndex(-1);
+        txtEmail    = new javax.swing.JTextField();
+        txtPass     = new javax.swing.JPasswordField();
+        lblError    = new javax.swing.JLabel("");
+        lblError.setForeground(new java.awt.Color(200, 0, 0));
+        lblError.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
 
-                javax.swing.JButton btnGuardar = new javax.swing.JButton("Guardar");
-                btnGuardar.setBackground(new java.awt.Color(139, 20, 20));
-                btnGuardar.setForeground(java.awt.Color.WHITE);
-                btnGuardar.setBorderPainted(false);
-                btnGuardar.setFocusPainted(false);
-                btnGuardar.addActionListener(e -> {
-                        String codigo   = txtCodigo.getText().trim();
-                        String nombre   = txtNombre.getText().trim();
-                        String edadTxt  = txtEdad.getText().trim();
-                        String carrera  = txtCarrera.getText().trim();
-                        String email    = txtEmail.getText().trim();
-                        String password = new String(txtPass.getPassword()).trim();
+        panelFormulario.add(new javax.swing.JLabel("Código *"), "growx");
+        panelFormulario.add(txtCodigo, "growx, h " + UIConstants.INPUT_HEIGHT + "!, wrap");
+        panelFormulario.add(new javax.swing.JLabel("Nombre *"), "growx");
+        panelFormulario.add(txtNombre, "growx, h " + UIConstants.INPUT_HEIGHT + "!, wrap");
+        panelFormulario.add(new javax.swing.JLabel("Fecha Nac. *"), "growx");
+        panelFormulario.add(txtFechaNac, "growx, h " + UIConstants.INPUT_HEIGHT + "!, wrap");
+        panelFormulario.add(new javax.swing.JLabel("Carrera *"), "growx");
+        panelFormulario.add(comboCarrera, "growx, h " + UIConstants.INPUT_HEIGHT + "!, wrap");
+        panelFormulario.add(new javax.swing.JLabel("Email *"), "growx");
+        panelFormulario.add(txtEmail, "growx, h " + UIConstants.INPUT_HEIGHT + "!, wrap");
+        panelFormulario.add(new javax.swing.JLabel("Contraseña *"), "growx");
+        panelFormulario.add(txtPass, "growx, h " + UIConstants.INPUT_HEIGHT + "!, wrap");
+        panelFormulario.add(lblError, "span, growx, wrap");
 
-                        if (codigo.isEmpty() || nombre.isEmpty() || edadTxt.isEmpty()
-                                || carrera.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                                javax.swing.JOptionPane.showMessageDialog(this,
-                                        "Todos los campos son obligatorios.",
-                                        "Campos requeridos", javax.swing.JOptionPane.WARNING_MESSAGE);
-                                return;
-                        }
-                        int edad;
-                        try {
-                                edad = Integer.parseInt(edadTxt);
-                                if (edad <= 0 || edad > 120) throw new NumberFormatException();
-                        } catch (NumberFormatException ex) {
-                                javax.swing.JOptionPane.showMessageDialog(this,
-                                        "Ingresa una edad válida (número entero).",
-                                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-                                return;
-                        }
-                        pe.edu.uni.centromedico.models.Estudiante est =
-                                new pe.edu.uni.centromedico.models.Estudiante();
-                        est.setId(codigo);
-                        est.setNombre(nombre);
-                        est.setEdad(edad);
-                        est.setCarrera(carrera);
-                        est.setEmail(email);
+        javax.swing.JPanel panelFooter = new javax.swing.JPanel(
+            new net.miginfocom.swing.MigLayout(
+                "fillx, insets 10 20 10 20", "[grow][][]", "[" + UIConstants.BTN_ALTURA + "!]"));
+        panelFooter.setBackground(UIConstants.FOOTER_BG);
+        panelFooter.add(new javax.swing.JLabel(), "growx");
 
-                        boolean ok = new pe.edu.uni.centromedico.db.dao.EstudianteDAO()
-                                .registrar(est, password);
-                        if (ok) {
-                                javax.swing.JOptionPane.showMessageDialog(this,
-                                        "Paciente registrado correctamente.",
-                                        "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                                this.dispose();
-                        } else {
-                                javax.swing.JOptionPane.showMessageDialog(this,
-                                        "Error al registrar. El código ya puede existir.",
-                                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-                        }
-                });
-                panelFooter.add(btnGuardar);
+        javax.swing.JButton btnCancelar = new javax.swing.JButton("Cancelar");
+        btnCancelar.putClientProperty("FlatLaf.style",
+            "arc: 8; borderWidth: 0; focusWidth: 0;"
+            + " background: #888888; foreground: #ffffff;"
+            + " hoverBackground: #888888; pressedBackground: #888888");
+        btnCancelar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnCancelar.addActionListener(e -> this.dispose());
+        panelFooter.add(btnCancelar);
 
-                // ── Header ────────────────────────────────────────────────
-                panelHeader.removeAll();
-                panelHeader.setLayout(
-                        new net.miginfocom.swing.MigLayout(
-                                "fill, insets 0 20 0 20", "[grow]", "[center]"));
-                javax.swing.JLabel titulo = new javax.swing.JLabel("Registrar Paciente");
-                titulo.setForeground(java.awt.Color.WHITE);
-                titulo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
-                panelHeader.add(titulo, "align left");
+        javax.swing.JButton btnGuardar = new javax.swing.JButton("Guardar");
+        btnGuardar.putClientProperty("FlatLaf.style",
+            "arc: 8; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0;"
+            + " background: #711610; foreground: #ffffff;"
+            + " hoverBackground: #711610; pressedBackground: #711610");
+        btnGuardar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnGuardar.addActionListener(e -> guardar());
+        panelFooter.add(btnGuardar);
 
-                this.getContentPane().add(panelHeader,    "growx, wrap");
-                this.getContentPane().add(panelFormulario, "grow, push, wrap");
-                this.getContentPane().add(panelFooter,    "growx");
-                panelHeader.setPreferredSize(new java.awt.Dimension(0, 54));
-                panelFooter.setPreferredSize(new java.awt.Dimension(0, 50));
+        getContentPane().add(panelHeader, "growx, wrap");
+        getContentPane().add(panelFormulario, "grow, push, wrap");
+        getContentPane().add(panelFooter, "growx");
+        panelHeader.setPreferredSize(new java.awt.Dimension(0, UIConstants.HEADER_HEIGHT));
+        panelFooter.setPreferredSize(new java.awt.Dimension(0, UIConstants.FOOTER_HEIGHT));
 
-                this.revalidate();
-                this.repaint();
-                this.pack();
-                this.setLocationRelativeTo(null);
+        setMinimumSize(new java.awt.Dimension(460, 520));
+        pack();
+        setLocationRelativeTo(parent);
+    }
+
+    private void guardar() {
+        lblError.setText("");
+        String codigo   = txtCodigo.getText().trim();
+        String nombre   = txtNombre.getText().trim();
+        String fechaTxt = txtFechaNac.getText().trim();
+        String carrera  = comboCarrera.getSelectedItem() != null
+            ? comboCarrera.getSelectedItem().toString() : "";
+        String email    = txtEmail.getText().trim();
+        String password = new String(txtPass.getPassword()).trim();
+
+        if (codigo.isEmpty() || nombre.isEmpty() || fechaTxt.isEmpty()
+                || carrera.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            lblError.setText("Todos los campos con * son obligatorios.");
+            return;
         }
 
-        /**
-         * This method is called from within the constructor to initialize the form.
-         * WARNING: Do NOT modify this code. The content of this method is always
-         * regenerated by the Form Editor.
-         */
-        @SuppressWarnings("unchecked")
-        // <editor-fold defaultstate="collapsed" desc="Generated
-        // Code">//GEN-BEGIN:initComponents
-        private void initComponents() {
+        String errCod = Validador.validarCodigoPaciente(codigo);
+        if (errCod != null) {
+            lblError.setText(errCod);
+            txtCodigo.requestFocus();
+            return;
+        }
 
-                panelHeader = new javax.swing.JPanel();
-                panelFormulario = new javax.swing.JPanel();
-                panelFooter = new javax.swing.JPanel();
+        String errNomNum = Validador.validarNombreSinNumeros(nombre);
+        if (errNomNum != null) {
+            lblError.setText(errNomNum);
+            txtNombre.requestFocus();
+            return;
+        }
 
-                setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-                setTitle("Registrar Pacientes");
-                setModal(true);
-                setPreferredSize(new java.awt.Dimension(480, 600));
-                setResizable(false);
+        LocalDate fechaNac;
+        try {
+            fechaNac = LocalDate.parse(fechaTxt, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } catch (DateTimeParseException e) {
+            lblError.setText("Fecha inválida. Use el formato dd/mm/aaaa.");
+            txtFechaNac.requestFocus();
+            return;
+        }
 
-                panelHeader.setBackground(new java.awt.Color(139, 20, 20));
+        if (!Validador.esMayorDeEdad(fechaNac)) {
+            lblError.setText("El paciente debe ser mayor de edad (+18).");
+            txtFechaNac.requestFocus();
+            return;
+        }
 
-                javax.swing.GroupLayout panelHeaderLayout = new javax.swing.GroupLayout(panelHeader);
-                panelHeader.setLayout(panelHeaderLayout);
-                panelHeaderLayout.setHorizontalGroup(
-                                panelHeaderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGap(0, 100, Short.MAX_VALUE));
-                panelHeaderLayout.setVerticalGroup(
-                                panelHeaderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGap(0, 100, Short.MAX_VALUE));
+        String errEmail = Validador.validarEmail(email);
+        if (errEmail != null) {
+            lblError.setText(errEmail);
+            return;
+        }
 
-                javax.swing.GroupLayout panelFormularioLayout = new javax.swing.GroupLayout(panelFormulario);
-                panelFormulario.setLayout(panelFormularioLayout);
-                panelFormularioLayout.setHorizontalGroup(
-                                panelFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGap(0, 96, Short.MAX_VALUE));
-                panelFormularioLayout.setVerticalGroup(
-                                panelFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGap(0, 100, Short.MAX_VALUE));
+        String errNombre = Validador.validarTextoLibre(nombre);
+        if (errNombre != null) {
+            lblError.setText(errNombre);
+            return;
+        }
 
-                panelFooter.setBackground(new java.awt.Color(240, 235, 230));
+        Estudiante est = new Estudiante();
+        est.setId(codigo);
+        est.setNombre(nombre);
+        est.setFechaNacimiento(fechaNac);
+        est.setCarrera(carrera);
+        est.setEmail(email);
 
-                javax.swing.GroupLayout panelFooterLayout = new javax.swing.GroupLayout(panelFooter);
-                panelFooter.setLayout(panelFooterLayout);
-                panelFooterLayout.setHorizontalGroup(
-                                panelFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGap(0, 100, Short.MAX_VALUE));
-                panelFooterLayout.setVerticalGroup(
-                                panelFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGap(0, 100, Short.MAX_VALUE));
-
-                javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-                getContentPane().setLayout(layout);
-                layout.setHorizontalGroup(
-                                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGroup(layout.createSequentialGroup()
-                                                                .addGap(146, 146, 146)
-                                                                .addGroup(layout.createParallelGroup(
-                                                                                javax.swing.GroupLayout.Alignment.LEADING)
-                                                                                .addComponent(panelFormulario,
-                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                                .addComponent(panelHeader,
-                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                                                .addContainerGap(154, Short.MAX_VALUE))
-                                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout
-                                                                .createSequentialGroup()
-                                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                Short.MAX_VALUE)
-                                                                .addComponent(panelFooter,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                .addGap(140, 140, 140)));
-                layout.setVerticalGroup(
-                                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGroup(layout.createSequentialGroup()
-                                                                .addContainerGap()
-                                                                .addComponent(panelHeader,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                .addPreferredGap(
-                                                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(panelFormulario,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                .addPreferredGap(
-                                                                                javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                Short.MAX_VALUE)
-                                                                .addComponent(panelFooter,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)));
-
-                pack();
-        }// </editor-fold>//GEN-END:initComponents
-
-        // Variables declaration - do not modify//GEN-BEGIN:variables
-        private javax.swing.JPanel panelFooter;
-        private javax.swing.JPanel panelFormulario;
-        private javax.swing.JPanel panelHeader;
-        // End of variables declaration//GEN-END:variables
+        boolean ok = new EstudianteDAO().registrar(est, password);
+        if (ok) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Paciente registrado correctamente.",
+                "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
+        } else {
+            lblError.setText("Error al registrar. El código ya puede existir.");
+        }
+    }
 }

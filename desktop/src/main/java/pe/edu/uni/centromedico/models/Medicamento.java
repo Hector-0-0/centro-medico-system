@@ -5,6 +5,7 @@ public class Medicamento {
     private String nombre;
     private int stock;
     private String tipo;
+    private String dosis;
 
     public Medicamento() {}
 
@@ -19,9 +20,11 @@ public class Medicamento {
     public String getNombre()   { return nombre; }
     public int getStock()       { return stock; }
     public String getTipo()     { return tipo; }
+    public String getDosis()    { return dosis; }
 
     public void setId(String id)        { this.id = id; }
     public void setNombre(String n)     { this.nombre = n; }
     public void setStock(int stock)     { this.stock = stock; }
     public void setTipo(String tipo)    { this.tipo = tipo; }
+    public void setDosis(String dosis)  { this.dosis = dosis; }
 }

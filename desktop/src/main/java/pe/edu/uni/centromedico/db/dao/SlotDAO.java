@@ -16,11 +16,12 @@ public class SlotDAO {
                 SELECT s.id, s.id_disponibilidad, s.id_doctor,
                        s.dia_semana, s.hora_inicio, s.hora_fin, s.disponible,
                        d.nombre       AS nombre_doctor,
-                       d.especialidad, d.consultorio
+                       d.consultorio, e.nombre AS especialidad
                 FROM slots_disponibilidad s
                 JOIN doctores d ON s.id_doctor = d.id_usuario
+                LEFT JOIN especialidades e ON d.especialidad_id = e.id
                 WHERE s.eliminado = 0
-                ORDER BY d.especialidad, s.dia_semana, s.hora_inicio
+                ORDER BY e.nombre, s.dia_semana, s.hora_inicio
                 """;
         try (Connection conn = DatabaseManager.getConnection();
                 Statement stmt = conn.createStatement();
@@ -41,11 +42,12 @@ public class SlotDAO {
                 SELECT s.id, s.id_disponibilidad, s.id_doctor,
                        s.dia_semana, s.hora_inicio, s.hora_fin, s.disponible,
                        d.nombre       AS nombre_doctor,
-                       d.especialidad, d.consultorio
+                       d.consultorio, e.nombre AS especialidad
                 FROM slots_disponibilidad s
                 JOIN doctores d ON s.id_doctor = d.id_usuario
+                LEFT JOIN especialidades e ON d.especialidad_id = e.id
                 WHERE s.disponible = 1 AND s.eliminado = 0
-                ORDER BY d.especialidad, s.dia_semana, s.hora_inicio
+                ORDER BY e.nombre, s.dia_semana, s.hora_inicio
                 """;
         try (Connection conn = DatabaseManager.getConnection();
                 Statement stmt = conn.createStatement();

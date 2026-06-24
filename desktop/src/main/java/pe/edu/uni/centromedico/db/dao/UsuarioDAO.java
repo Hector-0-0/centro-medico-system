@@ -47,7 +47,12 @@ public class UsuarioDAO {
     }
 
     private Estudiante buscarEstudiante(Connection conn, String id) throws SQLException {
-        String sql = "SELECT * FROM estudiantes WHERE id_usuario = ?";
+        String sql = """
+                SELECT e.id_usuario, e.nombre, e.carrera, e.email, u.fecha_nacimiento
+                FROM estudiantes e
+                JOIN usuarios u ON e.id_usuario = u.id
+                WHERE e.id_usuario = ? AND e.eliminado = 0
+                """;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -57,15 +62,22 @@ public class UsuarioDAO {
             Estudiante e = new Estudiante();
             e.setId(rs.getString("id_usuario"));
             e.setNombre(rs.getString("nombre"));
-            e.setEdad(rs.getInt("edad"));
             e.setCarrera(rs.getString("carrera"));
             e.setEmail(rs.getString("email"));
+            Date fn = rs.getDate("fecha_nacimiento");
+            if (fn != null) e.setFechaNacimiento(fn.toLocalDate());
             return e;
         }
     }
 
     private Doctor buscarDoctor(Connection conn, String id) throws SQLException {
-        String sql = "SELECT * FROM doctores WHERE id_usuario = ?";
+        String sql = """
+                SELECT d.id_usuario, d.nombre, d.especialidad_id, d.consultorio,
+                       d.activo, e.nombre AS especialidad
+                FROM doctores d
+                LEFT JOIN especialidades e ON d.especialidad_id = e.id
+                WHERE d.id_usuario = ? AND d.eliminado = 0
+                """;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -75,6 +87,7 @@ public class UsuarioDAO {
             Doctor d = new Doctor();
             d.setId(rs.getString("id_usuario"));
             d.setNombre(rs.getString("nombre"));
+            d.setEspecialidadId(rs.getInt("especialidad_id"));
             d.setEspecialidad(rs.getString("especialidad"));
             d.setConsultorio(rs.getString("consultorio"));
             d.setActivo(rs.getInt("activo") == 1);
@@ -83,7 +96,7 @@ public class UsuarioDAO {
     }
 
     private Admin buscarAdmin(Connection conn, String id) throws SQLException {
-        String sql = "SELECT * FROM administradores WHERE id_usuario = ?";
+        String sql = "SELECT * FROM administradores WHERE id_usuario = ? AND eliminado = 0";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -98,7 +111,7 @@ public class UsuarioDAO {
     }
 
     private Farmacia buscarFarmacia(Connection conn, String id) throws SQLException {
-        String sql = "SELECT * FROM farmacia_usuarios WHERE id_usuario = ?";
+        String sql = "SELECT * FROM farmacia_usuarios WHERE id_usuario = ? AND eliminado = 0";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();

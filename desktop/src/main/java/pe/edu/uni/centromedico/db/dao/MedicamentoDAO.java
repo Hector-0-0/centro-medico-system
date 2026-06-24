@@ -9,7 +9,6 @@ import java.util.List;
 
 public class MedicamentoDAO {
 
-    // Para TablaManager
     public List<Medicamento> obtenerTodos() {
         List<Medicamento> lista = new ArrayList<>();
         String sql = "SELECT * FROM medicamentos ORDER BY nombre";
@@ -24,6 +23,7 @@ public class MedicamentoDAO {
                 m.setNombre(rs.getString("nombre"));
                 m.setStock(rs.getInt("stock"));
                 m.setTipo(rs.getString("tipo"));
+                m.setDosis(rs.getString("dosis"));
                 lista.add(m);
             }
 
@@ -33,7 +33,6 @@ public class MedicamentoDAO {
         return lista;
     }
 
-    // Para el combobox al crear receta
     public List<Medicamento> obtenerConStock() {
         List<Medicamento> lista = new ArrayList<>();
         String sql = "SELECT * FROM medicamentos WHERE stock > 0 ORDER BY nombre";
@@ -48,6 +47,7 @@ public class MedicamentoDAO {
                 m.setNombre(rs.getString("nombre"));
                 m.setStock(rs.getInt("stock"));
                 m.setTipo(rs.getString("tipo"));
+                m.setDosis(rs.getString("dosis"));
                 lista.add(m);
             }
 
@@ -58,13 +58,14 @@ public class MedicamentoDAO {
     }
 
     public boolean registrar(Medicamento med) {
-        String sql = "INSERT INTO medicamentos (id, nombre, stock, tipo) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO medicamentos (id, nombre, stock, tipo, dosis) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, med.getId());
             stmt.setString(2, med.getNombre());
             stmt.setInt(3, med.getStock());
             stmt.setString(4, med.getTipo());
+            stmt.setString(5, med.getDosis());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error al registrar medicamento: " + e.getMessage());

@@ -4,174 +4,34 @@ import pe.edu.uni.centromedico.util.ConfiguracionParametros;
 
 public class LoginFrame extends javax.swing.JFrame {
 
-        // Configuración externalizada de rutas (lee SGH.config)
-        private final ConfiguracionParametros OBJ = new ConfiguracionParametros();
+    private final ConfiguracionParametros OBJ = new ConfiguracionParametros();
 
-        public LoginFrame() {
-                initComponents();
+    private javax.swing.JPanel pnlFooter;
+    private javax.swing.JPanel pnlCol1;
+    private javax.swing.JLabel lblEnterateTitulo;
+    private javax.swing.JLabel lblPortal;
+    private javax.swing.JLabel lblUnisalud;
+    private javax.swing.JPanel pnlCol2;
+    private javax.swing.JLabel lblContactanosTitulo;
+    private javax.swing.JLabel lblEmail;
+    private javax.swing.JLabel lblTelefono;
+    private javax.swing.JPanel pnlCol3;
+    private javax.swing.JLabel lblEncuentranosTitulo;
+    private javax.swing.JLabel lblSede;
+    private javax.swing.JLabel lblDireccion;
+    private javax.swing.JPanel panelLogin;
+    private javax.swing.JLabel lblFondo;
+    private javax.swing.JPanel pnlFormulario;
+    private javax.swing.JLabel lblTitulo;
+    private javax.swing.JLabel lblUsuario;
+    private javax.swing.JTextField txtUsuario;
+    private javax.swing.JLabel lblPassword;
+    private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JButton btnIngresar;
+    private javax.swing.JLabel lblLogo;
+    private javax.swing.JLabel lblSubtitulo;
 
-                // Sobrescribir logo con ruta dinámica de SGH.config
-                javax.swing.ImageIcon logoIcon = OBJ.cargarIcono("logo-uni.png");
-                if (logoIcon != null) lblLogo.setIcon(logoIcon);
-
-                // ── Tarjeta de login (formulario) ────────────────────────────
-                pnlFormulario.setLayout(new net.miginfocom.swing.MigLayout(
-                                "fillx, insets 40", "[grow, center]", "[]5[]10[]10[]20[]5[]20[]30[]"));
-
-                pnlFormulario.add(lblLogo, "center, wrap");
-                pnlFormulario.add(lblTitulo, "center, wrap");
-                pnlFormulario.add(lblSubtitulo, "center, wrap");
-                pnlFormulario.add(lblUsuario, "align left, wrap");
-                pnlFormulario.add(txtUsuario, "growx, h 40!, wrap");
-                pnlFormulario.add(lblPassword, "align left, wrap");
-                pnlFormulario.add(txtPassword, "growx, h 40!, wrap");
-                pnlFormulario.add(btnIngresar, "growx, h 44!");
-
-                // ── Estética (FlatLaf) ───────────────────────────────────────
-                lblTitulo.setFont(lblTitulo.getFont().deriveFont(java.awt.Font.BOLD, 22f));
-
-                // Bordes redondeados de FlatLaf para los campos, en lugar del
-                // LineBorder plano que define el editor visual.
-                javax.swing.border.Border bordeCampo = javax.swing.UIManager.getBorder("TextField.border");
-                txtUsuario.setBorder(bordeCampo);
-                txtPassword.setBorder(bordeCampo);
-                txtUsuario.putClientProperty("FlatLaf.style", "arc: 12");
-                txtPassword.putClientProperty("FlatLaf.style", "arc: 12");
-                txtUsuario.putClientProperty("JTextField.placeholderText", "Ingresa tu usuario");
-                txtPassword.putClientProperty("JTextField.placeholderText", "Ingresa tu contraseña");
-                txtPassword.putClientProperty("JPasswordField.showRevealButton", true);
-
-                // Botón con esquinas redondeadas y color guinda FIJO en todos
-                // los estados (normal, hover, pulsado, enfocado y por defecto),
-                // para que nunca cambie de color.
-                btnIngresar.putClientProperty("FlatLaf.style",
-                                "arc: 12; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0;"
-                                                + " background: #711610; foreground: #ffffff;"
-                                                + " hoverBackground: #711610; pressedBackground: #711610;"
-                                                + " focusedBackground: #711610; selectedBackground: #711610;"
-                                                + " defaultBackground: #711610; defaultHoverBackground: #711610;"
-                                                + " defaultPressedBackground: #711610; defaultFocusedBackground: #711610");
-                btnIngresar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-
-                // Tarjeta con esquinas redondeadas
-                pnlFormulario.putClientProperty("FlatLaf.style", "arc: 24");
-
-                // El fondo (lblFondo) actúa como contenedor y centra la tarjeta
-                // encima de la imagen, evitando posicionamiento absoluto.
-                lblFondo.setLayout(new net.miginfocom.swing.MigLayout(
-                                "fill", "[grow, center]", "[grow, center]"));
-                lblFondo.add(pnlFormulario, "width 400!");
-
-                // ── Footer ───────────────────────────────────────────────────
-                pnlCol1.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 10", "[center, grow]", "[]5[]5[]"));
-                pnlCol2.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 10", "[center, grow]", "[]5[]5[]"));
-                pnlCol3.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 10", "[center, grow]", "[]5[]5[]"));
-
-                pnlCol1.add(lblEnterateTitulo, "center, wrap");
-                pnlCol1.add(lblPortal, "center, wrap");
-                pnlCol1.add(lblUnisalud, "center, wrap");
-
-                pnlCol2.add(lblContactanosTitulo, "center, wrap");
-                pnlCol2.add(lblEmail, "center, wrap");
-                pnlCol2.add(lblTelefono, "center, wrap");
-
-                pnlCol3.add(lblEncuentranosTitulo, "center, wrap");
-                pnlCol3.add(lblSede, "center, wrap");
-                pnlCol3.add(lblDireccion, "center, wrap");
-
-                // ── Estética del footer ──────────────────────────────────────
-                // Columnas transparentes para que se vea el guinda del footer.
-                pnlCol1.setOpaque(false);
-                pnlCol2.setOpaque(false);
-                pnlCol3.setOpaque(false);
-
-                java.awt.Color blancoSuave = new java.awt.Color(255, 255, 255, 205);
-
-                // Títulos: blanco, negrita y con ligero espaciado entre letras.
-                java.util.Map<java.awt.font.TextAttribute, Object> tracking = new java.util.HashMap<>();
-                tracking.put(java.awt.font.TextAttribute.TRACKING, 0.12);
-                for (javax.swing.JLabel titulo : new javax.swing.JLabel[] {
-                                lblEnterateTitulo, lblContactanosTitulo, lblEncuentranosTitulo }) {
-                        titulo.setForeground(java.awt.Color.WHITE);
-                        titulo.setFont(titulo.getFont().deriveFont(java.awt.Font.BOLD, 14f).deriveFont(tracking));
-                }
-
-                // Texto de detalle: blanco suave y un punto más pequeño.
-                for (javax.swing.JLabel detalle : new javax.swing.JLabel[] {
-                                lblPortal, lblUnisalud, lblEmail, lblTelefono, lblSede, lblDireccion }) {
-                        detalle.setForeground(blancoSuave);
-                        detalle.setFont(detalle.getFont().deriveFont(12.5f));
-                }
-
-                // Separadores verticales sutiles entre columnas.
-                pnlCol2.setBorder(javax.swing.BorderFactory.createMatteBorder(
-                                0, 1, 0, 0, new java.awt.Color(255, 255, 255, 45)));
-                pnlCol3.setBorder(javax.swing.BorderFactory.createMatteBorder(
-                                0, 1, 0, 0, new java.awt.Color(255, 255, 255, 45)));
-
-                pnlFooter.setLayout(new net.miginfocom.swing.MigLayout(
-                                "fillx, insets 0", "[grow, fill][grow, fill][grow, fill]", "[grow, fill]"));
-                pnlFooter.add(pnlCol1, "grow");
-                pnlFooter.add(pnlCol2, "grow");
-                pnlFooter.add(pnlCol3, "grow");
-                pnlFooter.setPreferredSize(new java.awt.Dimension(0, 120));
-
-                // ── Layout principal: fondo al centro, footer anclado abajo ──
-                getContentPane().setLayout(new java.awt.BorderLayout());
-                getContentPane().add(lblFondo, java.awt.BorderLayout.CENTER);
-                getContentPane().add(pnlFooter, java.awt.BorderLayout.SOUTH);
-
-                // Reescalar la imagen de fondo al redimensionar / mostrar
-                this.addComponentListener(new java.awt.event.ComponentAdapter() {
-                        public void componentResized(java.awt.event.ComponentEvent e) {
-                                escalarFondo();
-                        }
-
-                        public void componentShown(java.awt.event.ComponentEvent e) {
-                                escalarFondo();
-                        }
-                });
-
-                // Alto suficiente para que la tarjeta de login nunca quede
-                // cortada por el footer, incluso al tamaño mínimo.
-                setTitle("Centro Médico UNI");
-                setMinimumSize(new java.awt.Dimension(900, 720));
-                setSize(1000, 780);
-                setLocationRelativeTo(null);
-
-                // Lógica delegada al LoginController (MVC estricto)
-                new pe.edu.uni.centromedico.controller.LoginController(this);
-        }
-
-        private void escalarFondo() {
-                int w = lblFondo.getWidth();
-                int h = lblFondo.getHeight();
-                if (w <= 0 || h <= 0) {
-                        return;
-                }
-                javax.swing.ImageIcon fondoIcon = OBJ.cargarIcono("banner-uni.jpeg");
-                if (fondoIcon == null) return;
-                java.awt.Image original = fondoIcon.getImage();
-
-                java.awt.image.BufferedImage buffer = new java.awt.image.BufferedImage(
-                                w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-                java.awt.Graphics2D g = buffer.createGraphics();
-                g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
-                                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g.drawImage(original, 0, 0, w, h, null);
-                // Capa oscura translúcida para resaltar la tarjeta de login
-                g.setColor(new java.awt.Color(0, 0, 0, 80));
-                g.fillRect(0, 0, w, h);
-                g.dispose();
-
-                lblFondo.setIcon(new javax.swing.ImageIcon(buffer));
-        }
-
-        @SuppressWarnings("unchecked")
-        // <editor-fold defaultstate="collapsed" desc="Generated
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
+    public LoginFrame() {
         pnlFooter = new javax.swing.JPanel();
         pnlCol1 = new javax.swing.JPanel();
         lblEnterateTitulo = new javax.swing.JLabel();
@@ -203,142 +63,16 @@ public class LoginFrame extends javax.swing.JFrame {
         pnlFooter.setBackground(new java.awt.Color(113, 22, 16));
 
         lblEnterateTitulo.setText("ENTERATE");
-
         lblPortal.setText("portal.uni.edu.pe");
-
         lblUnisalud.setText("@unisaludoficial");
 
-        javax.swing.GroupLayout pnlCol1Layout = new javax.swing.GroupLayout(pnlCol1);
-        pnlCol1.setLayout(pnlCol1Layout);
-        pnlCol1Layout.setHorizontalGroup(
-            pnlCol1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlCol1Layout.createSequentialGroup()
-                .addGroup(pnlCol1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlCol1Layout.createSequentialGroup()
-                        .addGap(16, 16, 16)
-                        .addComponent(lblEnterateTitulo))
-                    .addGroup(pnlCol1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(lblPortal))
-                    .addGroup(pnlCol1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(lblUnisalud)))
-                .addContainerGap(16, Short.MAX_VALUE))
-        );
-        pnlCol1Layout.setVerticalGroup(
-            pnlCol1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlCol1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblEnterateTitulo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblPortal)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblUnisalud)
-                .addContainerGap(22, Short.MAX_VALUE))
-        );
-
         lblContactanosTitulo.setText("CONTÁCTANOS");
-
         lblEmail.setText("centromedico@uni.edu.pe");
-
         lblTelefono.setText("014811070:3004");
 
-        javax.swing.GroupLayout pnlCol2Layout = new javax.swing.GroupLayout(pnlCol2);
-        pnlCol2.setLayout(pnlCol2Layout);
-        pnlCol2Layout.setHorizontalGroup(
-            pnlCol2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlCol2Layout.createSequentialGroup()
-                .addGroup(pnlCol2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlCol2Layout.createSequentialGroup()
-                        .addGap(22, 22, 22)
-                        .addComponent(lblEmail))
-                    .addGroup(pnlCol2Layout.createSequentialGroup()
-                        .addGap(51, 51, 51)
-                        .addComponent(lblContactanosTitulo)))
-                .addContainerGap(14, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCol2Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(lblTelefono)
-                .addGap(43, 43, 43))
-        );
-        pnlCol2Layout.setVerticalGroup(
-            pnlCol2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlCol2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblContactanosTitulo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblEmail)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblTelefono)
-                .addContainerGap(22, Short.MAX_VALUE))
-        );
-
         lblEncuentranosTitulo.setText("ENCUÉNTRANOS");
-
         lblSede.setText("Sede Central");
-
         lblDireccion.setText("Av. Tupac Amaru N.º 210");
-
-        javax.swing.GroupLayout pnlCol3Layout = new javax.swing.GroupLayout(pnlCol3);
-        pnlCol3.setLayout(pnlCol3Layout);
-        pnlCol3Layout.setHorizontalGroup(
-            pnlCol3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlCol3Layout.createSequentialGroup()
-                .addContainerGap(19, Short.MAX_VALUE)
-                .addGroup(pnlCol3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCol3Layout.createSequentialGroup()
-                        .addGroup(pnlCol3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(lblDireccion)
-                            .addGroup(pnlCol3Layout.createSequentialGroup()
-                                .addComponent(lblSede)
-                                .addGap(32, 32, 32)))
-                        .addGap(17, 17, 17))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCol3Layout.createSequentialGroup()
-                        .addComponent(lblEncuentranosTitulo)
-                        .addGap(36, 36, 36))))
-        );
-        pnlCol3Layout.setVerticalGroup(
-            pnlCol3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlCol3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblEncuentranosTitulo)
-                .addGap(16, 16, 16)
-                .addComponent(lblSede)
-                .addGap(18, 18, 18)
-                .addComponent(lblDireccion)
-                .addContainerGap(12, Short.MAX_VALUE))
-        );
-
-        javax.swing.GroupLayout pnlFooterLayout = new javax.swing.GroupLayout(pnlFooter);
-        pnlFooter.setLayout(pnlFooterLayout);
-        pnlFooterLayout.setHorizontalGroup(
-            pnlFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlFooterLayout.createSequentialGroup()
-                .addGap(157, 157, 157)
-                .addComponent(pnlCol1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 576, Short.MAX_VALUE)
-                .addComponent(pnlCol2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(158, 158, 158))
-            .addGroup(pnlFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(pnlFooterLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(pnlCol3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-        );
-        pnlFooterLayout.setVerticalGroup(
-            pnlFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlFooterLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(pnlFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(pnlCol2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(pnlCol1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
-            .addGroup(pnlFooterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(pnlFooterLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(pnlCol3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-        );
 
         panelLogin.setOpaque(false);
 
@@ -347,183 +81,169 @@ public class LoginFrame extends javax.swing.JFrame {
         pnlFormulario.setBackground(new java.awt.Color(255, 255, 255));
         pnlFormulario.setPreferredSize(new java.awt.Dimension(400, 500));
 
-        lblTitulo.setFont(new java.awt.Font("Liberation Sans", 1, 18)); // NOI18N
+        lblTitulo.setFont(new java.awt.Font("Liberation Sans", 1, 18));
         lblTitulo.setForeground(new java.awt.Color(113, 22, 16));
         lblTitulo.setText("Centro Médico UNI");
 
-        lblUsuario.setFont(new java.awt.Font("Liberation Sans", 0, 14)); // NOI18N
+        lblUsuario.setFont(new java.awt.Font("Liberation Sans", 0, 14));
         lblUsuario.setText("Usuario");
 
         txtUsuario.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(200, 200, 200)));
         txtUsuario.setPreferredSize(new java.awt.Dimension(250, 40));
 
-        lblPassword.setFont(new java.awt.Font("Liberation Sans", 0, 14)); // NOI18N
+        lblPassword.setFont(new java.awt.Font("Liberation Sans", 0, 14));
         lblPassword.setText("Contraseña");
 
         txtPassword.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(200, 200, 200)));
         txtPassword.setPreferredSize(new java.awt.Dimension(250, 40));
 
         btnIngresar.setBackground(new java.awt.Color(113, 22, 16));
-        btnIngresar.setFont(new java.awt.Font("Liberation Sans", 1, 14)); // NOI18N
+        btnIngresar.setFont(new java.awt.Font("Liberation Sans", 1, 14));
         btnIngresar.setForeground(new java.awt.Color(255, 255, 255));
         btnIngresar.setText("Ingresar");
         btnIngresar.setBorder(null);
         btnIngresar.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        btnIngresar.addActionListener(this::btnIngresarActionPerformed);
 
-        lblLogo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/logo-uni.png"))); // NOI18N
+        lblLogo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Images/logo-uni.png")));
 
         lblSubtitulo.setForeground(new java.awt.Color(153, 153, 153));
         lblSubtitulo.setText("Universidad Nacional de Ingeniería");
 
-        javax.swing.GroupLayout pnlFormularioLayout = new javax.swing.GroupLayout(pnlFormulario);
-        pnlFormulario.setLayout(pnlFormularioLayout);
-        pnlFormularioLayout.setHorizontalGroup(
-            pnlFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlFormularioLayout.createSequentialGroup()
-                .addGroup(pnlFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlFormularioLayout.createSequentialGroup()
-                        .addGap(167, 167, 167)
-                        .addComponent(btnIngresar))
-                    .addGroup(pnlFormularioLayout.createSequentialGroup()
-                        .addGap(76, 76, 76)
-                        .addGroup(pnlFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblUsuario)
-                            .addComponent(lblPassword)
-                            .addComponent(txtUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(74, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlFormularioLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(pnlFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlFormularioLayout.createSequentialGroup()
-                        .addComponent(lblTitulo)
-                        .addGap(116, 116, 116))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlFormularioLayout.createSequentialGroup()
-                        .addComponent(lblLogo)
-                        .addGap(148, 148, 148))))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlFormularioLayout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(lblSubtitulo)
-                .addGap(99, 99, 99))
-        );
-        pnlFormularioLayout.setVerticalGroup(
-            pnlFormularioLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlFormularioLayout.createSequentialGroup()
-                .addContainerGap(26, Short.MAX_VALUE)
-                .addComponent(lblLogo)
-                .addGap(18, 18, 18)
-                .addComponent(lblTitulo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(lblSubtitulo)
-                .addGap(19, 19, 19)
-                .addComponent(lblUsuario)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(txtUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(20, 20, 20)
-                .addComponent(lblPassword)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(35, 35, 35)
-                .addComponent(btnIngresar)
-                .addGap(55, 55, 55))
-        );
+        javax.swing.ImageIcon logoIcon = OBJ.cargarIcono("logo-uni.png");
+        if (logoIcon != null) lblLogo.setIcon(logoIcon);
 
-        javax.swing.GroupLayout panelLoginLayout = new javax.swing.GroupLayout(panelLogin);
-        panelLogin.setLayout(panelLoginLayout);
-        panelLoginLayout.setHorizontalGroup(
-            panelLoginLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelLoginLayout.createSequentialGroup()
-                .addGap(311, 311, 311)
-                .addComponent(pnlFormulario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(516, Short.MAX_VALUE))
-            .addGroup(panelLoginLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(panelLoginLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(lblFondo, javax.swing.GroupLayout.PREFERRED_SIZE, 0, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(710, Short.MAX_VALUE)))
-        );
-        panelLoginLayout.setVerticalGroup(
-            panelLoginLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelLoginLayout.createSequentialGroup()
-                .addGap(44, 44, 44)
-                .addComponent(pnlFormulario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(159, Short.MAX_VALUE))
-            .addGroup(panelLoginLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(panelLoginLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(lblFondo, javax.swing.GroupLayout.PREFERRED_SIZE, 0, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(562, Short.MAX_VALUE)))
-        );
+        pnlFormulario.setLayout(new net.miginfocom.swing.MigLayout(
+                "fillx, insets 40", "[grow, center]", "[]5[]10[]10[]20[]5[]20[]30[]"));
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1109, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(panelLogin, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(pnlFooter, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 703, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(panelLogin, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(585, Short.MAX_VALUE)
-                    .addComponent(pnlFooter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-        );
+        pnlFormulario.add(lblLogo, "center, wrap");
+        pnlFormulario.add(lblTitulo, "center, wrap");
+        pnlFormulario.add(lblSubtitulo, "center, wrap");
+        pnlFormulario.add(lblUsuario, "align left, wrap");
+        pnlFormulario.add(txtUsuario, "growx, h 40!, wrap");
+        pnlFormulario.add(lblPassword, "align left, wrap");
+        pnlFormulario.add(txtPassword, "growx, h 40!, wrap");
+        pnlFormulario.add(btnIngresar, "growx, h 44!");
 
-        pack();
-        setLocationRelativeTo(null);
-    }// </editor-fold>//GEN-END:initComponents
+        lblTitulo.setFont(lblTitulo.getFont().deriveFont(java.awt.Font.BOLD, 22f));
 
-    private void btnIngresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIngresarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnIngresarActionPerformed
+        javax.swing.border.Border bordeCampo = javax.swing.UIManager.getBorder("TextField.border");
+        txtUsuario.setBorder(bordeCampo);
+        txtPassword.setBorder(bordeCampo);
+        txtUsuario.putClientProperty("FlatLaf.style", "arc: 12");
+        txtPassword.putClientProperty("FlatLaf.style", "arc: 12");
+        txtUsuario.putClientProperty("JTextField.placeholderText", "Ingresa tu usuario");
+        txtPassword.putClientProperty("JTextField.placeholderText", "Ingresa tu contraseña");
+        txtPassword.putClientProperty("JPasswordField.showRevealButton", true);
 
-        public static void main(String args[]) {
+        btnIngresar.putClientProperty("FlatLaf.style",
+                "arc: 12; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0;"
+                        + " background: #711610; foreground: #ffffff;"
+                        + " hoverBackground: #711610; pressedBackground: #711610;"
+                        + " focusedBackground: #711610; selectedBackground: #711610");
+        btnIngresar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
-                // Mismo Look & Feel que la app real (FlatLaf) para que el
-                // login se vea igual si se ejecuta esta clase directamente.
-                com.formdev.flatlaf.FlatLightLaf.setup();
+        pnlFormulario.putClientProperty("FlatLaf.style", "arc: 24");
 
-                java.awt.EventQueue.invokeLater(() -> new LoginFrame().setVisible(true));
+        lblFondo.setLayout(new net.miginfocom.swing.MigLayout(
+                "fill", "[grow, center]", "[grow, center]"));
+        lblFondo.add(pnlFormulario, "width 400!");
+
+        pnlCol1.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 10", "[center, grow]", "[]5[]5[]"));
+        pnlCol2.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 10", "[center, grow]", "[]5[]5[]"));
+        pnlCol3.setLayout(new net.miginfocom.swing.MigLayout("fillx, insets 10", "[center, grow]", "[]5[]5[]"));
+
+        pnlCol1.add(lblEnterateTitulo, "center, wrap");
+        pnlCol1.add(lblPortal, "center, wrap");
+        pnlCol1.add(lblUnisalud, "center, wrap");
+
+        pnlCol2.add(lblContactanosTitulo, "center, wrap");
+        pnlCol2.add(lblEmail, "center, wrap");
+        pnlCol2.add(lblTelefono, "center, wrap");
+
+        pnlCol3.add(lblEncuentranosTitulo, "center, wrap");
+        pnlCol3.add(lblSede, "center, wrap");
+        pnlCol3.add(lblDireccion, "center, wrap");
+
+        pnlCol1.setOpaque(false);
+        pnlCol2.setOpaque(false);
+        pnlCol3.setOpaque(false);
+
+        java.awt.Color blancoSuave = new java.awt.Color(255, 255, 255, 205);
+
+        java.util.Map<java.awt.font.TextAttribute, Object> tracking = new java.util.HashMap<>();
+        tracking.put(java.awt.font.TextAttribute.TRACKING, 0.12);
+        for (javax.swing.JLabel titulo : new javax.swing.JLabel[]{
+                lblEnterateTitulo, lblContactanosTitulo, lblEncuentranosTitulo}) {
+            titulo.setForeground(java.awt.Color.WHITE);
+            titulo.setFont(titulo.getFont().deriveFont(java.awt.Font.BOLD, 14f).deriveFont(tracking));
         }
 
-        // ── API pública para LoginController ─────────────────────────────────
-        public javax.swing.JButton       getBtnIngresar() { return btnIngresar; }
-        public javax.swing.JTextField    getTxtUsuario()  { return txtUsuario; }
-        public javax.swing.JPasswordField getTxtPassword(){ return txtPassword; }
+        for (javax.swing.JLabel detalle : new javax.swing.JLabel[]{
+                lblPortal, lblUnisalud, lblEmail, lblTelefono, lblSede, lblDireccion}) {
+            detalle.setForeground(blancoSuave);
+            detalle.setFont(detalle.getFont().deriveFont(12.5f));
+        }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnIngresar;
-    private javax.swing.JLabel lblContactanosTitulo;
-    private javax.swing.JLabel lblDireccion;
-    private javax.swing.JLabel lblEmail;
-    private javax.swing.JLabel lblEncuentranosTitulo;
-    private javax.swing.JLabel lblEnterateTitulo;
-    private javax.swing.JLabel lblFondo;
-    private javax.swing.JLabel lblLogo;
-    private javax.swing.JLabel lblPassword;
-    private javax.swing.JLabel lblPortal;
-    private javax.swing.JLabel lblSede;
-    private javax.swing.JLabel lblSubtitulo;
-    private javax.swing.JLabel lblTelefono;
-    private javax.swing.JLabel lblTitulo;
-    private javax.swing.JLabel lblUnisalud;
-    private javax.swing.JLabel lblUsuario;
-    private javax.swing.JPanel panelLogin;
-    private javax.swing.JPanel pnlCol1;
-    private javax.swing.JPanel pnlCol2;
-    private javax.swing.JPanel pnlCol3;
-    private javax.swing.JPanel pnlFooter;
-    private javax.swing.JPanel pnlFormulario;
-    private javax.swing.JPasswordField txtPassword;
-    private javax.swing.JTextField txtUsuario;
-    // End of variables declaration//GEN-END:variables
+        pnlCol2.setBorder(javax.swing.BorderFactory.createMatteBorder(
+                0, 1, 0, 0, new java.awt.Color(255, 255, 255, 45)));
+        pnlCol3.setBorder(javax.swing.BorderFactory.createMatteBorder(
+                0, 1, 0, 0, new java.awt.Color(255, 255, 255, 45)));
+
+        pnlFooter.setLayout(new net.miginfocom.swing.MigLayout(
+                "fillx, insets 0", "[grow, fill][grow, fill][grow, fill]", "[grow, fill]"));
+        pnlFooter.add(pnlCol1, "grow");
+        pnlFooter.add(pnlCol2, "grow");
+        pnlFooter.add(pnlCol3, "grow");
+        pnlFooter.setPreferredSize(new java.awt.Dimension(0, 120));
+
+        getContentPane().setLayout(new java.awt.BorderLayout());
+        getContentPane().add(lblFondo, java.awt.BorderLayout.CENTER);
+        getContentPane().add(pnlFooter, java.awt.BorderLayout.SOUTH);
+
+        this.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                escalarFondo();
+            }
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                escalarFondo();
+            }
+        });
+
+        setTitle("Centro Médico UNI");
+        setMinimumSize(new java.awt.Dimension(900, 720));
+        setSize(1000, 780);
+        setLocationRelativeTo(null);
+
+        new pe.edu.uni.centromedico.controller.LoginController(this);
+    }
+
+    private void escalarFondo() {
+        int w = lblFondo.getWidth();
+        int h = lblFondo.getHeight();
+        if (w <= 0 || h <= 0) return;
+        javax.swing.ImageIcon fondoIcon = OBJ.cargarIcono("banner-uni.jpeg");
+        if (fondoIcon == null) return;
+        java.awt.Image original = fondoIcon.getImage();
+
+        java.awt.image.BufferedImage buffer = new java.awt.image.BufferedImage(
+                w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = buffer.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(original, 0, 0, w, h, null);
+        g.setColor(new java.awt.Color(0, 0, 0, 80));
+        g.fillRect(0, 0, w, h);
+        g.dispose();
+
+        lblFondo.setIcon(new javax.swing.ImageIcon(buffer));
+    }
+
+    public static void main(String args[]) {
+        com.formdev.flatlaf.FlatLightLaf.setup();
+        java.awt.EventQueue.invokeLater(() -> new LoginFrame().setVisible(true));
+    }
+
+    public javax.swing.JButton getBtnIngresar() { return btnIngresar; }
+    public javax.swing.JTextField getTxtUsuario() { return txtUsuario; }
+    public javax.swing.JPasswordField getTxtPassword() { return txtPassword; }
 }
