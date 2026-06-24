@@ -1,105 +1,83 @@
 package edu.universidad.centromedico.service;
 
-import edu.universidad.centromedico.dto.RecetaDTO;
-import edu.universidad.centromedico.model.*;
-import edu.universidad.centromedico.repository.*;
+import edu.universidad.centromedico.dto.RecetaPendienteDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Lógica de negocio de recetas: emisión por el médico y entrega por la
- * farmacia (que descuenta el stock de los medicamentos recetados).
+ * Recetas de farmacia. Replica RecetaDAO del desktop: listar pendientes (con
+ * paciente y diagnóstico) y entregar (descuenta stock + marca ENTREGADA).
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class RecetaService {
 
-    private final RecetaRepository recetaRepository;
-    private final PacienteRepository pacienteRepository;
-    private final MedicoRepository medicoRepository;
-    private final CitaRepository citaRepository;
-    private final MedicamentoRepository medicamentoRepository;
+    private final JdbcTemplate jdbc;
+    private final MedicamentoService medicamentoService;
 
-    public List<Receta> listar() {
-        return recetaRepository.findAllByOrderByFechaDesc();
-    }
-
-    public List<Receta> listarPendientes() {
-        return recetaRepository.findByEstadoOrderByFechaDesc(EstadoReceta.PENDIENTE);
-    }
-
-    public List<Receta> listarPorPaciente(Long pacienteId) {
-        return recetaRepository.findByPacienteIdOrderByFechaDesc(pacienteId);
-    }
-
-    public List<Receta> listarPorMedico(Long medicoId) {
-        return recetaRepository.findByMedicoIdOrderByFechaDesc(medicoId);
-    }
-
-    public Receta buscarPorId(Long id) {
-        return recetaRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Receta no encontrada con id: " + id));
-    }
-
-    public Receta emitir(RecetaDTO dto) {
-        Paciente paciente = pacienteRepository.findById(dto.getPacienteId())
-            .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
-        Medico medico = medicoRepository.findById(dto.getMedicoId())
-            .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
-
-        if (dto.getDetalles() == null || dto.getDetalles().isEmpty()) {
-            throw new RuntimeException("La receta debe tener al menos un medicamento");
-        }
-
-        Receta receta = new Receta();
-        receta.setPaciente(paciente);
-        receta.setMedico(medico);
-        receta.setDiagnostico(dto.getDiagnostico());
-        receta.setEstado(EstadoReceta.PENDIENTE);
-        if (dto.getCitaId() != null) {
-            citaRepository.findById(dto.getCitaId()).ifPresent(receta::setCita);
-        }
-
-        for (RecetaDTO.DetalleDTO d : dto.getDetalles()) {
-            Medicamento m = medicamentoRepository.findById(d.getMedicamentoId())
-                .orElseThrow(() -> new RuntimeException("Medicamento no encontrado: " + d.getMedicamentoId()));
-            RecetaDetalle det = new RecetaDetalle();
-            det.setMedicamento(m);
-            det.setDosis(d.getDosis());
-            det.setDuracion(d.getDuracion());
-            det.setCantidad(d.getCantidad() != null && d.getCantidad() > 0 ? d.getCantidad() : 1);
-            receta.agregarDetalle(det);
-        }
-
-        return recetaRepository.save(receta);
+    public List<RecetaPendienteDTO> pendientes() {
+        return jdbc.query("""
+            SELECT r.id AS id_receta,
+                   e.nombre AS nombre_estudiante,
+                   c.id AS id_cita,
+                   COALESCE(
+                       (SELECT STRING_AGG(cc.codigo + ' - ' + cc.descripcion, ' | ')
+                        FROM atencion_diagnostico ad
+                        JOIN codigos_cie cc ON ad.id_cie = cc.id
+                        WHERE ad.id_atencion = a.id),
+                       a.diagnostico
+                   ) AS diagnostico,
+                   r.estado
+            FROM recetas r
+            JOIN atencion_cita a ON r.id_atencion = a.id
+            JOIN citas         c ON a.id_cita      = c.id
+            JOIN estudiantes   e ON c.id_estudiante = e.id_usuario
+            WHERE r.estado = 'PENDIENTE'
+            ORDER BY r.id DESC
+            """,
+            (rs, n) -> new RecetaPendienteDTO(
+                rs.getInt("id_receta"), rs.getString("nombre_estudiante"),
+                rs.getInt("id_cita"), rs.getString("diagnostico"), rs.getString("estado")));
     }
 
     /**
-     * La farmacia entrega la receta: descuenta el stock de cada medicamento
-     * y marca la receta como ENTREGADA.
+     * Entrega la receta: descuenta 1 de stock por medicamento (registrando la
+     * salida en la auditoría) y marca ENTREGADA.
      */
-    public Receta entregar(Long id) {
-        Receta receta = buscarPorId(id);
-        if (receta.getEstado() == EstadoReceta.ENTREGADA) {
+    @Transactional
+    public void entregar(int idReceta, String usuario) {
+        List<Map<String, Object>> filas = jdbc.queryForList(
+            "SELECT estado FROM recetas WHERE id = ?", idReceta);
+        if (filas.isEmpty()) {
+            throw new RuntimeException("La receta no existe");
+        }
+        if (!"PENDIENTE".equals(filas.get(0).get("estado"))) {
             throw new RuntimeException("La receta ya fue entregada");
         }
 
-        for (RecetaDetalle det : receta.getDetalles()) {
-            Medicamento m = det.getMedicamento();
-            int restante = m.getStockActual() - det.getCantidad();
-            if (restante < 0) {
-                throw new RuntimeException("Stock insuficiente de " + m.getNombre()
-                    + " (disponible: " + m.getStockActual() + ", requerido: " + det.getCantidad() + ")");
-            }
-            m.setStockActual(restante);
-            medicamentoRepository.save(m);
+        // Un descuento de 1 por medicamento distinto de la receta (con stock).
+        List<Map<String, Object>> items = jdbc.queryForList("""
+            SELECT DISTINCT m.id AS id_med, m.stock AS stock
+            FROM medicamentos m
+            INNER JOIN receta_detalle rd ON m.id = rd.id_medicamento
+            WHERE rd.id_receta = ?
+            """, idReceta);
+
+        for (Map<String, Object> item : items) {
+            int stock = ((Number) item.get("stock")).intValue();
+            if (stock <= 0) continue; // sin existencias: no se descuenta ni se audita
+            String idMed = (String) item.get("id_med");
+            int nuevo = stock - 1;
+            jdbc.update("UPDATE medicamentos SET stock = ? WHERE id = ?", nuevo, idMed);
+            medicamentoService.registrarMovimiento(
+                idMed, "SALIDA", 1, nuevo, "Entrega de receta #" + idReceta, usuario);
         }
 
-        receta.setEstado(EstadoReceta.ENTREGADA);
-        return recetaRepository.save(receta);
+        jdbc.update("UPDATE recetas SET estado = 'ENTREGADA' WHERE id = ?", idReceta);
     }
 }

@@ -1,36 +1,21 @@
 services:
-  # ─── Base de datos PostgreSQL ───────────────────────────────────
-  db:
-    image: postgres:15-alpine
-    container_name: centromedico-db
-    environment:
-      POSTGRES_DB: centro_medico
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d centro_medico"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   # ─── Backend Spring Boot (API REST) ─────────────────────────────
+  # La BD es el contenedor SQL Server que ya tienes corriendo (la MISMA
+  # del desktop). No la administra este compose: el backend se conecta a
+  # ella a través del host (1433 publicado) usando host.docker.internal.
   backend:
     build: ./backend
     container_name: centromedico-backend
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/centro_medico
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_URL: "jdbc:sqlserver://host.docker.internal:1433;databaseName=centro_medico;encrypt=true;trustServerCertificate=true"
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: Rodrigo3%
       APP_JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-    depends_on:
-      db:
-        condition: service_healthy
+    # Permite resolver host.docker.internal hacia el host en Linux
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ─── Frontend React (servido por Nginx) ─────────────────────────
   frontend:
@@ -40,6 +25,3 @@ services:
       - "3000:80"
     depends_on:
       - backend
-
-volumes:
-  pgdata:

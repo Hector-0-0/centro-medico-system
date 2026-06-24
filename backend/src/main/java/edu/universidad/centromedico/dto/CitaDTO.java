@@ -1,22 +1,23 @@
 package edu.universidad.centromedico.dto;
 
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
 
-/** DTO para crear o modificar una cita médica. */
+/** Una cita con los datos de paciente, médico y horario (para listar). */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CitaDTO {
-
-    @NotNull(message = "El paciente es obligatorio")
-    private Long pacienteId;
-
-    @NotNull(message = "El médico es obligatorio")
-    private Long medicoId;
-
-    @NotNull(message = "La fecha y hora son obligatorias")
-    private LocalDateTime fechaHora;
-
+    private int id;
+    private String idEstudiante;
+    private String nombreEstudiante;
+    private String idDoctor;
+    private String nombreDoctor;
+    private String especialidad;
     private String motivo;
-    private String consultorio;
+    private String estado;
+    private String diaSemana;
+    private String horaInicio;
+    private String horaFin;
 }

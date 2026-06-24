@@ -1,179 +1,241 @@
-import { useState, useEffect } from 'react';
-import Layout from '../components/Layout';
-import Buscador from '../components/Buscador';
-import { disponibilidadService, pacienteService } from '../services/servicios';
-import { getRol, getPacienteId } from '../services/authService';
+import { useEffect, useMemo, useState } from 'react';
+import { listarSlots, agendarCita } from '../services/slotService';
+import { mensajeError } from '../services/api';
 
-const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
+const distintos = (arr) => [...new Set(arr)];
 
-const s = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b' },
-  subtitulo: { fontSize: 14, color: '#64748b', marginBottom: 20 },
-  filtros: { display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' },
-  select: { padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, background: '#fff', outline: 'none' },
-  tabla: { width: '100%', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderCollapse: 'collapse' },
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#8b1414', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8ddd8', background: '#f4ece4' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1e9e2' },
-  btnAgendar: { padding: '6px 14px', background: '#711610', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
-  badge: { display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: '#dcfce7', color: '#166534' },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modal: { background: '#fff', borderRadius: 16, padding: 32, width: 460, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
-  modalTit: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 6 },
-  modalSub: { fontSize: 13, color: '#64748b', marginBottom: 20 },
-  campo: { marginBottom: 16 },
-  label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
-  input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' },
-  btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
-  btnPrimario: { padding: '10px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
-  ok: { background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#166534', marginBottom: 16 },
-};
-
-// Día español (BACK) → índice JS getDay() (Domingo=0 … Sábado=6)
-const DIA_INDEX = { DOMINGO: 0, LUNES: 1, MARTES: 2, MIERCOLES: 3, JUEVES: 4, VIERNES: 5, SABADO: 6 };
-
-/** Próxima fecha (YYYY-MM-DD) que cae en el día de la semana indicado. */
-const proximaFecha = (diaSemana) => {
-  const objetivo = DIA_INDEX[(diaSemana || '').toUpperCase()];
-  if (objetivo === undefined) return '';
-  const hoy = new Date();
-  let diff = (objetivo - hoy.getDay() + 7) % 7;
-  if (diff === 0) diff = 7; // siempre a futuro
-  const d = new Date(hoy); d.setDate(hoy.getDate() + diff);
-  return d.toISOString().slice(0, 10);
-};
-
+/** Horarios — réplica del DashboardPanel del desktop (ver slots + agendar). */
 export default function Horarios() {
-  const rol = getRol();
-  const esPaciente = rol === 'PACIENTE';
-
-  const [horarios, setHorarios] = useState([]);
-  const [pacientes, setPacientes] = useState([]);
-  const [especialidad, setEspecialidad] = useState('');
-  const [buscar, setBuscar] = useState('');
-  const [agendar, setAgendar] = useState(null); // { disp, fecha, pacienteId, motivo }
-  const [error, setError] = useState('');
-  const [ok, setOk] = useState('');
-  const [guardando, setGuardando] = useState(false);
+  const [slots, setSlots] = useState([]);
+  const [especialidad, setEspecialidad] = useState('Todas');
+  const [estado, setEstado] = useState('Todos'); // Todos | Disponibles | Ocupados
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const cargar = async () => {
     try {
-      setHorarios((await disponibilidadService.listar()).data);
-      if (!esPaciente) setPacientes((await pacienteService.listar()).data);
-    } catch (e) { console.error(e); }
+      setSlots(await listarSlots());
+    } catch {
+      setSlots([]);
+    }
   };
-  useEffect(() => { cargar(); /* eslint-disable-next-line */ }, []);
 
-  const especialidades = [...new Set(horarios.map(h => h.medico?.especialidad?.nombre).filter(Boolean))];
-  const visibles = horarios.filter(h =>
-    (!especialidad || h.medico?.especialidad?.nombre === especialidad) &&
-    (!buscar || incluye(buscar, h.medico?.nombre, h.medico?.apellido, h.medico?.especialidad?.nombre, h.diaSemana, h.consultorio))
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  const especialidades = useMemo(
+    () => ['Todas', ...distintos(slots.map((s) => s.especialidad)).sort()],
+    [slots],
   );
 
-  const abrirAgendar = (disp) => {
-    setError(''); setOk('');
-    setAgendar({ disp, fecha: proximaFecha(disp.diaSemana), pacienteId: esPaciente ? getPacienteId() : '', motivo: '' });
-  };
-
-  const confirmar = async (e) => {
-    e.preventDefault(); setGuardando(true); setError(''); setOk('');
-    try {
-      await disponibilidadService.agendar({
-        disponibilidadId: agendar.disp.id,
-        pacienteId: Number(agendar.pacienteId),
-        fecha: agendar.fecha,
-        motivo: agendar.motivo,
-      });
-      setAgendar(null);
-      setOk('✅ Cita agendada correctamente. Revísala en "Mis Citas".');
-    } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.message || 'No se pudo agendar la cita');
-    } finally { setGuardando(false); }
-  };
-
-  const hora = (h) => (h ? h.slice(0, 5) : '');
+  const filtrados = slots.filter(
+    (s) =>
+      (especialidad === 'Todas' || s.especialidad === especialidad) &&
+      (estado === 'Todos' ||
+        (estado === 'Disponibles' && s.disponible) ||
+        (estado === 'Ocupados' && !s.disponible)),
+  );
 
   return (
-    <Layout titulo="Horarios disponibles">
-      <div style={s.header}><div style={s.titulo}>🗓️ Horarios disponibles</div></div>
-      <div style={s.subtitulo}>Selecciona un horario y agenda tu cita</div>
+    <div>
+      <h1 className="panel__title">Horarios Disponibles</h1>
 
-      {ok && <div style={s.ok}>{ok}</div>}
-
-      <div style={s.filtros}>
-        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por médico, día o consultorio..." ancho={320} />
-        <select style={s.select} value={especialidad} onChange={e => setEspecialidad(e.target.value)}>
-          <option value="">Todas las especialidades</option>
-          {especialidades.map(e => <option key={e} value={e}>{e}</option>)}
-        </select>
+      <div className="toolbar">
+        <label className="toolbar__label">
+          Especialidad
+          <select
+            className="toolbar__select"
+            value={especialidad}
+            onChange={(e) => setEspecialidad(e.target.value)}
+          >
+            {especialidades.map((esp) => <option key={esp} value={esp}>{esp}</option>)}
+          </select>
+        </label>
+        <label className="toolbar__label">
+          Estado
+          <select
+            className="toolbar__select"
+            value={estado}
+            onChange={(e) => setEstado(e.target.value)}
+          >
+            {['Todos', 'Disponibles', 'Ocupados'].map((es) => (
+              <option key={es} value={es}>{es}</option>
+            ))}
+          </select>
+        </label>
+        <button className="btn btn--primary" onClick={() => setModalAbierto(true)}>
+          + Agendar Cita
+        </button>
       </div>
 
-      <table style={s.tabla}>
-        <thead>
-          <tr>
-            <th style={s.th}>Especialidad</th>
-            <th style={s.th}>Médico</th>
-            <th style={s.th}>Día</th>
-            <th style={s.th}>Horario</th>
-            <th style={s.th}>Consultorio</th>
-            <th style={s.th}>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibles.length === 0 ? (
-            <tr><td colSpan={6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No hay horarios disponibles</td></tr>
-          ) : visibles.map(h => (
-            <tr key={h.id}>
-              <td style={s.td}>{h.medico?.especialidad?.nombre || '—'}</td>
-              <td style={s.td}>Dr. {h.medico?.nombre} {h.medico?.apellido}</td>
-              <td style={s.td}>{h.diaSemana}</td>
-              <td style={s.td}>{hora(h.horaInicio)} – {hora(h.horaFin)}</td>
-              <td style={s.td}>{h.consultorio || '—'}</td>
-              <td style={s.td}><button style={s.btnAgendar} onClick={() => abrirAgendar(h)}>Agendar</button></td>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Especialidad</th>
+              <th>Médico</th>
+              <th>Día</th>
+              <th>Hora</th>
+              <th>Consultorio</th>
+              <th>Estado</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtrados.length === 0 ? (
+              <tr>
+                <td className="table__empty" colSpan={6}>Sin horarios</td>
+              </tr>
+            ) : (
+              filtrados.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.especialidad}</td>
+                  <td>{s.nombreDoctor}</td>
+                  <td>{s.diaSemana}</td>
+                  <td>{s.horaInicio} - {s.horaFin}</td>
+                  <td>{s.consultorio}</td>
+                  <td>{s.disponible ? 'Disponible' : 'Ocupado'}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {agendar && (
-        <div style={s.overlay} onClick={e => e.target === e.currentTarget && setAgendar(null)}>
-          <div style={s.modal}>
-            <div style={s.modalTit}>Agendar cita</div>
-            <div style={s.modalSub}>
-              Dr. {agendar.disp.medico?.nombre} {agendar.disp.medico?.apellido} · {agendar.disp.diaSemana} {hora(agendar.disp.horaInicio)}
-            </div>
-            {error && <div style={s.error}>{error}</div>}
-            <form onSubmit={confirmar}>
-              {!esPaciente && (
-                <div style={s.campo}>
-                  <label style={s.label}>Paciente *</label>
-                  <select style={{ ...s.input, background: '#fff' }} required value={agendar.pacienteId}
-                          onChange={e => setAgendar(a => ({ ...a, pacienteId: e.target.value }))}>
-                    <option value="">— Seleccionar paciente —</option>
-                    {pacientes.map(p => <option key={p.id} value={p.id}>{p.nombre} {p.apellido} ({p.dni})</option>)}
-                  </select>
-                </div>
-              )}
-              <div style={s.campo}>
-                <label style={s.label}>Fecha ({agendar.disp.diaSemana}) *</label>
-                <input style={s.input} type="date" required value={agendar.fecha}
-                       onChange={e => setAgendar(a => ({ ...a, fecha: e.target.value }))} />
-              </div>
-              <div style={s.campo}>
-                <label style={s.label}>Motivo</label>
-                <input style={s.input} placeholder="Motivo de la consulta" value={agendar.motivo}
-                       onChange={e => setAgendar(a => ({ ...a, motivo: e.target.value }))} />
-              </div>
-              <div style={s.btnsFoot}>
-                <button type="button" style={s.btnCancelar} onClick={() => setAgendar(null)}>Cancelar</button>
-                <button type="submit" style={s.btnPrimario} disabled={guardando}>{guardando ? 'Agendando...' : 'Confirmar cita'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {modalAbierto && (
+        <AgendarModal
+          slots={slots.filter((s) => s.disponible)}
+          onClose={() => setModalAbierto(false)}
+          onSaved={() => {
+            setModalAbierto(false);
+            cargar();
+          }}
+        />
       )}
-    </Layout>
+    </div>
+  );
+}
+
+function AgendarModal({ slots, onClose, onSaved }) {
+  const [especialidad, setEspecialidad] = useState('');
+  const [medico, setMedico] = useState('');
+  const [dia, setDia] = useState('');
+  const [idSlot, setIdSlot] = useState('');
+  const [motivo, setMotivo] = useState('');
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const especialidades = distintos(slots.map((s) => s.especialidad)).sort();
+  const medicos = distintos(
+    slots.filter((s) => s.especialidad === especialidad).map((s) => s.nombreDoctor),
+  ).sort();
+  const dias = distintos(
+    slots
+      .filter((s) => s.especialidad === especialidad && s.nombreDoctor === medico)
+      .map((s) => s.diaSemana),
+  );
+  const horas = slots.filter(
+    (s) => s.especialidad === especialidad && s.nombreDoctor === medico && s.diaSemana === dia,
+  );
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!idSlot) {
+      setError('Selecciona especialidad, médico, día y hora.');
+      return;
+    }
+    if (!motivo.trim()) {
+      setError('Ingresa el motivo de la consulta.');
+      return;
+    }
+    setGuardando(true);
+    try {
+      await agendarCita({ idSlot: Number(idSlot), motivo: motivo.trim() });
+      onSaved();
+    } catch (err) {
+      setError(mensajeError(err, 'No se pudo agendar la cita.'));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="modal__overlay" onClick={onClose}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={guardar}>
+        <div className="modal__header">Agendar Cita</div>
+        <div className="modal__body">
+          {error && <div className="modal__error">{error}</div>}
+
+          <label className="field">
+            <span className="field__label">Especialidad</span>
+            <select
+              className="toolbar__select"
+              value={especialidad}
+              onChange={(e) => { setEspecialidad(e.target.value); setMedico(''); setDia(''); setIdSlot(''); }}
+            >
+              <option value="">Selecciona...</option>
+              {especialidades.map((esp) => <option key={esp} value={esp}>{esp}</option>)}
+            </select>
+          </label>
+
+          <label className="field">
+            <span className="field__label">Médico</span>
+            <select
+              className="toolbar__select"
+              value={medico}
+              disabled={!especialidad}
+              onChange={(e) => { setMedico(e.target.value); setDia(''); setIdSlot(''); }}
+            >
+              <option value="">Selecciona...</option>
+              {medicos.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </label>
+
+          <label className="field">
+            <span className="field__label">Día</span>
+            <select
+              className="toolbar__select"
+              value={dia}
+              disabled={!medico}
+              onChange={(e) => { setDia(e.target.value); setIdSlot(''); }}
+            >
+              <option value="">Selecciona...</option>
+              {dias.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </label>
+
+          <label className="field">
+            <span className="field__label">Hora</span>
+            <select
+              className="toolbar__select"
+              value={idSlot}
+              disabled={!dia}
+              onChange={(e) => setIdSlot(e.target.value)}
+            >
+              <option value="">Selecciona...</option>
+              {horas.map((s) => (
+                <option key={s.id} value={s.id}>{s.horaInicio} - {s.horaFin}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span className="field__label">Motivo</span>
+            <textarea
+              className="textarea"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Motivo de la consulta..."
+            />
+          </label>
+        </div>
+        <div className="modal__footer">
+          <button type="button" className="btn btn--ghost" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="btn btn--primary" disabled={guardando}>
+            {guardando ? 'Agendando…' : 'Agendar'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

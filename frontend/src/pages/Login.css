@@ -1,0 +1,158 @@
+/* ============================================================
+   Login — pantalla de acceso
+   Estable con zoom y redimensionado: la página ocupa exactamente
+   el viewport (dvh), el footer queda anclado y el área central
+   hace scroll interno solo si hace falta. Tamaños fluidos con clamp.
+   ============================================================ */
+
+.login {
+  height: 100vh;          /* fallback navegadores sin dvh */
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* La imagen de fondo (asset de public/) se aplica inline en el JSX;
+     aquí solo el encuadre y un color de respaldo guinda. */
+  background-color: #4a0d09;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.login__overlay {
+  flex: 1 1 auto;
+  min-height: 0;          /* permite que el hijo flex haga scroll */
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vh, 40px) 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.login__card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 20px;
+  padding: clamp(22px, 4vh, 36px) clamp(22px, 5vw, 34px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Marca ─────────────────────────────────────────────── */
+.login__brand {
+  text-align: center;
+  margin-bottom: clamp(14px, 2.5vh, 22px);
+}
+.login__logo {
+  width: clamp(60px, 8vh, 80px);
+  margin: 0 auto 10px;
+}
+.login__title {
+  margin: 0;
+  font-size: clamp(18px, 2.4vh, 22px);
+  font-weight: 800;
+  color: #711610;
+}
+.login__subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ── Campos ────────────────────────────────────────────── */
+.login__field { margin-bottom: 14px; }
+.login__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.login__input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.login__input:focus-visible {
+  border-color: #711610;
+  box-shadow: 0 0 0 3px rgba(113, 22, 16, 0.15);
+}
+
+.login__error {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+/* ── Botón ─────────────────────────────────────────────── */
+.login__btn {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: #711610;
+  border: none;
+  border-radius: 12px;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.login__btn:hover:not(:disabled) { background: #5e120d; }
+.login__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(113, 22, 16, 0.35);
+}
+.login__btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ── Ayuda (credenciales de prueba) ────────────────────── */
+.login__help {
+  margin-top: 14px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #711610;
+  background: #fbece9;
+  border-radius: 8px;
+}
+
+/* ── Footer institucional ──────────────────────────────── */
+.login__footer {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: clamp(12px, 2vh, 18px) 16px;
+  background: #711610;
+  color: #fff;
+}
+.login__col { text-align: center; padding: 0 10px; }
+/* Divisores verticales en el mismo tono carmesí de la marca (no blanco) */
+.login__col + .login__col { border-left: 2px solid #5e120d; }
+.login__col-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.login__col-text {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* En pantallas angostas el footer pasa a una sola columna */
+@media (max-width: 560px) {
+  .login__footer { grid-template-columns: 1fr; gap: 14px; }
+  .login__col + .login__col { border-left: none; }
+}

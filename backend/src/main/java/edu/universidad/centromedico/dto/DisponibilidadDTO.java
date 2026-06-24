@@ -1,26 +1,16 @@
 package edu.universidad.centromedico.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalTime;
-
-/** DTO para crear o actualizar un horario de disponibilidad. */
+/** Un rango de disponibilidad del médico. */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DisponibilidadDTO {
-
-    @NotNull(message = "El médico es obligatorio")
-    private Long medicoId;
-
-    @NotBlank(message = "El día de la semana es obligatorio")
+    private int id;
     private String diaSemana;
-
-    @NotNull(message = "La hora de inicio es obligatoria")
-    private LocalTime horaInicio;
-
-    @NotNull(message = "La hora de fin es obligatoria")
-    private LocalTime horaFin;
-
-    private String consultorio;
+    private String horaInicio;
+    private String horaFin;
 }

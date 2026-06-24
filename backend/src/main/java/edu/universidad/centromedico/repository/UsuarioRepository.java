@@ -6,8 +6,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    Optional<Usuario> findByUsername(String username);
-    boolean existsByEmail(String email);
-    boolean existsByUsername(String username);
+public interface UsuarioRepository extends JpaRepository<Usuario, String> {
+
+    /** Login: busca por id (= usuario) descartando los eliminados. */
+    Optional<Usuario> findByIdAndEliminadoFalse(String id);
 }

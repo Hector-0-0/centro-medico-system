@@ -1,164 +1,196 @@
-import { useState, useEffect } from 'react';
-import Layout from '../components/Layout';
-import Buscador from '../components/Buscador';
-import ThOrden from '../components/ThOrden';
-import { useOrden } from '../components/useOrden';
-import { medicoService, especialidadService } from '../services/servicios';
+import { useEffect, useState } from 'react';
+import {
+  listarDoctores,
+  crearDoctor,
+  eliminarDoctor,
+} from '../services/doctorService';
+import { mensajeError } from '../services/api';
 
-const incluye = (txt, ...campos) => campos.join(' ').toLowerCase().includes(txt.trim().toLowerCase());
-
-const s = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b' },
-  btnPrimario: { padding: '10px 20px', background: '#711610', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  tabla: { width: '100%', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderCollapse: 'collapse' },
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#8b1414', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8ddd8', background: '#f4ece4' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1e9e2' },
-  badge: { display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: '#fbece9', color: '#711610' },
-  btnAccion: (color) => ({ padding: '5px 12px', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: 6, background: color === 'azul' ? '#fbece9' : '#fee2e2', color: color === 'azul' ? '#711610' : '#dc2626' }),
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modal: { background: '#fff', borderRadius: 16, padding: 32, width: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
-  modalTit: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24 },
-  grilla: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
-  campoFull: { gridColumn: '1 / -1' },
-  label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
-  input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none' },
-  select: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff' },
-  btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
-  error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
-};
-
-const FORM_VACIO = { cmp: '', nombre: '', apellido: '', telefono: '', especialidadId: '' };
-
+/** Gestión de Médicos (doctores) — réplica del MedicoPanel del desktop. */
 export default function Medicos() {
-  const [medicos, setMedicos] = useState([]);
-  const [especialidades, setEspecialidades] = useState([]);
-  const [buscar, setBuscar] = useState('');
-  const orden = useOrden();
-  const [modal, setModal] = useState(false);
-  const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState(FORM_VACIO);
-  const [error, setError] = useState('');
-  const [guardando, setGuardando] = useState(false);
+  const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [seleccion, setSeleccion] = useState(null);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const cargar = async () => {
     try {
-      const [resM, resE] = await Promise.all([medicoService.listar(), especialidadService.listar()]);
-      setMedicos(resM.data);
-      setEspecialidades(resE.data);
-    } catch (e) { console.error(e); }
+      setLista(await listarDoctores());
+    } catch {
+      setLista([]);
+    }
+    setSeleccion(null);
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+  }, []);
 
-  const abrirNuevo = () => { setEditando(null); setForm(FORM_VACIO); setError(''); setModal(true); };
-  const abrirEditar = (m) => {
-    setEditando(m.id);
-    setForm({ cmp: m.cmp, nombre: m.nombre, apellido: m.apellido, telefono: m.telefono || '', especialidadId: m.especialidad?.id || '' });
-    setError(''); setModal(true);
-  };
+  const q = busqueda.trim().toLowerCase();
+  const filtrados = q
+    ? lista.filter(
+        (d) =>
+          d.nombre.toLowerCase().includes(q) ||
+          d.especialidad.toLowerCase().includes(q) ||
+          d.id.toLowerCase().includes(q),
+      )
+    : lista;
 
-  const guardar = async (e) => {
-    e.preventDefault(); setGuardando(true); setError('');
+  // Borrado con doble clic, igual que el MedicoController del desktop.
+  const eliminar = async (d) => {
+    if (!window.confirm(`¿Eliminar al médico ${d.nombre}?`)) return;
     try {
-      const payload = { ...form, especialidadId: Number(form.especialidadId) };
-      if (editando) await medicoService.actualizar(editando, payload);
-      else await medicoService.registrar(payload);
-      setModal(false); cargar();
-    } catch (err) { setError(err.response?.data?.error || 'Error al guardar'); }
-    finally { setGuardando(false); }
+      await eliminarDoctor(d.id);
+      cargar();
+    } catch (err) {
+      alert(err.response?.data?.error || 'No se pudo eliminar el médico.');
+    }
   };
-
-  const eliminar = async (id) => {
-    if (!window.confirm('¿Eliminar este médico?')) return;
-    try { await medicoService.eliminar(id); cargar(); }
-    catch (err) { alert(err.response?.data?.error || 'Error al eliminar'); }
-  };
-
-  const visibles = orden.ordenar(
-    medicos.filter(m => !buscar || incluye(buscar, m.cmp, m.nombre, m.apellido, m.especialidad?.nombre, m.telefono)),
-    { cmp: m => m.cmp, nombre: m => `${m.nombre} ${m.apellido}`, especialidad: m => m.especialidad?.nombre, telefono: m => m.telefono }
-  );
 
   return (
-    <Layout titulo="Médicos">
-      <div style={s.header}>
-        <div style={s.titulo}>👨‍⚕️ Médicos</div>
-        <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo médico</button>
+    <div>
+      <h1 className="panel__title">Gestión de Médicos</h1>
+
+      <div className="toolbar">
+        <input
+          className="toolbar__search"
+          placeholder="Buscar por nombre o especialidad..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+        <button className="btn btn--primary" onClick={() => setModalAbierto(true)}>
+          + Nuevo Médico
+        </button>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <Buscador value={buscar} onChange={setBuscar} placeholder="Buscar por nombre, CMP o especialidad..." ancho={360} />
-      </div>
+      <p className="panel__hint" style={{ marginBottom: 12 }}>
+        Doble clic en un médico para eliminarlo.
+      </p>
 
-      <table style={s.tabla}>
-        <thead>
-          <tr>
-            <ThOrden label="CMP" col="cmp" orden={orden} style={s.th} />
-            <ThOrden label="Nombre" col="nombre" orden={orden} style={s.th} />
-            <ThOrden label="Especialidad" col="especialidad" orden={orden} style={s.th} />
-            <ThOrden label="Teléfono" col="telefono" orden={orden} style={s.th} />
-            <th style={s.th}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibles.length === 0 ? (
-            <tr><td colSpan={5} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron médicos</td></tr>
-          ) : visibles.map(m => (
-            <tr key={m.id}>
-              <td style={s.td}>{m.cmp}</td>
-              <td style={s.td}><strong>Dr. {m.nombre} {m.apellido}</strong></td>
-              <td style={s.td}><span style={s.badge}>{m.especialidad?.nombre}</span></td>
-              <td style={s.td}>{m.telefono || '—'}</td>
-              <td style={s.td}>
-                <button style={s.btnAccion('azul')} onClick={() => abrirEditar(m)}>Editar</button>
-                <button style={s.btnAccion('rojo')} onClick={() => eliminar(m.id)}>Eliminar</button>
-              </td>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Especialidad</th>
+              <th>Estado</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtrados.length === 0 ? (
+              <tr>
+                <td className="table__empty" colSpan={4}>Sin médicos</td>
+              </tr>
+            ) : (
+              filtrados.map((d) => (
+                <tr
+                  key={d.id}
+                  className={seleccion === d.id ? 'is-selected' : ''}
+                  onClick={() => setSeleccion(d.id)}
+                  onDoubleClick={() => eliminar(d)}
+                >
+                  <td>{d.id}</td>
+                  <td>{d.nombre}</td>
+                  <td>{d.especialidad}</td>
+                  <td>{d.activo ? 'Activo' : 'Inactivo'}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {modal && (
-        <div style={s.overlay} onClick={e => e.target === e.currentTarget && setModal(false)}>
-          <div style={s.modal}>
-            <div style={s.modalTit}>{editando ? 'Editar médico' : 'Nuevo médico'}</div>
-            {error && <div style={s.error}>{error}</div>}
-            <form onSubmit={guardar}>
-              <div style={s.grilla}>
-                <div>
-                  <label style={s.label}>CMP *</label>
-                  <input style={s.input} required value={form.cmp} onChange={e => setForm(f => ({ ...f, cmp: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Teléfono</label>
-                  <input style={s.input} value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Nombre *</label>
-                  <input style={s.input} required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Apellido *</label>
-                  <input style={s.input} required value={form.apellido} onChange={e => setForm(f => ({ ...f, apellido: e.target.value }))} />
-                </div>
-                <div style={s.campoFull}>
-                  <label style={s.label}>Especialidad *</label>
-                  <select style={s.select} required value={form.especialidadId} onChange={e => setForm(f => ({ ...f, especialidadId: e.target.value }))}>
-                    <option value="">— Seleccionar especialidad —</option>
-                    {especialidades.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div style={s.btnsFoot}>
-                <button type="button" style={s.btnCancelar} onClick={() => setModal(false)}>Cancelar</button>
-                <button type="submit" style={s.btnPrimario} disabled={guardando}>{guardando ? 'Guardando...' : 'Guardar'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {modalAbierto && (
+        <NuevoMedicoModal
+          especialidades={[...new Set(lista.map((d) => d.especialidad))].sort()}
+          onClose={() => setModalAbierto(false)}
+          onSaved={() => {
+            setModalAbierto(false);
+            cargar();
+          }}
+        />
       )}
-    </Layout>
+    </div>
+  );
+}
+
+const VACIO = { id: '', nombre: '', especialidad: '', consultorio: '', password: '' };
+
+function NuevoMedicoModal({ especialidades, onClose, onSaved }) {
+  const [form, setForm] = useState(VACIO);
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const set = (campo) => (e) =>
+    setForm((f) => ({ ...f, [campo]: e.target.value }));
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const { id, nombre, especialidad, consultorio, password } = form;
+    if (!id.trim() || !nombre.trim() || !especialidad.trim() || !consultorio.trim() || !password.trim()) {
+      setError('Todos los campos son obligatorios.');
+      return;
+    }
+    if (!/^[A-Za-z0-9]{3,10}$/.test(id.trim())) {
+      setError('El código debe tener 3-10 caracteres, solo letras y números.');
+      return;
+    }
+
+    setGuardando(true);
+    try {
+      await crearDoctor({
+        id: id.trim(),
+        nombre: nombre.trim(),
+        especialidad: especialidad.trim(),
+        consultorio: consultorio.trim(),
+        password,
+      });
+      onSaved();
+    } catch (err) {
+      setError(mensajeError(err, 'No se pudo registrar. El código ya puede existir.'));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="modal__overlay" onClick={onClose}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={guardar}>
+        <div className="modal__header">Registrar Médico</div>
+
+        <div className="modal__body">
+          {error && <div className="modal__error">{error}</div>}
+          <Campo label="Código" value={form.id} onChange={set('id')} autoFocus />
+          <Campo label="Nombre" value={form.nombre} onChange={set('nombre')} />
+          <Campo label="Especialidad" list="especialidades-lst" value={form.especialidad} onChange={set('especialidad')} />
+          <datalist id="especialidades-lst">
+            {especialidades.map((e) => <option key={e} value={e} />)}
+          </datalist>
+          <Campo label="Consultorio" value={form.consultorio} onChange={set('consultorio')} />
+          <Campo label="Contraseña" type="password" value={form.password} onChange={set('password')} />
+        </div>
+
+        <div className="modal__footer">
+          <button type="button" className="btn btn--ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn--primary" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Campo({ label, ...props }) {
+  return (
+    <label className="field">
+      <span className="field__label">{label}</span>
+      <input className="field__input" {...props} />
+    </label>
   );
 }

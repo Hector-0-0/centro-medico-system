@@ -1,17 +1,20 @@
 package edu.universidad.centromedico.controller;
 
+import edu.universidad.centromedico.dto.AgendarRequest;
 import edu.universidad.centromedico.dto.CitaDTO;
-import edu.universidad.centromedico.model.Cita;
 import edu.universidad.centromedico.service.CitaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Citas: listado global (ADMIN) y citas propias del médico (DOCTOR).
+ */
 @RestController
 @RequestMapping("/api/citas")
 @RequiredArgsConstructor
@@ -19,52 +22,32 @@ public class CitaController {
 
     private final CitaService citaService;
 
+    /** Todas las citas — panel "Todas las Citas" del ADMIN. */
     @GetMapping
-    public ResponseEntity<List<Cita>> listar() {
-        return ResponseEntity.ok(citaService.listarTodas());
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<CitaDTO> listar() {
+        return citaService.obtenerTodas();
     }
 
-    @GetMapping("/hoy")
-    public ResponseEntity<List<Cita>> citasDeHoy() {
-        return ResponseEntity.ok(citaService.listarDeHoy());
+    /** Citas del médico autenticado — panel "Mis Citas" del DOCTOR. */
+    @GetMapping("/mias")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public List<CitaDTO> mias(Authentication auth) {
+        return citaService.obtenerPorDoctor(auth.getName());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Cita> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(citaService.buscarPorId(id));
+    /** Citas del estudiante autenticado — panel "Mis Citas" del ESTUDIANTE. */
+    @GetMapping("/estudiante")
+    @PreAuthorize("hasRole('ESTUDIANTE')")
+    public List<CitaDTO> deEstudiante(Authentication auth) {
+        return citaService.obtenerPorEstudiante(auth.getName());
     }
 
-    @GetMapping("/paciente/{pacienteId}")
-    public ResponseEntity<List<Cita>> listarPorPaciente(@PathVariable Long pacienteId) {
-        return ResponseEntity.ok(citaService.listarPorPaciente(pacienteId));
-    }
-
-    @GetMapping("/medico/{medicoId}")
-    public ResponseEntity<List<Cita>> listarPorMedico(@PathVariable Long medicoId) {
-        return ResponseEntity.ok(citaService.listarPorMedico(medicoId));
-    }
-
-    @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPCIONISTA', 'PACIENTE')")
-    public ResponseEntity<Cita> crear(@Valid @RequestBody CitaDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(citaService.crear(dto));
-    }
-
-    @PutMapping("/{id}/cancelar")
-    public ResponseEntity<Cita> cancelar(@PathVariable Long id) {
-        return ResponseEntity.ok(citaService.cancelar(id));
-    }
-
-    @PutMapping("/{id}/atender")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
-    public ResponseEntity<Cita> marcarAtendida(@PathVariable Long id) {
-        return ResponseEntity.ok(citaService.marcarAtendida(id));
-    }
-
-    @PutMapping("/{id}/reprogramar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPCIONISTA')")
-    public ResponseEntity<Cita> reprogramar(@PathVariable Long id,
-                                            @Valid @RequestBody CitaDTO dto) {
-        return ResponseEntity.ok(citaService.reprogramar(id, dto));
+    /** Agendar una cita en un slot disponible — ESTUDIANTE. */
+    @PostMapping("/agendar")
+    @PreAuthorize("hasRole('ESTUDIANTE')")
+    public ResponseEntity<Void> agendar(@Valid @RequestBody AgendarRequest req, Authentication auth) {
+        citaService.agendar(auth.getName(), req.getIdSlot(), req.getMotivo());
+        return ResponseEntity.ok().build();
     }
 }

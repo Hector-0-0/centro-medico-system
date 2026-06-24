@@ -1,15 +1,16 @@
 package edu.universidad.centromedico.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
- * Entidad que representa la cuenta de acceso al sistema.
- * Vinculada a Paciente o Medico según el rol asignado.
+ * Cuenta de acceso al sistema — mapea la tabla `usuarios` de la BD del desktop
+ * (SQL Server). El id (ej. ADM001, D001, U001, FAR001) es la clave primaria y
+ * también el "usuario" con el que se inicia sesión. La contraseña se guarda en
+ * texto plano, igual que en el desktop.
  */
 @Entity
 @Table(name = "usuarios")
@@ -19,26 +20,18 @@ import java.time.LocalDateTime;
 public class Usuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(length = 10)
+    private String id;
 
-    @Column(unique = true, nullable = false, length = 50)
-    private String username;
-
-    /** Contraseña almacenada como hash BCrypt, nunca en texto plano. */
-    @Column(nullable = false)
+    /** Texto plano (igual que el desktop). Nunca se expone en respuestas JSON. */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(nullable = false, length = 100)
     private String password;
-
-    @Column(unique = true, nullable = false, length = 100)
-    private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Rol rol;
 
     @Column(nullable = false)
-    private Boolean activo = true;
-
-    @Column(name = "creado_en", updatable = false)
-    private LocalDateTime creadoEn = LocalDateTime.now();
+    private boolean eliminado = false;
 }

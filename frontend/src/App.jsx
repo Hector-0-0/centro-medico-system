@@ -1,53 +1,49 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 
-import Portal       from './pages/Portal';
-import LoginRol     from './pages/LoginRol';
-import Login        from './pages/Login';
-import Dashboard    from './pages/Dashboard';
-import Pacientes    from './pages/Pacientes';
-import Medicos      from './pages/Medicos';
-import Citas        from './pages/Citas';
-import Historial    from './pages/Historial';
-import Medicamentos from './pages/Medicamentos';
-import MisCitas     from './pages/MisCitas';
-import MiHistorial  from './pages/MiHistorial';
-import Perfil       from './pages/Perfil';
-import Horarios      from './pages/Horarios';
+import Login         from './pages/Login';
+import Pacientes     from './pages/Pacientes';
+import Medicos       from './pages/Medicos';
+import Citas         from './pages/Citas';
+import CitasMedico   from './pages/CitasMedico';
+import AtenderCita   from './pages/AtenderCita';
 import Disponibilidad from './pages/Disponibilidad';
+import VerStock      from './pages/VerStock';
+import Perfil        from './pages/Perfil';
+import Horarios      from './pages/Horarios';
+import MisCitas      from './pages/MisCitas';
 import Recetas       from './pages/Recetas';
+import GestionStock  from './pages/GestionStock';
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* ── Rutas públicas ─────────────────────────────────── */}
-          <Route path="/"            element={<Portal />} />
-          <Route path="/login"       element={<Login />} />
-          <Route path="/login/:tipo" element={<LoginRol />} />
+          {/* Login: único punto de entrada */}
+          <Route path="/"      element={<Login />} />
+          <Route path="/login" element={<Login />} />
 
-          {/* ── Panel principal (todos los roles) ──────────────── */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/perfil"    element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
-          <Route path="/horarios"       element={<ProtectedRoute><Horarios /></ProtectedRoute>} />
-          <Route path="/disponibilidad" element={<ProtectedRoute><Disponibilidad /></ProtectedRoute>} />
-          <Route path="/recetas"        element={<ProtectedRoute><Recetas /></ProtectedRoute>} />
+          {/* Área autenticada con el marco (sidebar + topbar) */}
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/pacientes" element={<Pacientes />} />
+            <Route path="/medicos"   element={<Medicos />} />
+            <Route path="/citas"     element={<Citas />} />
+            <Route path="/citas-medico" element={<CitasMedico />} />
+            <Route path="/citas-medico/:id/atender" element={<AtenderCita />} />
+            <Route path="/disponibilidad" element={<Disponibilidad />} />
+            <Route path="/stock" element={<VerStock />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/horarios" element={<Horarios />} />
+            <Route path="/mis-citas" element={<MisCitas />} />
+            <Route path="/recetas" element={<Recetas />} />
+            <Route path="/gestion-stock" element={<GestionStock />} />
+          </Route>
 
-          {/* ── Rutas del PACIENTE ─────────────────────────────── */}
-          <Route path="/mis-citas"    element={<ProtectedRoute><MisCitas /></ProtectedRoute>} />
-          <Route path="/mi-historial" element={<ProtectedRoute><MiHistorial /></ProtectedRoute>} />
-
-          {/* ── Rutas de ADMIN / MÉDICO / RECEPCIONISTA ────────── */}
-          <Route path="/pacientes"    element={<ProtectedRoute><Pacientes /></ProtectedRoute>} />
-          <Route path="/medicos"      element={<ProtectedRoute><Medicos /></ProtectedRoute>} />
-          <Route path="/citas"        element={<ProtectedRoute><Citas /></ProtectedRoute>} />
-          <Route path="/historial"    element={<ProtectedRoute><Historial /></ProtectedRoute>} />
-          <Route path="/medicamentos" element={<ProtectedRoute><Medicamentos /></ProtectedRoute>} />
-
-          {/* ── Ruta no encontrada ─────────────────────────────── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Cualquier otra ruta vuelve al login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

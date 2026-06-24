@@ -1,103 +1,88 @@
 package edu.universidad.centromedico.service;
 
 import edu.universidad.centromedico.dto.CitaDTO;
-import edu.universidad.centromedico.model.Cita;
-import edu.universidad.centromedico.model.EstadoCita;
-import edu.universidad.centromedico.model.Medico;
-import edu.universidad.centromedico.model.Paciente;
-import edu.universidad.centromedico.repository.CitaRepository;
-import edu.universidad.centromedico.repository.MedicoRepository;
-import edu.universidad.centromedico.repository.PacienteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Lógica de negocio para la agenda de citas médicas.
+ * Consulta de citas. Replica el CitaDAO del desktop: trae todas las citas no
+ * eliminadas con el nombre del paciente, del médico, especialidad y horario.
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class CitaService {
 
-    private final CitaRepository citaRepository;
-    private final PacienteRepository pacienteRepository;
-    private final MedicoRepository medicoRepository;
+    private final JdbcTemplate jdbc;
 
-    public List<Cita> listarTodas() {
-        return citaRepository.findAll();
+    private static final RowMapper<CitaDTO> MAPPER = (rs, n) -> new CitaDTO(
+        rs.getInt("id"),
+        rs.getString("id_estudiante"),
+        rs.getString("nombre_estudiante"),
+        rs.getString("id_doctor"),
+        rs.getString("nombre_doctor"),
+        rs.getString("especialidad"),
+        rs.getString("motivo"),
+        rs.getString("estado"),
+        rs.getString("dia_semana"),
+        rs.getString("hora_inicio"),
+        rs.getString("hora_fin")
+    );
+
+    private static final String SELECT_CITA = """
+        SELECT c.id, c.id_estudiante, c.id_doctor, c.motivo, c.estado,
+               e.nombre AS nombre_estudiante,
+               d.nombre AS nombre_doctor,
+               d.especialidad,
+               s.dia_semana, s.hora_inicio, s.hora_fin
+        FROM citas c
+        JOIN estudiantes          e ON c.id_estudiante = e.id_usuario
+        JOIN doctores             d ON c.id_doctor     = d.id_usuario
+        JOIN slots_disponibilidad s ON c.id_slot       = s.id
+        """;
+
+    /** Todas las citas (cualquier especialidad/estado), ordenadas por id desc. */
+    public List<CitaDTO> obtenerTodas() {
+        return jdbc.query(SELECT_CITA + " WHERE c.eliminado = 0 ORDER BY c.id DESC", MAPPER);
     }
 
-    public List<Cita> listarDeHoy() {
-        return citaRepository.findCitasDeHoy();
+    /** Citas de un médico (cualquier estado), ordenadas por id desc. */
+    public List<CitaDTO> obtenerPorDoctor(String idDoctor) {
+        return jdbc.query(
+            SELECT_CITA + " WHERE c.id_doctor = ? AND c.eliminado = 0 ORDER BY c.id DESC",
+            MAPPER, idDoctor);
     }
 
-    public List<Cita> listarPorPaciente(Long pacienteId) {
-        return citaRepository.findByPacienteId(pacienteId);
+    /** Citas de un estudiante (cualquier estado), ordenadas por id desc. */
+    public List<CitaDTO> obtenerPorEstudiante(String idEstudiante) {
+        return jdbc.query(
+            SELECT_CITA + " WHERE c.id_estudiante = ? AND c.eliminado = 0 ORDER BY c.id DESC",
+            MAPPER, idEstudiante);
     }
 
-    public List<Cita> listarPorMedico(Long medicoId) {
-        return citaRepository.findByMedicoId(medicoId);
-    }
-
-    public Cita buscarPorId(Long id) {
-        return citaRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Cita no encontrada con id: " + id));
-    }
-
-    /**
-     * Crea una nueva cita validando que el médico esté disponible en ese horario.
-     */
-    public Cita crear(CitaDTO dto) {
-        Paciente paciente = pacienteRepository.findById(dto.getPacienteId())
-            .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
-
-        Medico medico = medicoRepository.findById(dto.getMedicoId())
-            .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
-
-        // Validar disponibilidad del médico (ventana de ±29 minutos)
-        boolean ocupado = citaRepository.findByMedicoIdAndFechaHoraBetween(
-            dto.getMedicoId(),
-            dto.getFechaHora().minusMinutes(29),
-            dto.getFechaHora().plusMinutes(29)
-        ).stream().anyMatch(c -> c.getEstado() != EstadoCita.CANCELADA);
-
-        if (ocupado) {
-            throw new RuntimeException("El médico ya tiene una cita en ese horario");
+    /** Agenda una cita en un slot disponible: crea la cita y ocupa el slot. */
+    @Transactional
+    public void agendar(String idEstudiante, int idSlot, String motivo) {
+        List<Map<String, Object>> filas = jdbc.queryForList(
+            "SELECT disponible, id_doctor FROM slots_disponibilidad WHERE id = ? AND eliminado = 0", idSlot);
+        if (filas.isEmpty()) {
+            throw new RuntimeException("El horario no existe");
+        }
+        Map<String, Object> slot = filas.get(0);
+        Object disp = slot.get("disponible");
+        boolean disponible = (disp instanceof Boolean b) ? b : ((Number) disp).intValue() == 1;
+        if (!disponible) {
+            throw new RuntimeException("El horario ya no está disponible");
         }
 
-        Cita cita = new Cita();
-        cita.setPaciente(paciente);
-        cita.setMedico(medico);
-        cita.setFechaHora(dto.getFechaHora());
-        cita.setMotivo(dto.getMotivo());
-        cita.setConsultorio(dto.getConsultorio());
-        cita.setEstado(EstadoCita.PENDIENTE);
-
-        return citaRepository.save(cita);
-    }
-
-    public Cita cancelar(Long id) {
-        Cita cita = buscarPorId(id);
-        if (cita.getEstado() == EstadoCita.ATENDIDA) {
-            throw new RuntimeException("No se puede cancelar una cita ya atendida");
-        }
-        cita.setEstado(EstadoCita.CANCELADA);
-        return citaRepository.save(cita);
-    }
-
-    public Cita marcarAtendida(Long id) {
-        Cita cita = buscarPorId(id);
-        cita.setEstado(EstadoCita.ATENDIDA);
-        return citaRepository.save(cita);
-    }
-
-    public Cita reprogramar(Long id, CitaDTO dto) {
-        Cita cita = buscarPorId(id);
-        cita.setFechaHora(dto.getFechaHora());
-        cita.setEstado(EstadoCita.REPROGRAMADA);
-        return citaRepository.save(cita);
+        jdbc.update(
+            "INSERT INTO citas (id_estudiante, id_doctor, id_slot, motivo, estado) VALUES (?, ?, ?, ?, 'PENDIENTE')",
+            idEstudiante, slot.get("id_doctor"), idSlot, motivo);
+        jdbc.update("UPDATE slots_disponibilidad SET disponible = 0 WHERE id = ?", idSlot);
     }
 }

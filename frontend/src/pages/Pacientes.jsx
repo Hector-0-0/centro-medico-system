@@ -1,193 +1,230 @@
-import { useState, useEffect } from 'react';
-import Layout from '../components/Layout';
-import ThOrden from '../components/ThOrden';
-import { useOrden } from '../components/useOrden';
-import { pacienteService } from '../services/servicios';
+import { useEffect, useState } from 'react';
+import {
+  listarEstudiantes,
+  crearEstudiante,
+  eliminarEstudiante,
+} from '../services/estudianteService';
+import { mensajeError } from '../services/api';
 
-/* ─── Estilos ─────────────────────────────────────────────────────────────── */
-const s = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  titulo: { fontSize: 22, fontWeight: 700, color: '#1e293b' },
-  btnPrimario: {
-    padding: '10px 20px', background: '#711610', color: '#fff',
-    border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-  },
-  buscador: {
-    padding: '10px 14px', border: '1.5px solid #d1d5db', borderRadius: 8,
-    fontSize: 14, width: 300, outline: 'none',
-  },
-  tabla: { width: '100%', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderCollapse: 'collapse' },
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#8b1414', textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #e8ddd8', background: '#f4ece4' },
-  td: { padding: '12px 16px', fontSize: 14, color: '#374151', borderBottom: '1px solid #f1e9e2' },
-  btnAccion: (color) => ({
-    padding: '5px 12px', border: 'none', borderRadius: 6, fontSize: 12,
-    fontWeight: 600, cursor: 'pointer', marginRight: 6,
-    background: color === 'azul' ? '#fbece9' : color === 'rojo' ? '#fee2e2' : '#f0fdf4',
-    color: color === 'azul' ? '#711610' : color === 'rojo' ? '#dc2626' : '#166534',
-  }),
-  overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-  },
-  modal: {
-    background: '#fff', borderRadius: 16, padding: 32, width: 520,
-    maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-  },
-  modalTit: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24 },
-  grilla: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
-  campoFull: { gridColumn: '1 / -1' },
-  label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
-  input: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none' },
-  select: { width: '100%', padding: '9px 12px', border: '1.5px solid #d1d5db', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff' },
-  btnsFoot: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 },
-  btnCancelar: { padding: '10px 20px', background: '#f1e9e2', color: '#475569', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
-  error: { background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16 },
-};
+// Carreras de la UNI para el combo (el usuario también puede escribir).
+const CARRERAS = [
+  'Ingenieria de Sistemas', 'Ingenieria Industrial', 'Ingenieria Civil',
+  'Ingenieria Electronica', 'Ingenieria Mecanica', 'Ingenieria Quimica',
+  'Ingenieria Economica', 'Arquitectura', 'Ciencias',
+];
 
-const FORM_VACIO = { dni: '', nombre: '', apellido: '', fechaNacimiento: '', telefono: '', direccion: '', grupoSanguineo: '', alergias: '' };
-const GRUPOS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+/** Edad cumplida a partir de una fecha de nacimiento (YYYY-MM-DD). */
+export function edadDesde(fecha) {
+  if (!fecha) return NaN;
+  const hoy = new Date();
+  const n = new Date(fecha + 'T00:00:00');
+  let edad = hoy.getFullYear() - n.getFullYear();
+  const m = hoy.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < n.getDate())) edad--;
+  return edad;
+}
 
+/** Gestión de Pacientes (estudiantes) — réplica del PacientePanel del desktop. */
 export default function Pacientes() {
-  const [pacientes, setPacientes] = useState([]);
-  const [buscar, setBuscar] = useState('');
-  const [modal, setModal] = useState(false);
-  const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState(FORM_VACIO);
-  const [error, setError] = useState('');
-  const [guardando, setGuardando] = useState(false);
-  const orden = useOrden();
+  const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [seleccion, setSeleccion] = useState(null);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
-  const cargar = async (termino = '') => {
+  const cargar = async () => {
     try {
-      const { data } = await pacienteService.listar(termino);
-      setPacientes(data);
-    } catch (e) { console.error(e); }
+      setLista(await listarEstudiantes());
+    } catch {
+      setLista([]);
+    }
+    setSeleccion(null);
   };
-
-  useEffect(() => { cargar(); }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => cargar(buscar), 400);
-    return () => clearTimeout(timer);
-  }, [buscar]);
+    cargar();
+  }, []);
 
-  const abrirNuevo = () => { setEditando(null); setForm(FORM_VACIO); setError(''); setModal(true); };
-  const abrirEditar = (p) => {
-    setEditando(p.id);
-    setForm({ dni: p.dni, nombre: p.nombre, apellido: p.apellido, fechaNacimiento: p.fechaNacimiento || '', telefono: p.telefono || '', direccion: p.direccion || '', grupoSanguineo: p.grupoSanguineo || '', alergias: p.alergias || '' });
-    setError('');
-    setModal(true);
-  };
+  const q = busqueda.trim().toLowerCase();
+  const filtrados = q
+    ? lista.filter(
+        (e) =>
+          e.nombre.toLowerCase().includes(q) || e.id.toLowerCase().includes(q),
+      )
+    : lista;
 
-  const guardar = async (e) => {
-    e.preventDefault();
-    setGuardando(true); setError('');
+  const eliminar = async () => {
+    if (!seleccion) {
+      alert('Selecciona un paciente para eliminar.');
+      return;
+    }
+    const p = lista.find((e) => e.id === seleccion);
+    if (!window.confirm(`¿Eliminar al paciente ${p?.nombre}?`)) return;
     try {
-      if (editando) await pacienteService.actualizar(editando, form);
-      else await pacienteService.registrar(form);
-      setModal(false);
-      cargar(buscar);
+      await eliminarEstudiante(seleccion);
+      cargar();
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al guardar');
-    } finally { setGuardando(false); }
-  };
-
-  const eliminar = async (id) => {
-    if (!window.confirm('¿Eliminar este paciente?')) return;
-    try { await pacienteService.eliminar(id); cargar(buscar); }
-    catch (err) { alert(err.response?.data?.error || 'Error al eliminar'); }
+      alert(err.response?.data?.error || 'No se pudo eliminar el paciente.');
+    }
   };
 
   return (
-    <Layout titulo="Gestión de Pacientes">
-      <div style={s.header}>
-        <div style={s.titulo}>👥 Pacientes</div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <input style={s.buscador} placeholder="🔍 Buscar por nombre o DNI..." value={buscar} onChange={e => setBuscar(e.target.value)} />
-          <button style={s.btnPrimario} onClick={abrirNuevo}>+ Nuevo paciente</button>
-        </div>
+    <div>
+      <h1 className="panel__title">Gestión de Pacientes</h1>
+
+      <div className="toolbar">
+        <input
+          className="toolbar__search"
+          placeholder="Buscar por nombre..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+        <button className="btn btn--danger" onClick={eliminar}>Eliminar</button>
+        <button className="btn btn--primary" onClick={() => setModalAbierto(true)}>
+          + Nuevo Paciente
+        </button>
       </div>
 
-      <table style={s.tabla}>
-        <thead>
-          <tr>
-            <ThOrden label="DNI" col="dni" orden={orden} style={s.th} />
-            <ThOrden label="Nombre completo" col="nombre" orden={orden} style={s.th} />
-            <ThOrden label="Teléfono" col="telefono" orden={orden} style={s.th} />
-            <ThOrden label="Grupo sanguíneo" col="grupo" orden={orden} style={s.th} />
-            <th style={s.th}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pacientes.length === 0 ? (
-            <tr><td colSpan={5} style={{ ...s.td, textAlign: 'center', color: '#94a3b8', padding: 40 }}>No se encontraron pacientes</td></tr>
-          ) : orden.ordenar(pacientes, { dni: p => p.dni, nombre: p => `${p.nombre} ${p.apellido}`, telefono: p => p.telefono, grupo: p => p.grupoSanguineo }).map(p => (
-            <tr key={p.id}>
-              <td style={s.td}>{p.dni}</td>
-              <td style={s.td}><strong>{p.nombre} {p.apellido}</strong></td>
-              <td style={s.td}>{p.telefono || '—'}</td>
-              <td style={s.td}>{p.grupoSanguineo || '—'}</td>
-              <td style={s.td}>
-                <button style={s.btnAccion('azul')} onClick={() => abrirEditar(p)}>Editar</button>
-                <button style={s.btnAccion('rojo')} onClick={() => eliminar(p.id)}>Eliminar</button>
-              </td>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Edad</th>
+              <th>Carrera</th>
+              <th>Email</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtrados.length === 0 ? (
+              <tr>
+                <td className="table__empty" colSpan={5}>Sin pacientes</td>
+              </tr>
+            ) : (
+              filtrados.map((e) => (
+                <tr
+                  key={e.id}
+                  className={seleccion === e.id ? 'is-selected' : ''}
+                  onClick={() => setSeleccion(e.id)}
+                >
+                  <td>{e.id}</td>
+                  <td>{e.nombre}</td>
+                  <td>{e.edad}</td>
+                  <td>{e.carrera}</td>
+                  <td>{e.email}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Modal */}
-      {modal && (
-        <div style={s.overlay} onClick={e => e.target === e.currentTarget && setModal(false)}>
-          <div style={s.modal}>
-            <div style={s.modalTit}>{editando ? 'Editar paciente' : 'Nuevo paciente'}</div>
-            {error && <div style={s.error}>{error}</div>}
-            <form onSubmit={guardar}>
-              <div style={s.grilla}>
-                <div>
-                  <label style={s.label}>DNI *</label>
-                  <input style={s.input} maxLength={8} required value={form.dni} onChange={e => setForm(f => ({ ...f, dni: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Grupo sanguíneo</label>
-                  <select style={s.select} value={form.grupoSanguineo} onChange={e => setForm(f => ({ ...f, grupoSanguineo: e.target.value }))}>
-                    <option value="">— Seleccionar —</option>
-                    {GRUPOS.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={s.label}>Nombre *</label>
-                  <input style={s.input} required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Apellido *</label>
-                  <input style={s.input} required value={form.apellido} onChange={e => setForm(f => ({ ...f, apellido: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Fecha de nacimiento</label>
-                  <input style={s.input} type="date" value={form.fechaNacimiento} onChange={e => setForm(f => ({ ...f, fechaNacimiento: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={s.label}>Teléfono</label>
-                  <input style={s.input} value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} />
-                </div>
-                <div style={s.campoFull}>
-                  <label style={s.label}>Dirección</label>
-                  <input style={s.input} value={form.direccion} onChange={e => setForm(f => ({ ...f, direccion: e.target.value }))} />
-                </div>
-                <div style={s.campoFull}>
-                  <label style={s.label}>Alergias conocidas</label>
-                  <input style={s.input} placeholder="Ej: Penicilina, aspirina..." value={form.alergias} onChange={e => setForm(f => ({ ...f, alergias: e.target.value }))} />
-                </div>
-              </div>
-              <div style={s.btnsFoot}>
-                <button type="button" style={s.btnCancelar} onClick={() => setModal(false)}>Cancelar</button>
-                <button type="submit" style={s.btnPrimario} disabled={guardando}>{guardando ? 'Guardando...' : 'Guardar'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {modalAbierto && (
+        <NuevoPacienteModal
+          onClose={() => setModalAbierto(false)}
+          onSaved={() => {
+            setModalAbierto(false);
+            cargar();
+          }}
+        />
       )}
-    </Layout>
+    </div>
+  );
+}
+
+const VACIO = { id: '', nombre: '', fechaNacimiento: '', carrera: '', email: '', password: '' };
+
+function NuevoPacienteModal({ onClose, onSaved }) {
+  const [form, setForm] = useState(VACIO);
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const set = (campo) => (e) =>
+    setForm((f) => ({ ...f, [campo]: e.target.value }));
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const { id, nombre, fechaNacimiento, carrera, email, password } = form;
+    if (!id.trim() || !nombre.trim() || !fechaNacimiento || !carrera.trim() || !email.trim() || !password.trim()) {
+      setError('Todos los campos son obligatorios.');
+      return;
+    }
+    if (!/^[A-Za-z0-9]{3,10}$/.test(id.trim())) {
+      setError('El código debe tener 3-10 caracteres, solo letras y números.');
+      return;
+    }
+    const edadNum = edadDesde(fechaNacimiento);
+    if (!Number.isInteger(edadNum) || edadNum < 18 || edadNum > 100) {
+      setError('El paciente debe tener entre 18 y 100 años según su fecha de nacimiento.');
+      return;
+    }
+    if (!/^[A-Za-z0-9._%+-]+@(uni\.pe|uni\.edu\.pe)$/.test(email.trim())) {
+      setError('El email debe terminar en @uni.pe o @uni.edu.pe.');
+      return;
+    }
+
+    setGuardando(true);
+    try {
+      await crearEstudiante({
+        id: id.trim(),
+        nombre: nombre.trim(),
+        fechaNacimiento,
+        carrera: carrera.trim(),
+        email: email.trim(),
+        password,
+      });
+      onSaved();
+    } catch (err) {
+      setError(mensajeError(err, 'No se pudo registrar. El código ya puede existir.'));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="modal__overlay" onClick={onClose}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={guardar}>
+        <div className="modal__header">Registrar Paciente</div>
+
+        <div className="modal__body">
+          {error && <div className="modal__error">{error}</div>}
+          <Campo label="Código" value={form.id} onChange={set('id')} autoFocus />
+          <Campo label="Nombre" value={form.nombre} onChange={set('nombre')} />
+          <Campo
+            label="Fecha de nacimiento"
+            type="date"
+            max={new Date().toISOString().slice(0, 10)}
+            value={form.fechaNacimiento}
+            onChange={set('fechaNacimiento')}
+          />
+          <Campo label="Carrera" list="carreras-uni" value={form.carrera} onChange={set('carrera')} />
+          <datalist id="carreras-uni">
+            {CARRERAS.map((c) => <option key={c} value={c} />)}
+          </datalist>
+          <Campo label="Email" type="email" placeholder="usuario@uni.pe" value={form.email} onChange={set('email')} />
+          <Campo label="Contraseña" type="password" value={form.password} onChange={set('password')} />
+        </div>
+
+        <div className="modal__footer">
+          <button type="button" className="btn btn--ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn--primary" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Campo({ label, ...props }) {
+  return (
+    <label className="field">
+      <span className="field__label">{label}</span>
+      <input className="field__input" {...props} />
+    </label>
   );
 }

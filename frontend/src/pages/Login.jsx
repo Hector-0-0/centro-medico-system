@@ -2,54 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
-
-// Color institucional guinda de la UNI (igual que el proyecto desktop)
-const GUINDA = '#711610';
-
-const s = {
-  page: {
-    minHeight: '100vh', display: 'flex', flexDirection: 'column',
-    backgroundImage: 'url(/images/banner-uni.jpeg)',
-    backgroundSize: 'cover', backgroundPosition: 'center',
-  },
-  overlay: {
-    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'rgba(15, 23, 42, 0.45)', padding: '40px 20px',
-  },
-  card: {
-    background: '#fff', borderRadius: 24, padding: '40px 36px',
-    width: 400, boxShadow: '0 24px 70px rgba(0,0,0,0.35)',
-  },
-  logo: { textAlign: 'center', marginBottom: 24 },
-  logoImg: { width: 88, height: 'auto', marginBottom: 12 },
-  titulo: { fontSize: 22, fontWeight: 800, color: GUINDA, textAlign: 'center' },
-  subtitulo: { fontSize: 13, color: '#64748b', textAlign: 'center', marginTop: 4 },
-  campo: { marginBottom: 16 },
-  label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 },
-  input: {
-    width: '100%', padding: '11px 14px', fontSize: 14, boxSizing: 'border-box',
-    border: '1.5px solid #d1d5db', borderRadius: 12, outline: 'none',
-  },
-  error: {
-    background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8,
-    padding: '10px 12px', fontSize: 13, color: '#dc2626', marginBottom: 16,
-  },
-  btn: {
-    width: '100%', padding: '13px', background: GUINDA, color: '#fff',
-    border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer',
-  },
-  ayuda: {
-    marginTop: 20, padding: '12px', background: '#fbece9',
-    borderRadius: 8, fontSize: 12, color: GUINDA,
-  },
-  footer: {
-    background: GUINDA, color: '#fff', display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)', padding: '22px 16px',
-  },
-  col: { textAlign: 'center', padding: '0 12px' },
-  colTit: { fontSize: 14, fontWeight: 700, letterSpacing: 0.6, marginBottom: 6 },
-  colTxt: { fontSize: 12.5, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 },
-};
+import { landingPath } from '../components/menu';
+import './Login.css';
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
@@ -58,14 +12,17 @@ export default function Login() {
   const navigate = useNavigate();
   const { handleLogin } = useAuth();
 
+  const handleChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCargando(true);
     setError('');
     try {
-      const data = await login(form.username, form.password);
+      const data = await login(form.username.trim(), form.password);
       handleLogin(data);
-      navigate('/dashboard');
+      navigate(landingPath(data.rol));
     } catch {
       setError('Usuario o contraseña incorrectos');
     } finally {
@@ -74,63 +31,83 @@ export default function Login() {
   };
 
   return (
-    <div style={s.page}>
-      <div style={s.overlay}>
-        <div style={s.card}>
-          <div style={s.logo}>
-            <img src="/images/logo-uni.png" alt="UNI" style={s.logoImg} />
-            <div style={s.titulo}>Centro Médico UNI</div>
-            <div style={s.subtitulo}>Sistema de Gestión Médica</div>
+    <div
+      className="login"
+      style={{ backgroundImage: "url('/images/banner-uni.jpeg')" }}
+    >
+      <div className="login__overlay">
+        <form className="login__card" onSubmit={handleSubmit}>
+          <div className="login__brand">
+            <img
+              className="login__logo"
+              src="/images/logo-uni.png"
+              alt="Universidad Nacional de Ingeniería"
+            />
+            <h1 className="login__title">Centro Médico UNI</h1>
+            <p className="login__subtitle">Universidad Nacional de Ingeniería</p>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div style={s.campo}>
-              <label style={s.label}>Usuario</label>
-              <input
-                style={s.input} type="text" required autoFocus
-                value={form.username}
-                onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
-                placeholder="Ingresa tu usuario"
-              />
-            </div>
-            <div style={s.campo}>
-              <label style={s.label}>Contraseña</label>
-              <input
-                style={s.input} type="password" required
-                value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="Ingresa tu contraseña"
-              />
-            </div>
+          <div className="login__field">
+            <label className="login__label" htmlFor="username">Usuario</label>
+            <input
+              id="username"
+              name="username"
+              className="login__input"
+              type="text"
+              autoComplete="username"
+              placeholder="Ingresa tu usuario"
+              value={form.username}
+              onChange={handleChange}
+              required
+              autoFocus
+            />
+          </div>
 
-            {error && <div style={s.error}>⚠️ {error}</div>}
+          <div className="login__field">
+            <label className="login__label" htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              name="password"
+              className="login__input"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-            <button type="submit" style={s.btn} disabled={cargando}>
-              {cargando ? 'Ingresando...' : 'Ingresar al sistema'}
-            </button>
-          </form>
+          {error && (
+            <div className="login__error" role="alert">{error}</div>
+          )}
 
-          <div style={s.ayuda}>
+          <button className="login__btn" type="submit" disabled={cargando}>
+            {cargando ? 'Ingresando…' : 'Ingresar'}
+          </button>
+
+          <div className="login__help">
             <strong>Credenciales de prueba:</strong><br />
-            Admin: admin / admin123<br />
-            Médico: medico1 / admin123
+            Admin: ADM001 / adm123<br />
+            Doctor: D001 / pass123<br />
+            Estudiante: U001 / 1234<br />
+            Farmacia: FAR001 / far123
           </div>
-        </div>
+        </form>
       </div>
 
-      {/* Footer institucional (igual al desktop) */}
-      <footer style={s.footer}>
-        <div style={s.col}>
-          <div style={s.colTit}>ENTÉRATE</div>
-          <div style={s.colTxt}>Portal UNI<br />Unisalud</div>
+      <footer className="login__footer">
+        <div className="login__col">
+          <div className="login__col-title">ENTÉRATE</div>
+          <div className="login__col-text">Portal UNI<br />Unisalud</div>
         </div>
-        <div style={{ ...s.col, borderLeft: '1px solid rgba(255,255,255,0.25)' }}>
-          <div style={s.colTit}>CONTÁCTANOS</div>
-          <div style={s.colTxt}>centromedico@uni.edu.pe<br />(01) 481-1070</div>
+        <div className="login__col">
+          <div className="login__col-title">CONTÁCTANOS</div>
+          <div className="login__col-text">centromedico@uni.edu.pe<br />(01) 481-1070</div>
         </div>
-        <div style={{ ...s.col, borderLeft: '1px solid rgba(255,255,255,0.25)' }}>
-          <div style={s.colTit}>ENCUÉNTRANOS</div>
-          <div style={s.colTxt}>Campus UNI<br />Av. Túpac Amaru 210, Rímac</div>
+        <div className="login__col">
+          <div className="login__col-title">ENCUÉNTRANOS</div>
+          <div className="login__col-text">Campus UNI<br />Av. Túpac Amaru 210, Rímac</div>
         </div>
       </footer>
     </div>

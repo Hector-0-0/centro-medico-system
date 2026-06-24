@@ -1,117 +1,137 @@
 package edu.universidad.centromedico.service;
 
-import edu.universidad.centromedico.dto.AgendarDTO;
 import edu.universidad.centromedico.dto.DisponibilidadDTO;
-import edu.universidad.centromedico.model.*;
-import edu.universidad.centromedico.repository.CitaRepository;
-import edu.universidad.centromedico.repository.DisponibilidadRepository;
-import edu.universidad.centromedico.repository.MedicoRepository;
-import edu.universidad.centromedico.repository.PacienteRepository;
+import edu.universidad.centromedico.dto.GuardarDisponibilidadRequest;
+import edu.universidad.centromedico.dto.GuardarDisponibilidadResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Lógica de negocio para los horarios de disponibilidad de los médicos
- * y el agendamiento de citas a partir de ellos.
+ * Disponibilidad del médico. Replica el DisponibilidadDAO del desktop: listar
+ * rangos, y guardar por día regenerando los slots de 30 minutos (bloqueando si
+ * el día tiene citas pendientes).
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class DisponibilidadService {
 
-    private final DisponibilidadRepository disponibilidadRepository;
-    private final MedicoRepository medicoRepository;
-    private final PacienteRepository pacienteRepository;
-    private final CitaRepository citaRepository;
+    private final JdbcTemplate jdbc;
 
-    private static final Map<String, DayOfWeek> DIAS = Map.of(
-        "LUNES", DayOfWeek.MONDAY, "MARTES", DayOfWeek.TUESDAY,
-        "MIERCOLES", DayOfWeek.WEDNESDAY, "JUEVES", DayOfWeek.THURSDAY,
-        "VIERNES", DayOfWeek.FRIDAY, "SABADO", DayOfWeek.SATURDAY,
-        "DOMINGO", DayOfWeek.SUNDAY
-    );
-
-    public List<Disponibilidad> listarDisponibles() {
-        return disponibilidadRepository.findByActivoTrue();
+    public List<DisponibilidadDTO> listar(String idDoctor) {
+        return jdbc.query("""
+            SELECT id, dia_semana, hora_inicio, hora_fin
+            FROM disponibilidad_doctor
+            WHERE id_doctor = ? AND eliminado = 0
+            ORDER BY dia_semana, hora_inicio
+            """,
+            (rs, n) -> new DisponibilidadDTO(rs.getInt("id"), rs.getString("dia_semana"),
+                rs.getString("hora_inicio"), rs.getString("hora_fin")),
+            idDoctor);
     }
 
-    public List<Disponibilidad> listarPorMedico(Long medicoId) {
-        return disponibilidadRepository.findByMedicoIdAndActivoTrue(medicoId);
-    }
-
-    public Disponibilidad crear(DisponibilidadDTO dto) {
-        Medico medico = medicoRepository.findById(dto.getMedicoId())
-            .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
-
-        Disponibilidad d = new Disponibilidad();
-        d.setMedico(medico);
-        d.setDiaSemana(dto.getDiaSemana().toUpperCase());
-        d.setHoraInicio(dto.getHoraInicio());
-        d.setHoraFin(dto.getHoraFin());
-        d.setConsultorio(dto.getConsultorio());
-        d.setActivo(true);
-        return disponibilidadRepository.save(d);
-    }
-
-    public Disponibilidad actualizar(Long id, DisponibilidadDTO dto) {
-        Disponibilidad d = buscarPorId(id);
-        d.setDiaSemana(dto.getDiaSemana().toUpperCase());
-        d.setHoraInicio(dto.getHoraInicio());
-        d.setHoraFin(dto.getHoraFin());
-        d.setConsultorio(dto.getConsultorio());
-        return disponibilidadRepository.save(d);
-    }
-
-    public void eliminar(Long id) {
-        Disponibilidad d = buscarPorId(id);
-        d.setActivo(false); // borrado lógico
-        disponibilidadRepository.save(d);
-    }
-
-    public Disponibilidad buscarPorId(Long id) {
-        return disponibilidadRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Horario no encontrado con id: " + id));
-    }
-
-    /**
-     * Agenda una cita a partir de un horario de disponibilidad.
-     * Combina la fecha elegida con la hora de inicio del horario.
-     */
-    public Cita agendar(AgendarDTO dto) {
-        Disponibilidad d = buscarPorId(dto.getDisponibilidadId());
-        Paciente paciente = pacienteRepository.findById(dto.getPacienteId())
-            .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
-
-        DayOfWeek esperado = DIAS.get(d.getDiaSemana().toUpperCase());
-        if (esperado != null && dto.getFecha().getDayOfWeek() != esperado) {
-            throw new RuntimeException("La fecha elegida no corresponde al día " + d.getDiaSemana());
+    /** Guarda varios días; cada uno se acepta o rechaza por su cuenta. */
+    @Transactional
+    public GuardarDisponibilidadResponse guardar(String idDoctor, GuardarDisponibilidadRequest req) {
+        int guardados = 0, rechazados = 0;
+        if (req.getDias() != null) {
+            for (GuardarDisponibilidadRequest.Dia d : req.getDias()) {
+                if (guardarDia(idDoctor, d.getDiaSemana(), d.getHoraInicio(), d.getHoraFin())) {
+                    guardados++;
+                } else {
+                    rechazados++;
+                }
+            }
         }
+        return new GuardarDisponibilidadResponse(guardados, rechazados);
+    }
 
-        LocalDateTime fechaHora = dto.getFecha().atTime(d.getHoraInicio());
+    /** Procesa un día dentro de la transacción. Devuelve false si se rechaza. */
+    private boolean guardarDia(String idDoctor, String dia, String ini, String fin) {
+        if (dia == null || dia.isBlank() || ini == null || fin == null) return false;
+        if (ini.compareTo(fin) >= 0) return false;                 // rango inválido
+        if (tieneCitasPendientes(idDoctor, dia, ini, fin)) return false;
 
-        boolean ocupado = citaRepository.findByMedicoIdAndFechaHoraBetween(
-            d.getMedico().getId(),
-            fechaHora.minusMinutes(29),
-            fechaHora.plusMinutes(29)
-        ).stream().anyMatch(c -> c.getEstado() != EstadoCita.CANCELADA);
+        // 1. Soft-delete de slots disponibles y disponibilidad anterior de ese día.
+        jdbc.update("""
+            UPDATE s SET s.eliminado = 1
+            FROM slots_disponibilidad s
+            INNER JOIN disponibilidad_doctor d ON s.id_disponibilidad = d.id
+            WHERE d.id_doctor = ? AND d.dia_semana = ? AND s.disponible = 1 AND s.eliminado = 0
+            """, idDoctor, dia);
+        jdbc.update("""
+            UPDATE disponibilidad_doctor SET eliminado = 1
+            WHERE id_doctor = ? AND dia_semana = ? AND eliminado = 0
+            """, idDoctor, dia);
 
-        if (ocupado) {
-            throw new RuntimeException("El médico ya tiene una cita en ese horario");
+        // 2. Insertar la nueva disponibilidad.
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbc.update(conn -> {
+            PreparedStatement ps = conn.prepareStatement("""
+                INSERT INTO disponibilidad_doctor (id_doctor, dia_semana, hora_inicio, hora_fin)
+                VALUES (?, ?, ?, ?)
+                """, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, idDoctor);
+            ps.setString(2, dia);
+            ps.setString(3, ini);
+            ps.setString(4, fin);
+            return ps;
+        }, kh);
+        int idDisp = kh.getKey().intValue();
+
+        // 3. Generar e insertar los slots de 30 minutos.
+        List<String[]> slots = generarSlots(ini, fin);
+        jdbc.batchUpdate("""
+            INSERT INTO slots_disponibilidad (id_disponibilidad, id_doctor, dia_semana, hora_inicio, hora_fin)
+            VALUES (?, ?, ?, ?, ?)
+            """, slots, slots.size(), (ps, slot) -> {
+                ps.setInt(1, idDisp);
+                ps.setString(2, idDoctor);
+                ps.setString(3, dia);
+                ps.setString(4, slot[0]);
+                ps.setString(5, slot[1]);
+            });
+        return true;
+    }
+
+    private boolean tieneCitasPendientes(String idDoctor, String dia, String ini, String fin) {
+        Integer n = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM citas c
+            JOIN slots_disponibilidad s   ON c.id_slot = s.id
+            JOIN disponibilidad_doctor d  ON s.id_disponibilidad = d.id
+            WHERE d.id_doctor = ? AND d.dia_semana = ?
+              AND s.hora_inicio >= ? AND s.hora_fin <= ?
+              AND c.estado = 'PENDIENTE' AND d.eliminado = 0
+            """, Integer.class, idDoctor, dia, ini, fin);
+        return n != null && n > 0;
+    }
+
+    /** Genera pares [inicio, fin] de 30 minutos dentro del rango. */
+    private List<String[]> generarSlots(String horaInicio, String horaFin) {
+        List<String[]> slots = new ArrayList<>();
+        int inicio = toMinutos(horaInicio);
+        int fin = toMinutos(horaFin);
+        while (inicio + 30 <= fin) {
+            slots.add(new String[]{ toHora(inicio), toHora(inicio + 30) });
+            inicio += 30;
         }
+        return slots;
+    }
 
-        Cita cita = new Cita();
-        cita.setPaciente(paciente);
-        cita.setMedico(d.getMedico());
-        cita.setFechaHora(fechaHora);
-        cita.setMotivo(dto.getMotivo());
-        cita.setConsultorio(d.getConsultorio());
-        cita.setEstado(EstadoCita.PENDIENTE);
-        return citaRepository.save(cita);
+    private int toMinutos(String hora) {
+        String[] p = hora.split(":");
+        return Integer.parseInt(p[0]) * 60 + Integer.parseInt(p[1]);
+    }
+
+    private String toHora(int minutos) {
+        return String.format("%02d:%02d", minutos / 60, minutos % 60);
     }
 }
