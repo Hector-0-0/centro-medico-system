@@ -1,27 +1,88 @@
 services:
+  # ─── Base de datos SQL Server (la MISMA del desktop) ────────────
+  # Ahora la administra este compose. El backend la siembra al arrancar
+  # (DataInitializer ejecuta init_db.sql, idempotente). Publica el 1433
+  # al host para que la app de ESCRITORIO siga conectándose a localhost:1433.
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: centromedico-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Rodrigo3%"
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Rodrigo3%' -C -Q 'SELECT 1' -b"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   # ─── Backend Spring Boot (API REST) ─────────────────────────────
-  # La BD es el contenedor SQL Server que ya tienes corriendo (la MISMA
-  # del desktop). No la administra este compose: el backend se conecta a
-  # ella a través del host (1433 publicado) usando host.docker.internal.
+  # Se conecta a la BD por el nombre de servicio interno (sqlserver:1433)
+  # y espera a que esté SANA antes de arrancar (depends_on healthcheck).
   backend:
     build: ./backend
     container_name: centromedico-backend
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:sqlserver://host.docker.internal:1433;databaseName=centro_medico;encrypt=true;trustServerCertificate=true"
+      SPRING_DATASOURCE_URL: "jdbc:sqlserver://sqlserver:1433;databaseName=centro_medico;encrypt=true;trustServerCertificate=true"
       SPRING_DATASOURCE_USERNAME: sa
       SPRING_DATASOURCE_PASSWORD: Rodrigo3%
       APP_JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-    # Permite resolver host.docker.internal hacia el host en Linux
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # URL del webhook de n8n. Como n8n vive en este mismo compose, se
+      # alcanza por el nombre del servicio ("n8n") en la red interna.
+      # El path final del webhook lo defines en tu workflow de n8n.
+      N8N_WEBHOOK_RECETA_URL: "http://n8n:5678/webhook/receta-medica"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      n8n:
+        condition: service_started
 
   # ─── Frontend React (servido por Nginx) ─────────────────────────
   frontend:
     build: ./frontend
     container_name: centromedico-frontend
+    restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:
       - backend
+
+  # ─── n8n (automatización: envía la receta por Gmail) ────────────
+  # Comparte la red por defecto del compose, así el backend lo alcanza
+  # como http://n8n:5678 y n8n alcanza al backend como http://backend:8080.
+  # El editor queda en http://localhost:5678 (usuario/clave abajo).
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: centromedico-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # URL pública del editor; necesaria para que los webhooks se generen bien.
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: "http://localhost:5678/"
+      GENERIC_TIMEZONE: "America/Lima"
+      # Autenticación básica del editor (cámbiala si quieres).
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin
+    volumes:
+      # Persiste workflows y credenciales (incl. la de Gmail) entre reinicios.
+      - n8n_data:/home/node/.n8n
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  n8n_data:
+  sqlserver_data:

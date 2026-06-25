@@ -8,9 +8,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +30,8 @@ import java.util.Map;
 public class AtencionService {
 
     private final JdbcTemplate jdbc;
+    private final N8nNotificacionService n8n;
+    private final RecetaPdfService recetaPdf;
 
     /** Detalle de la atención de una cita del estudiante (diagnósticos + comentarios). */
     public AtencionDetalleDTO detalle(int idCita, String idEstudiante) {
@@ -119,6 +126,83 @@ public class AtencionService {
                     ps.setString(3, d.getDosis());
                     ps.setString(4, d.getDuracion());
                 });
+
+            // 6. Notificar la receta a n8n (envía el email al estudiante).
+            //    Se arma el payload ahora (dentro de la tx, lecturas consistentes)
+            //    pero el POST se dispara SOLO si la transacción se confirma, para
+            //    no enviar correos de recetas que terminen revertidas.
+            Map<String, Object> payload =
+                construirPayloadReceta(idReceta, idCita, idDoctor, req);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            n8n.notificarReceta(payload);
+                        }
+                    });
+            } else {
+                n8n.notificarReceta(payload);
+            }
         }
+    }
+
+    /** Construye el payload JSON que recibirá n8n para enviar la receta por correo. */
+    private Map<String, Object> construirPayloadReceta(
+            int idReceta, int idCita, String idDoctor, AtenderRequest req) {
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("idReceta", idReceta);
+        payload.put("idCita", idCita);
+        payload.put("fecha", LocalDateTime.now().toString());
+        payload.put("comentarios", req.getComentarios());
+
+        // Estudiante (destinatario del correo).
+        Map<String, Object> estudiante = jdbc.queryForMap("""
+            SELECT e.id_usuario AS id, e.nombre, e.email
+            FROM citas c
+            JOIN estudiantes e ON c.id_estudiante = e.id_usuario
+            WHERE c.id = ?
+            """, idCita);
+        payload.put("estudiante", estudiante);
+
+        // Doctor que emite la receta.
+        Map<String, Object> doctor = jdbc.queryForMap(
+            "SELECT id_usuario AS id, nombre, especialidad FROM doctores WHERE id_usuario = ?",
+            idDoctor);
+        payload.put("doctor", doctor);
+
+        // Diagnósticos CIE (código + descripción + observación).
+        List<Map<String, Object>> diagnosticos = new ArrayList<>();
+        for (AtenderRequest.Diagnostico d : req.getDiagnosticos()) {
+            Map<String, Object> cie = jdbc.queryForMap(
+                "SELECT codigo, descripcion FROM codigos_cie WHERE id = ?", d.getIdCie());
+            Map<String, Object> diag = new LinkedHashMap<>();
+            diag.put("codigo", cie.get("codigo"));
+            diag.put("descripcion", cie.get("descripcion"));
+            diag.put("observacion", d.getObservacion());
+            diagnosticos.add(diag);
+        }
+        payload.put("diagnosticos", diagnosticos);
+
+        // Medicamentos recetados (nombre + dosis + duración).
+        List<Map<String, Object>> medicamentos = new ArrayList<>();
+        for (AtenderRequest.RecetaItem item : req.getReceta()) {
+            Map<String, Object> med = new LinkedHashMap<>();
+            String nombre = jdbc.queryForObject(
+                "SELECT nombre FROM medicamentos WHERE id = ?", String.class, item.getIdMedicamento());
+            med.put("id", item.getIdMedicamento());
+            med.put("nombre", nombre);
+            med.put("dosis", item.getDosis());
+            med.put("duracion", item.getDuracion());
+            medicamentos.add(med);
+        }
+        payload.put("medicamentos", medicamentos);
+
+        // PDF de la receta (Base64) para que n8n lo adjunte al correo.
+        payload.put("pdfNombre", "receta-" + String.format("%04d", idReceta) + ".pdf");
+        payload.put("pdfBase64", recetaPdf.generarBase64(payload));
+
+        return payload;
     }
 }
