@@ -36,6 +36,7 @@ public class DoctorService {
         if (usuarioRepository.existsById(req.getId())) {
             throw new RuntimeException("El código ya existe");
         }
+        edu.universidad.centromedico.model.Catalogos.validarEspecialidad(req.getEspecialidad());
 
         Usuario usuario = new Usuario();
         usuario.setId(req.getId());

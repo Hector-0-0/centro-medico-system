@@ -45,7 +45,7 @@ public class PerfilService {
             }
             case "DOCTOR" -> {
                 p.putAll(jdbc.queryForMap(
-                    "SELECT nombre, especialidad, consultorio, activo FROM doctores WHERE id_usuario = ?", id));
+                    "SELECT nombre, especialidad, consultorio, activo, foto FROM doctores WHERE id_usuario = ?", id));
                 ponerEstadisticas(p, "id_doctor", id);
             }
             case "ADMIN" -> p.put("nombre", jdbc.queryForObject(
@@ -69,6 +69,8 @@ public class PerfilService {
             throw new RuntimeException("Solo los estudiantes pueden editar su perfil");
         }
 
+        edu.universidad.centromedico.model.Catalogos.validarCarrera(req.getCarrera());
+
         int edad = Period.between(req.getFechaNacimiento(), LocalDate.now()).getYears();
         if (edad < 18 || edad > 100) {
             throw new RuntimeException("El paciente debe tener entre 18 y 100 años");
@@ -87,6 +89,28 @@ public class PerfilService {
                 "UPDATE estudiantes SET email = ?, carrera = ?, fecha_nacimiento = ?, edad = ?, foto = ? WHERE id_usuario = ?",
                 req.getEmail(), req.getCarrera(), java.sql.Date.valueOf(req.getFechaNacimiento()), edad,
                 req.getFoto().isBlank() ? null : req.getFoto(), id);
+        }
+    }
+
+    /** Edita el perfil del médico autenticado (consultorio y foto). */
+    @Transactional
+    public void actualizarDoctor(String id, edu.universidad.centromedico.dto.ActualizarPerfilDoctorRequest req) {
+        String rol = jdbc.queryForObject(
+            "SELECT rol FROM usuarios WHERE id = ? AND eliminado = 0", String.class, id);
+        if (!"DOCTOR".equals(rol)) {
+            throw new RuntimeException("Solo los médicos pueden editar este perfil");
+        }
+        if (req.getFoto() != null && req.getFoto().length() > MAX_FOTO_CHARS) {
+            throw new RuntimeException("La foto es demasiado grande (máx. ~1.3 MB)");
+        }
+
+        // La foto solo se actualiza si viene en la petición (null = sin cambios).
+        if (req.getFoto() == null) {
+            jdbc.update("UPDATE doctores SET consultorio = ? WHERE id_usuario = ?",
+                req.getConsultorio(), id);
+        } else {
+            jdbc.update("UPDATE doctores SET consultorio = ?, foto = ? WHERE id_usuario = ?",
+                req.getConsultorio(), req.getFoto().isBlank() ? null : req.getFoto(), id);
         }
     }
 

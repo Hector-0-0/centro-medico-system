@@ -15,3 +15,7 @@ export const listarCitasEstudiante = () =>
 /** Detalle de la atención de una cita propia (diagnósticos + comentarios). */
 export const obtenerAtencion = (idCita) =>
   api.get(`/citas/${idCita}/atencion`).then((r) => r.data);
+
+/** Cancela una cita PENDIENTE propia (ESTUDIANTE o DOCTOR). Libera el slot. */
+export const cancelarCita = (idCita) =>
+  api.post(`/citas/${idCita}/cancelar`).then((r) => r.data);

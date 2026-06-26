@@ -38,41 +38,47 @@ public class DisponibilidadService {
             idDoctor);
     }
 
-    /** Guarda varios días; cada uno se acepta o rechaza por su cuenta. */
+    /** Guarda/limpia varios días; cada uno se acepta o rechaza por su cuenta. */
     @Transactional
     public GuardarDisponibilidadResponse guardar(String idDoctor, GuardarDisponibilidadRequest req) {
-        int guardados = 0, rechazados = 0;
+        int guardados = 0;
+        List<GuardarDisponibilidadResponse.DiaRechazado> rechazados = new ArrayList<>();
         if (req.getDias() != null) {
             for (GuardarDisponibilidadRequest.Dia d : req.getDias()) {
-                if (guardarDia(idDoctor, d.getDiaSemana(), d.getHoraInicio(), d.getHoraFin())) {
+                String motivo = procesarDia(idDoctor, d);
+                if (motivo == null) {
                     guardados++;
                 } else {
-                    rechazados++;
+                    rechazados.add(new GuardarDisponibilidadResponse.DiaRechazado(d.getDiaSemana(), motivo));
                 }
             }
         }
-        return new GuardarDisponibilidadResponse(guardados, rechazados);
+        return new GuardarDisponibilidadResponse(guardados, rechazados.size(), rechazados);
     }
 
-    /** Procesa un día dentro de la transacción. Devuelve false si se rechaza. */
-    private boolean guardarDia(String idDoctor, String dia, String ini, String fin) {
-        if (dia == null || dia.isBlank() || ini == null || fin == null) return false;
-        if (ini.compareTo(fin) >= 0) return false;                 // rango inválido
-        if (tieneCitasPendientes(idDoctor, dia, ini, fin)) return false;
+    /**
+     * Procesa un día dentro de la transacción. Devuelve null si se aplicó bien, o
+     * el motivo del rechazo. Un día inactivo se limpia (borra su disponibilidad y
+     * sus slots libres); un día activo regenera los slots de 30 min.
+     */
+    private String procesarDia(String idDoctor, GuardarDisponibilidadRequest.Dia d) {
+        String dia = d.getDiaSemana();
+        if (dia == null || dia.isBlank()) return "día inválido";
 
-        // 1. Soft-delete de slots disponibles y disponibilidad anterior de ese día.
-        jdbc.update("""
-            UPDATE s SET s.eliminado = 1
-            FROM slots_disponibilidad s
-            INNER JOIN disponibilidad_doctor d ON s.id_disponibilidad = d.id
-            WHERE d.id_doctor = ? AND d.dia_semana = ? AND s.disponible = 1 AND s.eliminado = 0
-            """, idDoctor, dia);
-        jdbc.update("""
-            UPDATE disponibilidad_doctor SET eliminado = 1
-            WHERE id_doctor = ? AND dia_semana = ? AND eliminado = 0
-            """, idDoctor, dia);
+        // Día desactivado: limpiar lo registrado (bloqueado si hay citas pendientes).
+        if (!d.isActivo()) {
+            if (tieneCitasPendientesDia(idDoctor, dia)) return "tiene citas pendientes ese día";
+            limpiarDia(idDoctor, dia);
+            return null;
+        }
 
-        // 2. Insertar la nueva disponibilidad.
+        String ini = d.getHoraInicio(), fin = d.getHoraFin();
+        if (ini == null || fin == null || ini.compareTo(fin) >= 0) return "rango horario inválido";
+        if (tieneCitasPendientes(idDoctor, dia, ini, fin)) return "tiene citas pendientes ese día";
+
+        limpiarDia(idDoctor, dia);
+
+        // Insertar la nueva disponibilidad.
         KeyHolder kh = new GeneratedKeyHolder();
         jdbc.update(conn -> {
             PreparedStatement ps = conn.prepareStatement("""
@@ -99,7 +105,33 @@ public class DisponibilidadService {
                 ps.setString(4, slot[0]);
                 ps.setString(5, slot[1]);
             });
-        return true;
+        return null;
+    }
+
+    /** Soft-delete de la disponibilidad de un día y de sus slots aún disponibles. */
+    private void limpiarDia(String idDoctor, String dia) {
+        jdbc.update("""
+            UPDATE s SET s.eliminado = 1
+            FROM slots_disponibilidad s
+            INNER JOIN disponibilidad_doctor d ON s.id_disponibilidad = d.id
+            WHERE d.id_doctor = ? AND d.dia_semana = ? AND s.disponible = 1 AND s.eliminado = 0
+            """, idDoctor, dia);
+        jdbc.update("""
+            UPDATE disponibilidad_doctor SET eliminado = 1
+            WHERE id_doctor = ? AND dia_semana = ? AND eliminado = 0
+            """, idDoctor, dia);
+    }
+
+    /** ¿El día tiene alguna cita PENDIENTE (en cualquier hora)? */
+    private boolean tieneCitasPendientesDia(String idDoctor, String dia) {
+        Integer n = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM citas c
+            JOIN slots_disponibilidad s   ON c.id_slot = s.id
+            JOIN disponibilidad_doctor d  ON s.id_disponibilidad = d.id
+            WHERE d.id_doctor = ? AND d.dia_semana = ?
+              AND c.estado = 'PENDIENTE' AND d.eliminado = 0
+            """, Integer.class, idDoctor, dia);
+        return n != null && n > 0;
     }
 
     private boolean tieneCitasPendientes(String idDoctor, String dia, String ini, String fin) {

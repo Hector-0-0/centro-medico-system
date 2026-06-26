@@ -1,6 +1,7 @@
 package edu.universidad.centromedico.controller;
 
 import edu.universidad.centromedico.dto.ActualizarPerfilRequest;
+import edu.universidad.centromedico.dto.ActualizarPerfilDoctorRequest;
 import edu.universidad.centromedico.service.PerfilService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,14 @@ public class PerfilController {
     public ResponseEntity<Map<String, Object>> actualizar(
             @Valid @RequestBody ActualizarPerfilRequest req, Authentication auth) {
         perfilService.actualizar(auth.getName(), req);
+        return ResponseEntity.ok(perfilService.perfil(auth.getName()));
+    }
+
+    /** Editar "Mi Perfil" del médico (consultorio y foto). */
+    @PutMapping("/doctor")
+    public ResponseEntity<Map<String, Object>> actualizarDoctor(
+            @Valid @RequestBody ActualizarPerfilDoctorRequest req, Authentication auth) {
+        perfilService.actualizarDoctor(auth.getName(), req);
         return ResponseEntity.ok(perfilService.perfil(auth.getName()));
     }
 }

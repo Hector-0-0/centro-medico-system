@@ -4,12 +4,14 @@ import {
   entregarReceta,
 } from '../services/recetaService';
 import { mensajeError } from '../services/api';
+import { useDialog } from '../components/Dialog';
 
 /** Recetas Pendientes — réplica del FarmaciaRecetasPanel del desktop. */
 export default function Recetas() {
   const [lista, setLista] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState(null);
+  const { alerta, confirmar } = useDialog();
 
   const cargar = async () => {
     try {
@@ -35,15 +37,15 @@ export default function Recetas() {
 
   const confirmarEntrega = async () => {
     if (!seleccion) {
-      alert('Selecciona una receta para confirmar la entrega.');
+      alerta('Selecciona una receta para confirmar la entrega.');
       return;
     }
-    if (!window.confirm(`¿Confirmar entrega de la receta #${seleccion}?`)) return;
+    if (!(await confirmar(`¿Confirmar entrega de la receta #${seleccion}?`, { textoOk: 'Confirmar' }))) return;
     try {
       await entregarReceta(seleccion);
       cargar();
     } catch (err) {
-      alert(mensajeError(err, 'No se pudo confirmar la entrega.'));
+      alerta(mensajeError(err, 'No se pudo confirmar la entrega.'));
     }
   };
 

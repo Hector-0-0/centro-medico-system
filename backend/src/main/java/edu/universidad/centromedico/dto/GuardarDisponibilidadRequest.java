@@ -15,5 +15,7 @@ public class GuardarDisponibilidadRequest {
         private String diaSemana;
         private String horaInicio;
         private String horaFin;
+        /** true = atiende ese día; false = desactivar (limpiar) ese día. */
+        private boolean activo;
     }
 }

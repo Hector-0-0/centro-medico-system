@@ -1,0 +1,8 @@
+# Reverse proxy con HTTPS automático.
+# El dominio se toma de la variable DOMAIN (definida en .env). Si es un dominio
+# público real, Caddy pide y renueva el certificado de Let's Encrypt solo.
+# Si vale "localhost", usa su CA interna (útil para probar en tu PC).
+{$DOMAIN:localhost} {
+	encode gzip
+	reverse_proxy frontend:80
+}

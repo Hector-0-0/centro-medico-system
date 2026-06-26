@@ -47,14 +47,34 @@ services:
         condition: service_started
 
   # ─── Frontend React (servido por Nginx) ─────────────────────────
+  # No publica puertos al host: Caddy (abajo) se pone delante y lo expone por
+  # HTTPS. nginx interno sigue sirviendo el SPA y haciendo proxy de /api.
   frontend:
     build: ./frontend
     container_name: centromedico-frontend
     restart: unless-stopped
-    ports:
-      - "3000:80"
     depends_on:
       - backend
+
+  # ─── Caddy: reverse proxy con HTTPS automático ──────────────────
+  # Termina TLS y reenvía todo a "frontend". Para un dominio real obtiene el
+  # certificado de Let's Encrypt solo; con DOMAIN=localhost usa su CA interna.
+  # Requiere los puertos 80 y 443 abiertos y el dominio apuntando a la IP.
+  caddy:
+    image: caddy:2-alpine
+    container_name: centromedico-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
 
   # ─── n8n (automatización: envía la receta por Gmail) ────────────
   # Comparte la red por defecto del compose, así el backend lo alcanza
@@ -86,3 +106,5 @@ services:
 volumes:
   n8n_data:
   sqlserver_data:
+  caddy_data:
+  caddy_config:

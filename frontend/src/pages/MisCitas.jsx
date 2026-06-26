@@ -1,28 +1,43 @@
 import { useEffect, useState } from 'react';
-import { listarCitasEstudiante, obtenerAtencion } from '../services/citaService';
+import { listarCitasEstudiante, obtenerAtencion, cancelarCita } from '../services/citaService';
+import { mensajeError } from '../services/api';
+import { useDialog } from '../components/Dialog';
 
-/** Mis Citas del estudiante — réplica del HistorialPanel del desktop. */
+// Pestañas por estado de la cita.
+const TABS = [
+  { key: 'PENDIENTE', label: 'Pendientes' },
+  { key: 'ATENDIDA',  label: 'Atendidas' },
+  { key: 'CANCELADA', label: 'Canceladas' },
+];
+
+/** Mis Citas del estudiante — réplica del HistorialPanel del desktop, con pestañas. */
 export default function MisCitas() {
   const [lista, setLista] = useState([]);
+  const [tab, setTab] = useState('PENDIENTE');
   const [busqueda, setBusqueda] = useState('');
   const [detalle, setDetalle] = useState(null); // { cita, atencion }
+  const { alerta, confirmar } = useDialog();
 
-  useEffect(() => {
+  const cargar = () =>
     listarCitasEstudiante()
       .then(setLista)
       .catch(() => setLista([]));
+
+  useEffect(() => {
+    cargar();
   }, []);
 
+  const cuenta = (estado) => lista.filter((c) => c.estado === estado).length;
+
   const q = busqueda.trim().toLowerCase();
-  const filtradas = q
-    ? lista.filter(
-        (c) =>
-          (c.especialidad || '').toLowerCase().includes(q) ||
-          (c.nombreDoctor || '').toLowerCase().includes(q) ||
-          (c.motivo || '').toLowerCase().includes(q) ||
-          (c.estado || '').toLowerCase().includes(q),
-      )
-    : lista;
+  const filtradas = lista
+    .filter((c) => c.estado === tab)
+    .filter((c) =>
+      !q ||
+      (c.especialidad || '').toLowerCase().includes(q) ||
+      (c.nombreDoctor || '').toLowerCase().includes(q) ||
+      (c.motivo || '').toLowerCase().includes(q),
+    );
 
   const verDetalle = async (cita) => {
     try {
@@ -33,14 +48,38 @@ export default function MisCitas() {
     }
   };
 
+  const cancelar = async (cita) => {
+    if (!(await confirmar(
+      `¿Cancelar tu cita de ${cita.especialidad || ''} con ${cita.nombreDoctor || cita.idDoctor}?`,
+      { peligro: true, textoOk: 'Cancelar cita', textoCancelar: 'Volver' },
+    ))) return;
+    try {
+      await cancelarCita(cita.id);
+      cargar();
+    } catch (err) {
+      alerta(mensajeError(err, 'No se pudo cancelar la cita.'));
+    }
+  };
+
+  const esPendiente = tab === 'PENDIENTE';
+
   return (
     <div>
       <h1 className="panel__title">Mis Citas</h1>
 
       <div className="toolbar">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            className={`btn ${tab === t.key ? 'btn--primary' : 'btn--ghost'}`}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label} ({cuenta(t.key)})
+          </button>
+        ))}
         <input
           className="toolbar__search"
-          placeholder="Buscar por especialidad, médico, motivo o estado..."
+          placeholder="Buscar por especialidad, médico o motivo..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -60,12 +99,15 @@ export default function MisCitas() {
               <th>Hora</th>
               <th>Motivo</th>
               <th>Estado</th>
+              {esPendiente && <th></th>}
             </tr>
           </thead>
           <tbody>
             {filtradas.length === 0 ? (
               <tr>
-                <td className="table__empty" colSpan={6}>No tienes citas registradas</td>
+                <td className="table__empty" colSpan={esPendiente ? 7 : 6}>
+                  No tienes citas en esta categoría
+                </td>
               </tr>
             ) : (
               filtradas.map((c) => (
@@ -76,6 +118,16 @@ export default function MisCitas() {
                   <td>{c.horaInicio}{c.horaFin ? ` - ${c.horaFin}` : ''}</td>
                   <td>{c.motivo}</td>
                   <td>{c.estado}</td>
+                  {esPendiente && (
+                    <td>
+                      <button
+                        className="btn btn--danger btn--sm"
+                        onClick={(e) => { e.stopPropagation(); cancelar(c); }}
+                      >
+                        Cancelar
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

@@ -50,4 +50,15 @@ public class CitaController {
         citaService.agendar(auth.getName(), req.getIdSlot(), req.getMotivo());
         return ResponseEntity.ok().build();
     }
+
+    /** Cancelar una cita PENDIENTE propia — ESTUDIANTE (la suya) o DOCTOR (la suya). */
+    @PostMapping("/{id}/cancelar")
+    @PreAuthorize("hasAnyRole('ESTUDIANTE','DOCTOR')")
+    public ResponseEntity<Void> cancelar(@PathVariable int id, Authentication auth) {
+        String rol = auth.getAuthorities().stream()
+            .map(a -> a.getAuthority().replaceFirst("^ROLE_", ""))
+            .findFirst().orElse("");
+        citaService.cancelar(id, auth.getName(), rol);
+        return ResponseEntity.ok().build();
+    }
 }

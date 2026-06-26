@@ -21,6 +21,7 @@ export default function GestionStock() {
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [movimientosDe, setMovimientosDe] = useState(null);
+  const [ajustarDe, setAjustarDe] = useState(null);
 
   const cargar = async () => {
     try {
@@ -43,30 +44,6 @@ export default function GestionStock() {
           (m.tipo || '').toLowerCase().includes(q),
       )
     : lista;
-
-  // Doble clic en una fila → ajustar stock (reabastecimiento; solo aumentar).
-  const ajustar = async (m) => {
-    const input = window.prompt(
-      `Nuevo stock para "${m.nombre}" (solo se puede aumentar; las salidas se descuentan al entregar recetas):`,
-      m.stock,
-    );
-    if (input === null || input.trim() === '') return;
-    const nuevo = Number(input.trim());
-    if (!Number.isInteger(nuevo) || nuevo < 0) {
-      alert('Ingresa un número entero ≥ 0.');
-      return;
-    }
-    if (nuevo < m.stock) {
-      alert('El stock solo puede aumentarse manualmente. Las salidas se descuentan al entregar recetas.');
-      return;
-    }
-    try {
-      await actualizarStock(m.id, nuevo);
-      cargar();
-    } catch (err) {
-      alert(mensajeError(err, 'No se pudo actualizar el stock.'));
-    }
-  };
 
   return (
     <div>
@@ -109,7 +86,7 @@ export default function GestionStock() {
               filtrados.map((m) => {
                 const estado = estadoDe(m.stock);
                 return (
-                  <tr key={m.id} onDoubleClick={() => ajustar(m)}>
+                  <tr key={m.id} onDoubleClick={() => setAjustarDe(m)}>
                     <td>{m.id}</td>
                     <td>{m.nombre}</td>
                     <td>{m.dosisMg != null ? m.dosisMg : '—'}</td>
@@ -147,6 +124,78 @@ export default function GestionStock() {
           onClose={() => setMovimientosDe(null)}
         />
       )}
+
+      {ajustarDe && (
+        <AjustarStockModal
+          medicamento={ajustarDe}
+          onClose={() => setAjustarDe(null)}
+          onSaved={() => {
+            setAjustarDe(null);
+            cargar();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Ajuste manual de stock (reabastecimiento; solo se puede aumentar). */
+function AjustarStockModal({ medicamento, onClose, onSaved }) {
+  const [valor, setValor] = useState(String(medicamento.stock));
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    setError('');
+    const nuevo = Number(valor.trim());
+    if (!Number.isInteger(nuevo) || nuevo < 0) {
+      setError('Ingresa un número entero ≥ 0.');
+      return;
+    }
+    if (nuevo < medicamento.stock) {
+      setError('El stock solo puede aumentarse manualmente. Las salidas se descuentan al entregar recetas.');
+      return;
+    }
+    setGuardando(true);
+    try {
+      await actualizarStock(medicamento.id, nuevo);
+      onSaved();
+    } catch (err) {
+      setError(mensajeError(err, 'No se pudo actualizar el stock.'));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="modal__overlay" onClick={onClose}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={guardar} style={{ maxWidth: 420 }}>
+        <div className="modal__header">Ajustar stock · {medicamento.nombre}</div>
+        <div className="modal__body">
+          {error && <div className="modal__error">{error}</div>}
+          <p className="panel__hint" style={{ margin: 0 }}>
+            Solo se puede aumentar; las salidas se descuentan al entregar recetas.
+          </p>
+          <label className="field">
+            <span className="field__label">Nuevo stock</span>
+            <input
+              className="field__input"
+              type="number"
+              min={medicamento.stock}
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              autoFocus
+            />
+          </label>
+        </div>
+        <div className="modal__footer">
+          <button type="button" className="btn btn--ghost" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="btn btn--primary" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

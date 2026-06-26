@@ -5,13 +5,8 @@ import {
   eliminarEstudiante,
 } from '../services/estudianteService';
 import { mensajeError } from '../services/api';
-
-// Carreras de la UNI para el combo (el usuario también puede escribir).
-const CARRERAS = [
-  'Ingenieria de Sistemas', 'Ingenieria Industrial', 'Ingenieria Civil',
-  'Ingenieria Electronica', 'Ingenieria Mecanica', 'Ingenieria Quimica',
-  'Ingenieria Economica', 'Arquitectura', 'Ciencias',
-];
+import { useDialog } from '../components/Dialog';
+import { CARRERAS } from '../constants/catalogos';
 
 /** Edad cumplida a partir de una fecha de nacimiento (YYYY-MM-DD). */
 export function edadDesde(fecha) {
@@ -30,6 +25,7 @@ export default function Pacientes() {
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const { alerta, confirmar } = useDialog();
 
   const cargar = async () => {
     try {
@@ -54,16 +50,16 @@ export default function Pacientes() {
 
   const eliminar = async () => {
     if (!seleccion) {
-      alert('Selecciona un paciente para eliminar.');
+      alerta('Selecciona un paciente para eliminar.');
       return;
     }
     const p = lista.find((e) => e.id === seleccion);
-    if (!window.confirm(`¿Eliminar al paciente ${p?.nombre}?`)) return;
+    if (!(await confirmar(`¿Eliminar al paciente ${p?.nombre}?`, { peligro: true, textoOk: 'Eliminar' }))) return;
     try {
       await eliminarEstudiante(seleccion);
       cargar();
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo eliminar el paciente.');
+      alerta(err.response?.data?.error || 'No se pudo eliminar el paciente.');
     }
   };
 
@@ -199,10 +195,13 @@ function NuevoPacienteModal({ onClose, onSaved }) {
             value={form.fechaNacimiento}
             onChange={set('fechaNacimiento')}
           />
-          <Campo label="Carrera" list="carreras-uni" value={form.carrera} onChange={set('carrera')} />
-          <datalist id="carreras-uni">
-            {CARRERAS.map((c) => <option key={c} value={c} />)}
-          </datalist>
+          <label className="field">
+            <span className="field__label">Carrera</span>
+            <select className="field__input" value={form.carrera} onChange={set('carrera')}>
+              <option value="">Selecciona...</option>
+              {CARRERAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
           <Campo label="Email" type="email" placeholder="usuario@uni.pe" value={form.email} onChange={set('email')} />
           <Campo label="Contraseña" type="password" value={form.password} onChange={set('password')} />
         </div>

@@ -19,10 +19,12 @@ export const MENU = {
     { label: 'Pacientes',       path: '/pacientes' },
     { label: 'Médicos',         path: '/medicos' },
     { label: 'Todas las Citas', path: '/citas' },
+    { label: 'Mi Perfil',       path: '/perfil' },
   ],
   FARMACIA: [
     { label: 'Recetas',         path: '/recetas' },
     { label: 'Gestión Stock',   path: '/gestion-stock' },
+    { label: 'Mi Perfil',       path: '/perfil' },
   ],
 };
 

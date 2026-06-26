@@ -5,6 +5,8 @@ import {
   eliminarDoctor,
 } from '../services/doctorService';
 import { mensajeError } from '../services/api';
+import { useDialog } from '../components/Dialog';
+import { ESPECIALIDADES } from '../constants/catalogos';
 
 /** Gestión de Médicos (doctores) — réplica del MedicoPanel del desktop. */
 export default function Medicos() {
@@ -12,6 +14,7 @@ export default function Medicos() {
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const { alerta, confirmar } = useDialog();
 
   const cargar = async () => {
     try {
@@ -38,12 +41,12 @@ export default function Medicos() {
 
   // Borrado con doble clic, igual que el MedicoController del desktop.
   const eliminar = async (d) => {
-    if (!window.confirm(`¿Eliminar al médico ${d.nombre}?`)) return;
+    if (!(await confirmar(`¿Eliminar al médico ${d.nombre}?`, { peligro: true, textoOk: 'Eliminar' }))) return;
     try {
       await eliminarDoctor(d.id);
       cargar();
     } catch (err) {
-      alert(err.response?.data?.error || 'No se pudo eliminar el médico.');
+      alerta(err.response?.data?.error || 'No se pudo eliminar el médico.');
     }
   };
 
@@ -103,7 +106,6 @@ export default function Medicos() {
 
       {modalAbierto && (
         <NuevoMedicoModal
-          especialidades={[...new Set(lista.map((d) => d.especialidad))].sort()}
           onClose={() => setModalAbierto(false)}
           onSaved={() => {
             setModalAbierto(false);
@@ -117,7 +119,7 @@ export default function Medicos() {
 
 const VACIO = { id: '', nombre: '', especialidad: '', consultorio: '', password: '' };
 
-function NuevoMedicoModal({ especialidades, onClose, onSaved }) {
+function NuevoMedicoModal({ onClose, onSaved }) {
   const [form, setForm] = useState(VACIO);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -165,10 +167,13 @@ function NuevoMedicoModal({ especialidades, onClose, onSaved }) {
           {error && <div className="modal__error">{error}</div>}
           <Campo label="Código" value={form.id} onChange={set('id')} autoFocus />
           <Campo label="Nombre" value={form.nombre} onChange={set('nombre')} />
-          <Campo label="Especialidad" list="especialidades-lst" value={form.especialidad} onChange={set('especialidad')} />
-          <datalist id="especialidades-lst">
-            {especialidades.map((e) => <option key={e} value={e} />)}
-          </datalist>
+          <label className="field">
+            <span className="field__label">Especialidad</span>
+            <select className="field__input" value={form.especialidad} onChange={set('especialidad')}>
+              <option value="">Selecciona...</option>
+              {ESPECIALIDADES.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </label>
           <Campo label="Consultorio" value={form.consultorio} onChange={set('consultorio')} />
           <Campo label="Contraseña" type="password" value={form.password} onChange={set('password')} />
         </div>

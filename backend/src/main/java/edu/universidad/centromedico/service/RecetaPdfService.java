@@ -4,22 +4,28 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Genera el PDF de la receta médica a partir del payload de la atención.
- * Usa openhtmltopdf (HTML/CSS -> PDF) para un documento con la identidad
- * visual de la UNI (guinda + crema), listo para adjuntar al correo.
+ * Usa openhtmltopdf (HTML/CSS -> PDF) reproduciendo el formato oficial de la
+ * receta de la UNI: cabecera azul con el escudo institucional, bloque de datos
+ * del paciente/médico en dos columnas y la tabla de prescripción.
  */
 @Service
 public class RecetaPdfService {
 
     private static final DateTimeFormatter FECHA_FMT =
-        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    /** Escudo de la UNI embebido como data URI (se carga una sola vez del classpath). */
+    private static final String LOGO_DATA_URI = cargarLogo();
 
     /** Devuelve el PDF de la receta codificado en Base64 (para enviarlo en JSON). */
     public String generarBase64(Map<String, Object> payload) {
@@ -36,159 +42,56 @@ public class RecetaPdfService {
         List<Map<String, Object>> meds =
             (List<Map<String, Object>>) payload.getOrDefault("medicamentos", List.of());
 
-        String nReceta = String.format("%04d", asInt(payload.get("idReceta")));
-        String nCita = String.format("%04d", asInt(payload.get("idCita")));
         String fecha = fecha(payload.get("fecha"));
-        String comentarios = str(payload.get("comentarios"));
 
-        StringBuilder filasDiag = new StringBuilder();
+        // "Diag. Asociado": no tenemos diagnóstico ligado a cada medicamento, así que
+        // se muestra el resumen de los diagnósticos CIE de la atención en cada fila.
+        String diagAsociado;
         if (diags.isEmpty()) {
-            filasDiag.append("<tr><td colspan=\"3\" class=\"empty\">Sin diagnósticos registrados</td></tr>");
+            diagAsociado = "No hay Diagnóstico asociado";
         } else {
-            for (Map<String, Object> d : diags) {
-                filasDiag.append("<tr>")
-                    .append("<td class=\"code\">").append(esc(d.get("codigo"))).append("</td>")
-                    .append("<td>").append(esc(d.get("descripcion"))).append("</td>")
-                    .append("<td>").append(esc(orDash(d.get("observacion")))).append("</td>")
-                    .append("</tr>");
-            }
+            diagAsociado = diags.stream()
+                .map(d -> str(orDash(d.get("descripcion"))))
+                .collect(Collectors.joining(", "));
         }
+        String diagAsociadoEsc = esc(diagAsociado);
 
-        StringBuilder filasMed = new StringBuilder();
+        StringBuilder filas = new StringBuilder();
         if (meds.isEmpty()) {
-            filasMed.append("<tr><td colspan=\"4\" class=\"empty\">Sin medicamentos</td></tr>");
+            filas.append("<tr><td colspan=\"8\" class=\"empty\">Sin medicamentos prescritos</td></tr>");
         } else {
             int i = 1;
             for (Map<String, Object> m : meds) {
-                filasMed.append("<tr>")
+                String codigo = str(m.get("id")).isBlank()
+                    ? esc(m.get("nombre"))
+                    : "(" + esc(m.get("id")) + ") " + esc(m.get("nombre"));
+                String concentracion = str(m.get("dosisMg")).isBlank() ? "—" : esc(m.get("dosisMg")) + "MG";
+                filas.append("<tr>")
                     .append("<td class=\"num\">").append(i++).append("</td>")
-                    .append("<td>").append(esc(m.get("nombre"))).append("</td>")
+                    .append("<td>").append(codigo).append("</td>")
+                    .append("<td>").append(diagAsociadoEsc).append("</td>")
+                    .append("<td class=\"ctr\">").append(concentracion).append("</td>")
+                    .append("<td class=\"ctr\">").append(esc(orDash(m.get("tipo")))).append("</td>")
+                    .append("<td class=\"ctr\">").append(esc(orDash(m.get("duracion")))).append("</td>")
+                    .append("<td class=\"ctr\">—</td>")
                     .append("<td>").append(esc(orDash(m.get("dosis")))).append("</td>")
-                    .append("<td>").append(esc(orDash(m.get("duracion")))).append("</td>")
                     .append("</tr>");
             }
         }
 
-        String comentariosBloque = comentarios.isBlank() ? "" : """
-            <div class="section">
-              <div class="section-title">Indicaciones del médico</div>
-              <div class="box">%s</div>
-            </div>
-            """.formatted(esc(comentarios));
+        String logoTag = LOGO_DATA_URI.isBlank()
+            ? ""
+            : "<img class=\"logo\" src=\"" + LOGO_DATA_URI + "\" />";
 
-        String html = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <html>
-            <head>
-            <style>
-              @page { size: A4; margin: 0; }
-              * { box-sizing: border-box; }
-              body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #1E293B; font-size: 11pt; }
-              .page { padding: 0 0 90px 0; position: relative; min-height: 100%%; }
-              .header { background-color: #8B1414; color: #F9F5F0; padding: 22px 40px; }
-              .header .uni { font-size: 16pt; font-weight: bold; letter-spacing: .5px; }
-              .header .sub { font-size: 9.5pt; opacity: .92; margin-top: 2px; }
-              .titlebar { background-color: #711610; color: #F9F5F0; padding: 8px 40px;
-                          font-size: 12pt; font-weight: bold; letter-spacing: 3px; }
-              .content { padding: 24px 40px; }
-              .meta { width: 100%%; border-collapse: collapse; margin-bottom: 6px; }
-              .meta td { padding: 4px 0; vertical-align: top; font-size: 10.5pt; }
-              .meta .label { color: #64748B; width: 95px; }
-              .meta .val { font-weight: bold; }
-              .receta-no { float: right; text-align: right; }
-              .receta-no .big { color: #711610; font-size: 15pt; font-weight: bold; }
-              .receta-no .lbl { color: #64748B; font-size: 8.5pt; letter-spacing: 1px; }
-              .section { margin-top: 18px; }
-              .section-title { color: #711610; font-size: 11pt; font-weight: bold;
-                               border-bottom: 2px solid #E8DDD8; padding-bottom: 4px; margin-bottom: 8px; }
-              table.data { width: 100%%; border-collapse: collapse; font-size: 10pt; }
-              table.data th { background-color: #F4ECE4; color: #1E293B; text-align: left;
-                              padding: 7px 10px; border: 1px solid #E8DDD8; font-size: 9.5pt; }
-              table.data td { padding: 7px 10px; border: 1px solid #E8DDD8; }
-              table.data tr:nth-child(even) td { background-color: #F9F5F0; }
-              .code { font-weight: bold; color: #711610; white-space: nowrap; }
-              .num { text-align: center; color: #64748B; width: 28px; }
-              .empty { color: #94A3B8; font-style: italic; text-align: center; }
-              .box { background-color: #F9F5F0; border: 1px solid #E8DDD8; border-radius: 4px;
-                     padding: 10px 12px; font-size: 10.5pt; }
-              .firma { margin-top: 48px; width: 100%%; }
-              .firma td { width: 50%%; vertical-align: bottom; padding-top: 28px; font-size: 9.5pt; color: #64748B; }
-              .firma .line { border-top: 1px solid #94A3B8; padding-top: 5px; text-align: center; }
-              .footer { position: absolute; bottom: 0; left: 0; right: 0;
-                        border-top: 3px solid #8B1414; background-color: #F4ECE4;
-                        padding: 12px 40px; font-size: 8pt; color: #64748B; }
-            </style>
-            </head>
-            <body>
-              <div class="page">
-                <div class="header">
-                  <div class="uni">UNIVERSIDAD NACIONAL DE INGENIERÍA</div>
-                  <div class="sub">Centro Médico Universitario &#8226; Sistema de Gestión de Salud</div>
-                </div>
-                <div class="titlebar">RECETA MÉDICA</div>
-
-                <div class="content">
-                  <div class="receta-no">
-                    <div class="lbl">RECETA N°</div>
-                    <div class="big">%s</div>
-                  </div>
-                  <table class="meta">
-                    <tr><td class="label">Fecha:</td><td class="val">%s</td></tr>
-                    <tr><td class="label">Paciente:</td><td class="val">%s</td></tr>
-                    <tr><td class="label">Código:</td><td class="val">%s</td></tr>
-                    <tr><td class="label">Médico:</td><td class="val">%s</td></tr>
-                    <tr><td class="label">Especialidad:</td><td class="val">%s</td></tr>
-                    <tr><td class="label">N° de cita:</td><td class="val">%s</td></tr>
-                  </table>
-
-                  <div class="section">
-                    <div class="section-title">Diagnóstico (CIE-10)</div>
-                    <table class="data">
-                      <thead><tr><th style="width:90px;">Código</th><th>Descripción</th><th>Observación</th></tr></thead>
-                      <tbody>%s</tbody>
-                    </table>
-                  </div>
-
-                  <div class="section">
-                    <div class="section-title">Prescripción</div>
-                    <table class="data">
-                      <thead><tr><th>#</th><th>Medicamento</th><th>Dosis</th><th>Duración</th></tr></thead>
-                      <tbody>%s</tbody>
-                    </table>
-                  </div>
-
-                  %s
-
-                  <table class="firma">
-                    <tr>
-                      <td></td>
-                      <td><div class="line">%s<br/>%s</div></td>
-                    </tr>
-                  </table>
-                </div>
-
-                <div class="footer">
-                  Documento generado automáticamente por el Sistema de Gestión del Centro Médico UNI.
-                  Este documento no requiere firma manuscrita. Para recoger los medicamentos, acérquese a la
-                  farmacia del Centro Médico presentando esta receta.
-                </div>
-              </div>
-            </body>
-            </html>
-            """.formatted(
-                nReceta,
-                esc(fecha),
-                esc(orDash(est.get("nombre"))),
-                esc(orDash(est.get("id"))),
-                esc(orDash(doc.get("nombre"))),
-                esc(orDash(doc.get("especialidad"))),
-                nCita,
-                filasDiag,
-                filasMed,
-                comentariosBloque,
-                esc(orDash(doc.get("nombre"))),
-                esc(orDash(doc.get("especialidad")))
-            );
+        String html = PLANTILLA
+            .replace("@@LOGO@@", logoTag)
+            .replace("@@NOMBRE@@", esc(orDash(est.get("nombre"))))
+            .replace("@@EDAD@@", esc(orDash(est.get("edad"))))
+            .replace("@@NDOC@@", esc(orDash(est.get("id"))))
+            .replace("@@ESPECIALIDAD@@", esc(orDash(doc.get("especialidad"))))
+            .replace("@@DOCTOR@@", esc(orDash(doc.get("nombre"))))
+            .replace("@@FECHA@@", esc(fecha))
+            .replace("@@FILAS@@", filas.toString());
 
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -203,11 +106,117 @@ public class RecetaPdfService {
         }
     }
 
+    /** Esqueleto HTML/CSS de la receta (placeholders @@...@@ se rellenan en generar()). */
+    private static final String PLANTILLA = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <html>
+        <head>
+        <style>
+          @page { size: A4; margin: 28px 36px; }
+          * { box-sizing: border-box; }
+          body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #1a1a1a; font-size: 10pt; }
+          .head { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+          .head td { vertical-align: middle; }
+          .head .logo { height: 70px; }
+          .head .cell-l { width: 110px; }
+          .head .cell-r { width: 110px; text-align: right; }
+          .titles { text-align: center; }
+          .titles .uni { color: #2456a6; font-style: italic; font-weight: bold;
+                         font-family: Georgia, 'Times New Roman', serif; font-size: 16pt; }
+          .titles .doc { color: #2456a6; font-style: italic; font-weight: bold;
+                         font-family: Georgia, 'Times New Roman', serif; font-size: 18pt; margin-top: 4px; }
+          .info { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 14px; }
+          .info td { padding: 3px 0; font-size: 9.5pt; vertical-align: top; }
+          .info .lbl { color: #1a1a1a; width: 150px; }
+          .info .sep { width: 12px; color: #1a1a1a; }
+          .info .val { font-weight: normal; }
+          .info .lbl-r { color: #1a1a1a; width: 120px; padding-left: 24px; }
+          table.rx { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 4px; }
+          table.rx th { background-color: #1f3c88; color: #ffffff; text-align: center;
+                        padding: 5px 4px; border: 1px solid #1f3c88; font-size: 8pt; font-weight: bold; }
+          table.rx td { padding: 4px 6px; border: 1px solid #c9d3e6; vertical-align: top; }
+          table.rx td.num { text-align: center; width: 22px; }
+          table.rx td.ctr { text-align: center; }
+          table.rx .empty { color: #94A3B8; font-style: italic; text-align: center; }
+          .firma { text-align: center; margin-top: 70px; }
+          .firma .line { display: inline-block; border-top: 1px solid #555; padding-top: 5px;
+                         min-width: 240px; }
+          .firma .name { font-weight: bold; color: #1a1a1a; font-size: 10pt; }
+          .firma .esp { color: #444; font-size: 9pt; margin-top: 2px; }
+          .firma .cmp { color: #444; font-size: 9pt; }
+          .pag { position: fixed; bottom: 6px; right: 0; font-size: 8.5pt; color: #1a1a1a; }
+        </style>
+        </head>
+        <body>
+          <table class="head">
+            <tr>
+              <td class="cell-l">@@LOGO@@</td>
+              <td class="titles">
+                <div class="uni">Universidad Nacional de Ingeniería</div>
+                <div class="doc">RECETA MEDICA</div>
+              </td>
+              <td class="cell-r"></td>
+            </tr>
+          </table>
+
+          <table class="info">
+            <tr>
+              <td class="lbl">Nombres y Apellidos</td><td class="sep">:</td><td class="val">@@NOMBRE@@</td>
+              <td class="lbl-r">Edad (Años)</td><td class="sep">:</td><td class="val">@@EDAD@@</td>
+            </tr>
+            <tr>
+              <td class="lbl">Tipo Documento Identidad</td><td class="sep">:</td><td class="val">DNI</td>
+              <td class="lbl-r">N° Doc. Identidad</td><td class="sep">:</td><td class="val">@@NDOC@@</td>
+            </tr>
+            <tr>
+              <td class="lbl">Especialidad</td><td class="sep">:</td><td class="val">@@ESPECIALIDAD@@</td>
+              <td class="lbl-r">Fecha de Atención</td><td class="sep">:</td><td class="val">@@FECHA@@</td>
+            </tr>
+            <tr>
+              <td class="lbl">Especialista de la Salud</td><td class="sep">:</td><td class="val">@@DOCTOR@@</td>
+              <td class="lbl-r"></td><td class="sep"></td><td class="val"></td>
+            </tr>
+          </table>
+
+          <table class="rx">
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Codigo ATC</th>
+                <th>Diag. Asociado</th>
+                <th>Concentración</th>
+                <th>Forma Farmaceutica</th>
+                <th>Días Tratami.</th>
+                <th>Cant.</th>
+                <th>Indicaciones</th>
+              </tr>
+            </thead>
+            <tbody>@@FILAS@@</tbody>
+          </table>
+
+          <div class="firma">
+            <div class="line">
+              <div class="name">@@DOCTOR@@</div>
+              <div class="esp">@@ESPECIALIDAD@@</div>
+              <div class="cmp">C.M.P.</div>
+            </div>
+          </div>
+
+          <div class="pag">Pag :1</div>
+        </body>
+        </html>
+        """;
+
     // ----- helpers -----
 
-    private static int asInt(Object o) {
-        if (o instanceof Number n) return n.intValue();
-        try { return Integer.parseInt(String.valueOf(o)); } catch (Exception e) { return 0; }
+    private static String cargarLogo() {
+        try (InputStream in = RecetaPdfService.class.getResourceAsStream("/images/logo-uni.png")) {
+            if (in == null) return "";
+            byte[] bytes = in.readAllBytes();
+            return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private static String str(Object o) {

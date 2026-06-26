@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { DialogProvider } from './components/Dialog';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
@@ -20,6 +21,7 @@ import GestionStock  from './pages/GestionStock';
 export default function App() {
   return (
     <AuthProvider>
+      <DialogProvider>
       <BrowserRouter>
         <Routes>
           {/* Login: único punto de entrada */}
@@ -46,6 +48,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
+      </DialogProvider>
     </AuthProvider>
   );
 }

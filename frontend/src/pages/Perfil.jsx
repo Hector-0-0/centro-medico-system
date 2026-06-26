@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
-import { obtenerPerfil, actualizarPerfil } from '../services/perfilService';
+import { obtenerPerfil, actualizarPerfil, actualizarPerfilDoctor } from '../services/perfilService';
 import { mensajeError } from '../services/api';
-
-// Carreras de la UNI para el combo (el usuario también puede escribir).
-const CARRERAS = [
-  'Ingenieria de Sistemas', 'Ingenieria Industrial', 'Ingenieria Civil',
-  'Ingenieria Electronica', 'Ingenieria Mecanica', 'Ingenieria Quimica',
-  'Ingenieria Economica', 'Arquitectura', 'Ciencias',
-];
+import { CARRERAS } from '../constants/catalogos';
 
 const MAX_FOTO_BYTES = 1_300_000; // ~1.3 MB
 
@@ -43,6 +37,7 @@ function Avatar({ nombre, foto, size = 96 }) {
 export default function Perfil() {
   const [p, setP] = useState(null);
   const [editando, setEditando] = useState(false);
+  const [editandoDoctor, setEditandoDoctor] = useState(false);
 
   useEffect(() => {
     obtenerPerfil().then(setP).catch(() => setP(null));
@@ -80,7 +75,17 @@ export default function Perfil() {
               <p className="perfil__linea">Especialidad: {p.especialidad}</p>
               <p className="perfil__linea">Consultorio: {p.consultorio}</p>
               <p className="perfil__linea">Estado: {p.activo ? 'Activo' : 'Inactivo'}</p>
+              <button
+                className="btn btn--primary"
+                style={{ marginTop: 12 }}
+                onClick={() => setEditandoDoctor(true)}
+              >
+                Editar Perfil
+              </button>
             </>
+          )}
+          {(p.rol === 'ADMIN' || p.rol === 'FARMACIA') && (
+            <p className="perfil__linea">Rol: {p.rol}</p>
           )}
           {esEstudiante && (
             <>
@@ -131,6 +136,96 @@ export default function Perfil() {
           }}
         />
       )}
+
+      {editandoDoctor && (
+        <EditarPerfilDoctorModal
+          perfil={p}
+          onClose={() => setEditandoDoctor(false)}
+          onSaved={(actualizado) => {
+            setP(actualizado);
+            setEditandoDoctor(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditarPerfilDoctorModal({ perfil, onClose, onSaved }) {
+  const [consultorio, setConsultorio] = useState(perfil.consultorio || '');
+  const [foto, setFoto] = useState(perfil.foto || null); // null = sin cambios; '' = quitar; dataURL = nueva
+  const [error, setError] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const elegirFoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('El archivo debe ser una imagen.');
+      return;
+    }
+    if (file.size > MAX_FOTO_BYTES) {
+      setError('La imagen es demasiado grande (máx. ~1.3 MB).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setFoto(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!consultorio.trim()) {
+      setError('El consultorio es obligatorio.');
+      return;
+    }
+    setGuardando(true);
+    try {
+      const actualizado = await actualizarPerfilDoctor({ consultorio: consultorio.trim(), foto });
+      onSaved(actualizado);
+    } catch (err) {
+      setError(mensajeError(err, 'No se pudo guardar el perfil.'));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="modal__overlay" onClick={onClose}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={guardar}>
+        <div className="modal__header">Editar Perfil</div>
+        <div className="modal__body">
+          {error && <div className="modal__error">{error}</div>}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+            <Avatar nombre={perfil.nombre} foto={foto || null} size={72} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label className="btn btn--ghost btn--sm" style={{ cursor: 'pointer' }}>
+                Subir foto
+                <input type="file" accept="image/*" onChange={elegirFoto} style={{ display: 'none' }} />
+              </label>
+              {foto && (
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFoto('')}>
+                  Quitar foto
+                </button>
+              )}
+            </div>
+          </div>
+
+          <p className="perfil__linea">Especialidad: {perfil.especialidad}</p>
+          <label className="field">
+            <span className="field__label">Consultorio</span>
+            <input className="field__input" value={consultorio} onChange={(e) => setConsultorio(e.target.value)} />
+          </label>
+        </div>
+        <div className="modal__footer">
+          <button type="button" className="btn btn--ghost" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="btn btn--primary" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -173,10 +268,6 @@ function EditarPerfilModal({ perfil, onClose, onSaved }) {
     }
     if (!/^[A-Za-z0-9._%+-]+@(uni\.pe|uni\.edu\.pe)$/.test(form.email.trim())) {
       setError('El email debe terminar en @uni.pe o @uni.edu.pe.');
-      return;
-    }
-    if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(form.carrera.trim())) {
-      setError('La carrera solo puede contener letras y espacios.');
       return;
     }
     const edad = edadDesde(form.fechaNacimiento);
@@ -234,11 +325,10 @@ function EditarPerfilModal({ perfil, onClose, onSaved }) {
           </label>
           <label className="field">
             <span className="field__label">Carrera</span>
-            <input className="field__input" list="carreras-perfil"
-              value={form.carrera} onChange={set('carrera')} />
-            <datalist id="carreras-perfil">
-              {CARRERAS.map((c) => <option key={c} value={c} />)}
-            </datalist>
+            <select className="field__input" value={form.carrera} onChange={set('carrera')}>
+              <option value="">Selecciona...</option>
+              {CARRERAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
           </label>
           <label className="field">
             <span className="field__label">Fecha de nacimiento</span>

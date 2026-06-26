@@ -85,4 +85,32 @@ public class CitaService {
             idEstudiante, slot.get("id_doctor"), idSlot, motivo);
         jdbc.update("UPDATE slots_disponibilidad SET disponible = 0 WHERE id = ?", idSlot);
     }
+
+    /**
+     * Cancela una cita PENDIENTE propia y libera su slot para que vuelva a estar
+     * disponible. El estudiante solo cancela las suyas; el doctor solo las que
+     * le pertenecen.
+     */
+    @Transactional
+    public void cancelar(int idCita, String idUsuario, String rol) {
+        List<Map<String, Object>> filas = jdbc.queryForList(
+            "SELECT id_estudiante, id_doctor, id_slot, estado FROM citas WHERE id = ? AND eliminado = 0", idCita);
+        if (filas.isEmpty()) {
+            throw new RuntimeException("La cita no existe");
+        }
+        Map<String, Object> cita = filas.get(0);
+
+        if (!"PENDIENTE".equals(cita.get("estado"))) {
+            throw new RuntimeException("Solo se pueden cancelar citas pendientes");
+        }
+
+        boolean esDueño = ("ESTUDIANTE".equals(rol) && idUsuario.equals(cita.get("id_estudiante")))
+                       || ("DOCTOR".equals(rol)     && idUsuario.equals(cita.get("id_doctor")));
+        if (!esDueño) {
+            throw new RuntimeException("No puedes cancelar esta cita");
+        }
+
+        jdbc.update("UPDATE citas SET estado = 'CANCELADA' WHERE id = ?", idCita);
+        jdbc.update("UPDATE slots_disponibilidad SET disponible = 1 WHERE id = ?", cita.get("id_slot"));
+    }
 }

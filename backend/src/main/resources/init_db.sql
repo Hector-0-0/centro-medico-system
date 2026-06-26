@@ -256,6 +256,11 @@ IF COL_LENGTH('estudiantes', 'foto') IS NULL
     ALTER TABLE estudiantes ADD foto VARCHAR(MAX) NULL;
 GO
 
+-- Foto de perfil del médico (data URL base64).
+IF COL_LENGTH('doctores', 'foto') IS NULL
+    ALTER TABLE doctores ADD foto VARCHAR(MAX) NULL;
+GO
+
 -- (26) Concentración del medicamento en miligramos.
 IF COL_LENGTH('medicamentos', 'dosis_mg') IS NULL
     ALTER TABLE medicamentos ADD dosis_mg INT NULL;

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listarMisCitas } from '../services/citaService';
+import { listarMisCitas, cancelarCita } from '../services/citaService';
+import { mensajeError } from '../services/api';
+import { useDialog } from '../components/Dialog';
 
 /** Fecha de hoy en español, con la primera letra en mayúscula. */
 function fechaHoy() {
@@ -20,11 +22,15 @@ export default function CitasMedico() {
   const [lista, setLista] = useState([]);
   const [estado, setEstado] = useState('Todos');
   const navigate = useNavigate();
+  const { alerta, confirmar } = useDialog();
 
-  useEffect(() => {
+  const cargar = () =>
     listarMisCitas()
       .then(setLista)
       .catch(() => setLista([]));
+
+  useEffect(() => {
+    cargar();
   }, []);
 
   const filtradas = estado === 'Todos' ? lista : lista.filter((c) => c.estado === estado);
@@ -32,10 +38,24 @@ export default function CitasMedico() {
   // Doble clic en una cita PENDIENTE abre la atención (igual que el desktop).
   const atender = (c) => {
     if (c.estado !== 'PENDIENTE') {
-      alert('Solo se pueden atender citas PENDIENTES.');
+      alerta('Solo se pueden atender citas PENDIENTES.');
       return;
     }
     navigate(`/citas-medico/${c.id}/atender`, { state: { cita: c } });
+  };
+
+  // Cancelar una cita pendiente: libera el turno para que vuelva a estar disponible.
+  const cancelar = async (c) => {
+    if (!(await confirmar(
+      `¿Cancelar la cita de ${c.nombreEstudiante || c.idEstudiante}? El turno volverá a quedar disponible.`,
+      { peligro: true, textoOk: 'Cancelar cita', textoCancelar: 'Volver' },
+    ))) return;
+    try {
+      await cancelarCita(c.id);
+      cargar();
+    } catch (err) {
+      alerta(mensajeError(err, 'No se pudo cancelar la cita.'));
+    }
   };
 
   return (
@@ -68,12 +88,13 @@ export default function CitasMedico() {
               <th>Hora</th>
               <th>Motivo</th>
               <th>Estado</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {filtradas.length === 0 ? (
               <tr>
-                <td className="table__empty" colSpan={6}>No tienes citas registradas</td>
+                <td className="table__empty" colSpan={7}>No tienes citas registradas</td>
               </tr>
             ) : (
               filtradas.map((c) => (
@@ -87,6 +108,16 @@ export default function CitasMedico() {
                   </td>
                   <td>{c.motivo}</td>
                   <td>{c.estado}</td>
+                  <td>
+                    {c.estado === 'PENDIENTE' && (
+                      <button
+                        className="btn btn--danger btn--sm"
+                        onClick={(e) => { e.stopPropagation(); cancelar(c); }}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))
             )}

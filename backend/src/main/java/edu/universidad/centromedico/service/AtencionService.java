@@ -159,7 +159,7 @@ public class AtencionService {
 
         // Estudiante (destinatario del correo).
         Map<String, Object> estudiante = jdbc.queryForMap("""
-            SELECT e.id_usuario AS id, e.nombre, e.email
+            SELECT e.id_usuario AS id, e.nombre, e.email, e.edad
             FROM citas c
             JOIN estudiantes e ON c.id_estudiante = e.id_usuario
             WHERE c.id = ?
@@ -189,10 +189,12 @@ public class AtencionService {
         List<Map<String, Object>> medicamentos = new ArrayList<>();
         for (AtenderRequest.RecetaItem item : req.getReceta()) {
             Map<String, Object> med = new LinkedHashMap<>();
-            String nombre = jdbc.queryForObject(
-                "SELECT nombre FROM medicamentos WHERE id = ?", String.class, item.getIdMedicamento());
+            Map<String, Object> info = jdbc.queryForMap(
+                "SELECT nombre, tipo, dosis_mg FROM medicamentos WHERE id = ?", item.getIdMedicamento());
             med.put("id", item.getIdMedicamento());
-            med.put("nombre", nombre);
+            med.put("nombre", info.get("nombre"));
+            med.put("tipo", info.get("tipo"));
+            med.put("dosisMg", info.get("dosis_mg"));
             med.put("dosis", item.getDosis());
             med.put("duracion", item.getDuracion());
             medicamentos.add(med);

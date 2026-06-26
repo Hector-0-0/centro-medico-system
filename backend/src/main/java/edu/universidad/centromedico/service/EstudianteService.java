@@ -38,6 +38,7 @@ public class EstudianteService {
         if (usuarioRepository.existsById(req.getId())) {
             throw new RuntimeException("El código ya existe");
         }
+        edu.universidad.centromedico.model.Catalogos.validarCarrera(req.getCarrera());
 
         int edad = Period.between(req.getFechaNacimiento(), LocalDate.now()).getYears();
         if (edad < 18 || edad > 100) {

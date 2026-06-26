@@ -4,8 +4,12 @@ import axios from 'axios';
  * Instancia central de Axios con la URL base del backend.
  * Agrega el token JWT automáticamente en cada petición.
  */
+// URL base de la API. Por defecto es relativa ("/api"): en producción nginx
+// hace de proxy hacia el backend (mismo origen → sin CORS); en desarrollo el
+// proxy de CRA (campo "proxy" en package.json) la reenvía a localhost:8080.
+// Se puede sobreescribir con REACT_APP_API_URL si el backend vive en otro host.
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: process.env.REACT_APP_API_URL || '/api',
 });
 
 // Interceptor de REQUEST: adjunta el token JWT si existe
