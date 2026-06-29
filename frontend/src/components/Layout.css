@@ -103,6 +103,10 @@
 .table tbody tr:nth-child(even) { background: #f1e9e2; }
 .table tbody tr.is-selected { background: #faedcf; }
 .table__empty { text-align: center; color: #64748b; padding: 24px; cursor: default; }
+.table__empty--error { color: #b91c1c; }
+
+/* Fila de botones alineados a la derecha (pie de formularios largos). */
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
 /* ── Modal ──────────────────────────────────────────────── */
 .modal__overlay {

@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listarMisCitas, cancelarCita } from '../services/citaService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 
 /** Fecha de hoy en español, con la primera letra en mayúscula. */
@@ -19,19 +21,11 @@ const ESTADOS = ['Todos', 'PENDIENTE', 'ATENDIDA', 'CANCELADA'];
 
 /** Mis Citas del médico — réplica del CitaPanel del desktop (solo lectura). */
 export default function CitasMedico() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarMisCitas);
+  const lista = datos || [];
   const [estado, setEstado] = useState('Todos');
   const navigate = useNavigate();
   const { alerta, confirmar } = useDialog();
-
-  const cargar = () =>
-    listarMisCitas()
-      .then(setLista)
-      .catch(() => setLista([]));
-
-  useEffect(() => {
-    cargar();
-  }, []);
 
   const filtradas = estado === 'Todos' ? lista : lista.filter((c) => c.estado === estado);
 
@@ -52,7 +46,7 @@ export default function CitasMedico() {
     ))) return;
     try {
       await cancelarCita(c.id);
-      cargar();
+      recargar();
     } catch (err) {
       alerta(mensajeError(err, 'No se pudo cancelar la cita.'));
     }
@@ -62,7 +56,7 @@ export default function CitasMedico() {
     <div>
       <h1 className="panel__title">Mis Citas del Día</h1>
       <p className="panel__hint" style={{ marginBottom: 16 }}>
-        {fechaHoy()} — doble clic en una cita PENDIENTE para atenderla.
+        {fechaHoy()} — doble clic (o Enter) en una cita PENDIENTE para atenderla.
       </p>
 
       <div className="toolbar">
@@ -92,13 +86,27 @@ export default function CitasMedico() {
             </tr>
           </thead>
           <tbody>
-            {filtradas.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={7}>No tienes citas registradas</td>
-              </tr>
+            {cargando || error || filtradas.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={7}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="No tienes citas registradas"
+              />
             ) : (
               filtradas.map((c) => (
-                <tr key={c.id} onDoubleClick={() => atender(c)}>
+                <tr
+                  key={c.id}
+                  onDoubleClick={() => atender(c)}
+                  tabIndex={0}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter') {
+                      ev.preventDefault();
+                      atender(c);
+                    }
+                  }}
+                >
                   <td>{String(c.id).padStart(4, '0')}</td>
                   <td>{c.nombreEstudiante || c.idEstudiante}</td>
                   <td>{c.diaSemana || '—'}</td>

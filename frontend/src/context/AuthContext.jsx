@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
     setLoggedIn(true);
     setRol(data.rol);
     setUsername(data.username);
-    // Cargar pacienteId / medicoId inmediatamente después del login
+    // Trae el nombre completo del usuario (GET /auth/me) para mostrarlo en el topbar.
     await cargarPerfil();
   };
 

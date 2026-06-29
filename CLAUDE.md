@@ -41,7 +41,7 @@ Authorization is enforced with `@PreAuthorize("hasRole('…')")` on controllers;
 - `components/Layout.jsx` (sidebar + 54px topbar) + `components/Sidebar.jsx` replicate the desktop `MainFrame`/`Sidebar`. `components/menu.js` defines the per-role menu, `landingPath(rol)`, and label lookups — after login users are redirected to their role's landing page.
 - `components/Layout.css` holds the guinda+crema palette and reusable classes (`.panel__title`, `.toolbar`, `.btn--primary/--ghost/--danger`, `.table`, `.modal*`, `.field*`, `.card-section`). Reuse these rather than inventing new styles.
 - Auth state in `context/AuthContext.jsx`; JWT stored in `localStorage`; routes guarded by `components/ProtectedRoute.jsx`.
-- API base URL comes from `frontend/src/.env` (axios in `services/api.js`).
+- API base URL comes from `frontend/.env` (CRA only reads `.env` at the project root, **not** `src/.env`); if unset, `services/api.js` falls back to `/api` (nginx proxy in prod, CRA `proxy` field in dev).
 
 ## Desktop Swing — NetBeans GUI Builder rules (mandatory)
 

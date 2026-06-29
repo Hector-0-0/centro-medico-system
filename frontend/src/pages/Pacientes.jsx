@@ -1,44 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   listarEstudiantes,
   crearEstudiante,
   eliminarEstudiante,
 } from '../services/estudianteService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 import { CARRERAS } from '../constants/catalogos';
-
-/** Edad cumplida a partir de una fecha de nacimiento (YYYY-MM-DD). */
-export function edadDesde(fecha) {
-  if (!fecha) return NaN;
-  const hoy = new Date();
-  const n = new Date(fecha + 'T00:00:00');
-  let edad = hoy.getFullYear() - n.getFullYear();
-  const m = hoy.getMonth() - n.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < n.getDate())) edad--;
-  return edad;
-}
+import { edadDesde, hoyISO } from '../utils/fechas';
 
 /** Gestión de Pacientes (estudiantes) — réplica del PacientePanel del desktop. */
 export default function Pacientes() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarEstudiantes);
+  const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const { alerta, confirmar } = useDialog();
 
-  const cargar = async () => {
-    try {
-      setLista(await listarEstudiantes());
-    } catch {
-      setLista([]);
-    }
-    setSeleccion(null);
-  };
-
-  useEffect(() => {
-    cargar();
-  }, []);
+  const cargar = () => recargar().then(() => setSeleccion(null));
 
   const q = busqueda.trim().toLowerCase();
   const filtrados = q
@@ -59,7 +41,7 @@ export default function Pacientes() {
       await eliminarEstudiante(seleccion);
       cargar();
     } catch (err) {
-      alerta(err.response?.data?.error || 'No se pudo eliminar el paciente.');
+      alerta(mensajeError(err, 'No se pudo eliminar el paciente.'));
     }
   };
 
@@ -92,16 +74,28 @@ export default function Pacientes() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={5}>Sin pacientes</td>
-              </tr>
+            {cargando || error || filtrados.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={5}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin pacientes"
+              />
             ) : (
               filtrados.map((e) => (
                 <tr
                   key={e.id}
                   className={seleccion === e.id ? 'is-selected' : ''}
                   onClick={() => setSeleccion(e.id)}
+                  tabIndex={0}
+                  aria-selected={seleccion === e.id}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                      ev.preventDefault();
+                      setSeleccion(e.id);
+                    }
+                  }}
                 >
                   <td>{e.id}</td>
                   <td>{e.nombre}</td>
@@ -191,7 +185,7 @@ function NuevoPacienteModal({ onClose, onSaved }) {
           <Campo
             label="Fecha de nacimiento"
             type="date"
-            max={new Date().toISOString().slice(0, 10)}
+            max={hoyISO()}
             value={form.fechaNacimiento}
             onChange={set('fechaNacimiento')}
           />

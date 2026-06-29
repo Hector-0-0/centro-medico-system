@@ -1,27 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { listarSlots, agendarCita } from '../services/slotService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 
 const distintos = (arr) => [...new Set(arr)];
 
 /** Horarios — réplica del DashboardPanel del desktop (ver slots + agendar). */
 export default function Horarios() {
-  const [slots, setSlots] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarSlots);
+  const slots = datos || [];
   const [especialidad, setEspecialidad] = useState('Todas');
   const [estado, setEstado] = useState('Todos'); // Todos | Disponibles | Ocupados
   const [modalAbierto, setModalAbierto] = useState(false);
-
-  const cargar = async () => {
-    try {
-      setSlots(await listarSlots());
-    } catch {
-      setSlots([]);
-    }
-  };
-
-  useEffect(() => {
-    cargar();
-  }, []);
 
   const especialidades = useMemo(
     () => ['Todas', ...distintos(slots.map((s) => s.especialidad)).sort()],
@@ -81,10 +72,14 @@ export default function Horarios() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={6}>Sin horarios</td>
-              </tr>
+            {cargando || error || filtrados.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={6}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin horarios"
+              />
             ) : (
               filtrados.map((s) => (
                 <tr key={s.id}>
@@ -107,7 +102,7 @@ export default function Horarios() {
           onClose={() => setModalAbierto(false)}
           onSaved={() => {
             setModalAbierto(false);
-            cargar();
+            recargar();
           }}
         />
       )}

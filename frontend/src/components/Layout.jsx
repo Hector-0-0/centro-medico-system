@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import ErrorBoundary from './ErrorBoundary';
 import { useAuth } from '../context/AuthContext';
 import { getNombre } from '../services/authService';
 import { labelForPath } from './menu';
@@ -22,7 +23,9 @@ export default function Layout() {
           </div>
         </header>
         <main className="content">
-          <Outlet />
+          <ErrorBoundary key={pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

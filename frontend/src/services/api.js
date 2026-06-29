@@ -21,11 +21,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor de RESPONSE: redirige al login si el token expiró
+// Interceptor de RESPONSE: si el token expiró/es inválido (401) cierra la
+// sesión y vuelve al login. El 403 (sin permiso para ese recurso) NO cierra
+// sesión: se deja pasar para que la página lo muestre con mensajeError().
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const enLogin = window.location.pathname === '/login' || window.location.pathname === '/';
+    if (error.response?.status === 401 && !enLogin) {
       localStorage.clear();
       window.location.href = '/login';
     }

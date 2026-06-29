@@ -1,33 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   listarDoctores,
   crearDoctor,
   eliminarDoctor,
 } from '../services/doctorService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 import { ESPECIALIDADES } from '../constants/catalogos';
 
 /** Gestión de Médicos (doctores) — réplica del MedicoPanel del desktop. */
 export default function Medicos() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarDoctores);
+  const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const { alerta, confirmar } = useDialog();
 
-  const cargar = async () => {
-    try {
-      setLista(await listarDoctores());
-    } catch {
-      setLista([]);
-    }
-    setSeleccion(null);
-  };
-
-  useEffect(() => {
-    cargar();
-  }, []);
+  const cargar = () => recargar().then(() => setSeleccion(null));
 
   const q = busqueda.trim().toLowerCase();
   const filtrados = q
@@ -46,7 +38,7 @@ export default function Medicos() {
       await eliminarDoctor(d.id);
       cargar();
     } catch (err) {
-      alerta(err.response?.data?.error || 'No se pudo eliminar el médico.');
+      alerta(mensajeError(err, 'No se pudo eliminar el médico.'));
     }
   };
 
@@ -67,7 +59,7 @@ export default function Medicos() {
       </div>
 
       <p className="panel__hint" style={{ marginBottom: 12 }}>
-        Doble clic en un médico para eliminarlo.
+        Doble clic en un médico (o Enter con la fila enfocada) para eliminarlo.
       </p>
 
       <div className="table-wrap">
@@ -81,10 +73,14 @@ export default function Medicos() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={4}>Sin médicos</td>
-              </tr>
+            {cargando || error || filtrados.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={4}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin médicos"
+              />
             ) : (
               filtrados.map((d) => (
                 <tr
@@ -92,6 +88,14 @@ export default function Medicos() {
                   className={seleccion === d.id ? 'is-selected' : ''}
                   onClick={() => setSeleccion(d.id)}
                   onDoubleClick={() => eliminar(d)}
+                  tabIndex={0}
+                  aria-selected={seleccion === d.id}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter') {
+                      ev.preventDefault();
+                      eliminar(d);
+                    }
+                  }}
                 >
                   <td>{d.id}</td>
                   <td>{d.nombre}</td>

@@ -1,16 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { listarMedicamentos } from '../services/medicamentoService';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 
 /** Ver Stock — réplica del MedicamentoPanel (read-only) del desktop. */
 export default function VerStock() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarMedicamentos);
+  const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
-
-  useEffect(() => {
-    listarMedicamentos()
-      .then(setLista)
-      .catch(() => setLista([]));
-  }, []);
 
   const q = busqueda.trim().toLowerCase();
   const filtrados = q
@@ -47,10 +44,14 @@ export default function VerStock() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={5}>Sin medicamentos</td>
-              </tr>
+            {cargando || error || filtrados.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={5}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin medicamentos"
+              />
             ) : (
               filtrados.map((m) => (
                 <tr key={m.id}>

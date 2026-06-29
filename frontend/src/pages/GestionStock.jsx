@@ -6,6 +6,8 @@ import {
   listarMovimientos,
 } from '../services/medicamentoService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 
 const TIPOS = ['tabletas', 'capsulas', 'comprimidos', 'jarabe', 'sobre', 'inyectable', 'crema', 'gotas'];
 
@@ -17,23 +19,12 @@ const colorEstado = (estado) =>
 
 /** Gestión de Stock — réplica del GestionStockPanel del desktop. */
 export default function GestionStock() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarMedicamentos);
+  const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [movimientosDe, setMovimientosDe] = useState(null);
   const [ajustarDe, setAjustarDe] = useState(null);
-
-  const cargar = async () => {
-    try {
-      setLista(await listarMedicamentos());
-    } catch {
-      setLista([]);
-    }
-  };
-
-  useEffect(() => {
-    cargar();
-  }, []);
 
   const q = busqueda.trim().toLowerCase();
   const filtrados = q
@@ -62,7 +53,7 @@ export default function GestionStock() {
       </div>
 
       <p className="panel__hint" style={{ marginBottom: 12 }}>
-        Doble clic en un medicamento para ajustar su stock (reabastecimiento).
+        Doble clic (o Enter) en un medicamento para ajustar su stock (reabastecimiento).
       </p>
 
       <div className="table-wrap">
@@ -78,15 +69,29 @@ export default function GestionStock() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={6}>Sin medicamentos</td>
-              </tr>
+            {cargando || error || filtrados.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={6}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin medicamentos"
+              />
             ) : (
               filtrados.map((m) => {
                 const estado = estadoDe(m.stock);
                 return (
-                  <tr key={m.id} onDoubleClick={() => setAjustarDe(m)}>
+                  <tr
+                    key={m.id}
+                    onDoubleClick={() => setAjustarDe(m)}
+                    tabIndex={0}
+                    onKeyDown={(ev) => {
+                      if (ev.key === 'Enter') {
+                        ev.preventDefault();
+                        setAjustarDe(m);
+                      }
+                    }}
+                  >
                     <td>{m.id}</td>
                     <td>{m.nombre}</td>
                     <td>{m.dosisMg != null ? m.dosisMg : '—'}</td>
@@ -113,7 +118,7 @@ export default function GestionStock() {
           onClose={() => setModalAbierto(false)}
           onSaved={() => {
             setModalAbierto(false);
-            cargar();
+            recargar();
           }}
         />
       )}
@@ -131,7 +136,7 @@ export default function GestionStock() {
           onClose={() => setAjustarDe(null)}
           onSaved={() => {
             setAjustarDe(null);
-            cargar();
+            recargar();
           }}
         />
       )}

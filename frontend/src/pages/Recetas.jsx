@@ -1,30 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   listarRecetasPendientes,
   entregarReceta,
 } from '../services/recetaService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 
 /** Recetas Pendientes — réplica del FarmaciaRecetasPanel del desktop. */
 export default function Recetas() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarRecetasPendientes);
+  const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const { alerta, confirmar } = useDialog();
 
-  const cargar = async () => {
-    try {
-      setLista(await listarRecetasPendientes());
-    } catch {
-      setLista([]);
-    }
-    setSeleccion(null);
-  };
-
-  useEffect(() => {
-    cargar();
-  }, []);
+  const cargar = () => recargar().then(() => setSeleccion(null));
 
   const q = busqueda.trim().toLowerCase();
   const filtradas = q
@@ -77,16 +69,28 @@ export default function Recetas() {
             </tr>
           </thead>
           <tbody>
-            {filtradas.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={5}>Sin recetas pendientes</td>
-              </tr>
+            {cargando || error || filtradas.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={5}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin recetas pendientes"
+              />
             ) : (
               filtradas.map((r) => (
                 <tr
                   key={r.id}
                   className={seleccion === r.id ? 'is-selected' : ''}
                   onClick={() => setSeleccion(r.id)}
+                  tabIndex={0}
+                  aria-selected={seleccion === r.id}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                      ev.preventDefault();
+                      setSeleccion(r.id);
+                    }
+                  }}
                 >
                   <td>{r.id}</td>
                   <td>{r.nombrePaciente || '—'}</td>

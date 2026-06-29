@@ -293,7 +293,7 @@ export default function AtenderCita() {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+      <div className="form-actions">
         <button className="btn btn--ghost" onClick={() => navigate('/citas-medico')}>
           Cancelar
         </button>

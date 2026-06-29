@@ -3,6 +3,8 @@ import {
   listarDisponibilidad,
   guardarDisponibilidad,
 } from '../services/disponibilidadService';
+import { mensajeError } from '../services/api';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 
 const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'];
@@ -24,9 +26,13 @@ export default function Disponibilidad() {
   const [actuales, setActuales] = useState([]);
   const [dias, setDias] = useState(ESTADO_INICIAL);
   const [guardando, setGuardando] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
   const { alerta } = useDialog();
 
   const cargar = async () => {
+    setCargando(true);
+    setErrorCarga('');
     try {
       const lista = await listarDisponibilidad();
       setActuales(lista);
@@ -38,8 +44,11 @@ export default function Disponibilidad() {
         }
       });
       setDias(base);
-    } catch {
+    } catch (err) {
       setActuales([]);
+      setErrorCarga(mensajeError(err, 'No se pudo cargar la disponibilidad.'));
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -81,7 +90,7 @@ export default function Disponibilidad() {
       }
       cargar();
     } catch (err) {
-      await alerta(err.response?.data?.error || 'No se pudo guardar la disponibilidad.');
+      await alerta(mensajeError(err, 'No se pudo guardar la disponibilidad.'));
     } finally {
       setGuardando(false);
     }
@@ -104,10 +113,14 @@ export default function Disponibilidad() {
               </tr>
             </thead>
             <tbody>
-              {actuales.length === 0 ? (
-                <tr>
-                  <td className="table__empty" colSpan={3}>Sin horarios registrados</td>
-                </tr>
+              {cargando || errorCarga || actuales.length === 0 ? (
+                <FilaTablaEstado
+                  colSpan={3}
+                  cargando={cargando}
+                  error={errorCarga}
+                  onReintentar={cargar}
+                  vacio="Sin horarios registrados"
+                />
               ) : (
                 actuales.map((d) => (
                   <tr key={d.id}>

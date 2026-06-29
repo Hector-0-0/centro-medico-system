@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { listarCitasEstudiante, obtenerAtencion, cancelarCita } from '../services/citaService';
 import { mensajeError } from '../services/api';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 
 // Pestañas por estado de la cita.
@@ -12,20 +14,12 @@ const TABS = [
 
 /** Mis Citas del estudiante — réplica del HistorialPanel del desktop, con pestañas. */
 export default function MisCitas() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarCitasEstudiante);
+  const lista = datos || [];
   const [tab, setTab] = useState('PENDIENTE');
   const [busqueda, setBusqueda] = useState('');
   const [detalle, setDetalle] = useState(null); // { cita, atencion }
   const { alerta, confirmar } = useDialog();
-
-  const cargar = () =>
-    listarCitasEstudiante()
-      .then(setLista)
-      .catch(() => setLista([]));
-
-  useEffect(() => {
-    cargar();
-  }, []);
 
   const cuenta = (estado) => lista.filter((c) => c.estado === estado).length;
 
@@ -55,7 +49,7 @@ export default function MisCitas() {
     ))) return;
     try {
       await cancelarCita(cita.id);
-      cargar();
+      recargar();
     } catch (err) {
       alerta(mensajeError(err, 'No se pudo cancelar la cita.'));
     }
@@ -86,7 +80,7 @@ export default function MisCitas() {
       </div>
 
       <p className="panel__hint" style={{ marginBottom: 12 }}>
-        Doble clic en una cita para ver el detalle de la atención.
+        Doble clic (o Enter) en una cita para ver el detalle de la atención.
       </p>
 
       <div className="table-wrap">
@@ -103,15 +97,27 @@ export default function MisCitas() {
             </tr>
           </thead>
           <tbody>
-            {filtradas.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={esPendiente ? 7 : 6}>
-                  No tienes citas en esta categoría
-                </td>
-              </tr>
+            {cargando || error || filtradas.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={esPendiente ? 7 : 6}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="No tienes citas en esta categoría"
+              />
             ) : (
               filtradas.map((c) => (
-                <tr key={c.id} onDoubleClick={() => verDetalle(c)}>
+                <tr
+                  key={c.id}
+                  onDoubleClick={() => verDetalle(c)}
+                  tabIndex={0}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter') {
+                      ev.preventDefault();
+                      verDetalle(c);
+                    }
+                  }}
+                >
                   <td>{c.especialidad || '—'}</td>
                   <td>{c.nombreDoctor || c.idDoctor}</td>
                   <td>{c.diaSemana || '—'}</td>

@@ -2,19 +2,9 @@ import { useEffect, useState } from 'react';
 import { obtenerPerfil, actualizarPerfil, actualizarPerfilDoctor } from '../services/perfilService';
 import { mensajeError } from '../services/api';
 import { CARRERAS } from '../constants/catalogos';
+import { edadDesde, hoyISO } from '../utils/fechas';
 
 const MAX_FOTO_BYTES = 1_300_000; // ~1.3 MB
-
-/** Edad cumplida a partir de una fecha de nacimiento (YYYY-MM-DD). */
-function edadDesde(fecha) {
-  if (!fecha) return NaN;
-  const hoy = new Date();
-  const n = new Date(fecha + 'T00:00:00');
-  let edad = hoy.getFullYear() - n.getFullYear();
-  const m = hoy.getMonth() - n.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < n.getDate())) edad--;
-  return edad;
-}
 
 /** Iniciales para el avatar cuando no hay foto. */
 function iniciales(nombre = '') {
@@ -36,18 +26,38 @@ function Avatar({ nombre, foto, size = 96 }) {
 /** Mi Perfil — datos + estadísticas, con edición y foto para el estudiante. */
 export default function Perfil() {
   const [p, setP] = useState(null);
+  const [error, setError] = useState('');
   const [editando, setEditando] = useState(false);
   const [editandoDoctor, setEditandoDoctor] = useState(false);
 
+  const cargar = () => {
+    setError('');
+    obtenerPerfil()
+      .then(setP)
+      .catch((err) => setError(mensajeError(err, 'No se pudo cargar el perfil.')));
+  };
+
   useEffect(() => {
-    obtenerPerfil().then(setP).catch(() => setP(null));
+    cargar();
   }, []);
+
+  if (error) {
+    return (
+      <div>
+        <h1 className="panel__title">Mi Perfil</h1>
+        <div className="card-section">
+          <p className="panel__hint table__empty--error" style={{ marginBottom: 12 }}>{error}</p>
+          <button className="btn btn--primary" onClick={cargar}>Reintentar</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!p) {
     return (
       <div>
         <h1 className="panel__title">Mi Perfil</h1>
-        <p className="panel__hint">Cargando...</p>
+        <p className="panel__hint">Cargando…</p>
       </div>
     );
   }
@@ -333,7 +343,7 @@ function EditarPerfilModal({ perfil, onClose, onSaved }) {
           <label className="field">
             <span className="field__label">Fecha de nacimiento</span>
             <input className="field__input" type="date"
-              max={new Date().toISOString().slice(0, 10)}
+              max={hoyISO()}
               value={form.fechaNacimiento} onChange={set('fechaNacimiento')} />
           </label>
         </div>

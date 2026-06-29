@@ -1,25 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { listarCitas } from '../services/citaService';
+import { useCargar } from '../hooks/useCargar';
+import FilaTablaEstado from '../components/FilaTablaEstado';
 
 const ESTADOS = ['Todos', 'PENDIENTE', 'ATENDIDA', 'CANCELADA'];
 
 /** Todas las Citas — réplica del AdminCitasPanel del desktop (solo lectura + filtros). */
 export default function Citas() {
-  const [lista, setLista] = useState([]);
+  const { datos, cargando, error, recargar } = useCargar(listarCitas);
+  const lista = datos || [];
   const [especialidad, setEspecialidad] = useState('Todas');
   const [estado, setEstado] = useState('Todos');
-
-  const cargar = async () => {
-    try {
-      setLista(await listarCitas());
-    } catch {
-      setLista([]);
-    }
-  };
-
-  useEffect(() => {
-    cargar();
-  }, []);
 
   // Especialidades disponibles según las citas cargadas.
   const especialidades = useMemo(() => {
@@ -77,10 +68,14 @@ export default function Citas() {
             </tr>
           </thead>
           <tbody>
-            {filtradas.length === 0 ? (
-              <tr>
-                <td className="table__empty" colSpan={5}>Sin citas</td>
-              </tr>
+            {cargando || error || filtradas.length === 0 ? (
+              <FilaTablaEstado
+                colSpan={5}
+                cargando={cargando}
+                error={error}
+                onReintentar={recargar}
+                vacio="Sin citas"
+              />
             ) : (
               filtradas.map((c) => (
                 <tr key={c.id}>
