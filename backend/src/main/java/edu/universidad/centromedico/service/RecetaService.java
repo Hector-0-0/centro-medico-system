@@ -1,11 +1,13 @@
 package edu.universidad.centromedico.service;
 
+import edu.universidad.centromedico.dto.RecetaDetalleDTO;
 import edu.universidad.centromedico.dto.RecetaPendienteDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +45,54 @@ public class RecetaService {
             (rs, n) -> new RecetaPendienteDTO(
                 rs.getInt("id_receta"), rs.getString("nombre_estudiante"),
                 rs.getInt("id_cita"), rs.getString("diagnostico"), rs.getString("estado")));
+    }
+
+    public RecetaDetalleDTO detalle(int idReceta) {
+        List<Map<String, Object>> filas = jdbc.queryForList("""
+            SELECT r.id AS id_receta,
+                   e.nombre AS nombre_estudiante,
+                   c.id AS id_cita,
+                   COALESCE(
+                       (SELECT STRING_AGG(cc.codigo + ' - ' + cc.descripcion, ' | ')
+                        FROM atencion_diagnostico ad
+                        JOIN codigos_cie cc ON ad.id_cie = cc.id
+                        WHERE ad.id_atencion = a.id),
+                       a.diagnostico
+                   ) AS diagnostico,
+                   r.estado
+            FROM recetas r
+            JOIN atencion_cita a ON r.id_atencion = a.id
+            JOIN citas         c ON a.id_cita      = c.id
+            JOIN estudiantes   e ON c.id_estudiante = e.id_usuario
+            WHERE r.id = ?
+            """, idReceta);
+        if (filas.isEmpty()) {
+            throw new RuntimeException("Receta no encontrada");
+        }
+        Map<String, Object> f = filas.get(0);
+
+        List<RecetaDetalleDTO.Item> items = jdbc.query("""
+            SELECT rd.id_medicamento, m.nombre, rd.dosis, rd.duracion, m.stock AS stock_actual
+            FROM receta_detalle rd
+            JOIN medicamentos m ON rd.id_medicamento = m.id
+            WHERE rd.id_receta = ?
+            """,
+            (rs, n) -> new RecetaDetalleDTO.Item(
+                rs.getString("id_medicamento"),
+                rs.getString("nombre"),
+                rs.getString("dosis"),
+                rs.getString("duracion"),
+                rs.getInt("stock_actual"),
+                Math.max(0, rs.getInt("stock_actual") - 1)),
+            idReceta);
+
+        return new RecetaDetalleDTO(
+            (int) f.get("id_receta"),
+            (String) f.get("nombre_estudiante"),
+            (int) f.get("id_cita"),
+            (String) f.get("diagnostico"),
+            (String) f.get("estado"),
+            items);
     }
 
     /**

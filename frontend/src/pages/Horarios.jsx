@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { listarSlots, agendarCita } from '../services/slotService';
 import { mensajeError } from '../services/api';
 import { useCargar } from '../hooks/useCargar';
-import FilaTablaEstado from '../components/FilaTablaEstado';
 
 const distintos = (arr) => [...new Set(arr)];
 
@@ -11,21 +10,70 @@ export default function Horarios() {
   const { datos, cargando, error, recargar } = useCargar(listarSlots);
   const slots = datos || [];
   const [especialidad, setEspecialidad] = useState('Todas');
-  const [estado, setEstado] = useState('Todos'); // Todos | Disponibles | Ocupados
+  const [medico, setMedico] = useState('Todos');
+  const [ocultarOcupados, setOcultarOcupados] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [slotAgendar, setSlotAgendar] = useState(null);
 
   const especialidades = useMemo(
     () => ['Todas', ...distintos(slots.map((s) => s.especialidad)).sort()],
     [slots],
   );
 
-  const filtrados = slots.filter(
-    (s) =>
-      (especialidad === 'Todas' || s.especialidad === especialidad) &&
-      (estado === 'Todos' ||
-        (estado === 'Disponibles' && s.disponible) ||
-        (estado === 'Ocupados' && !s.disponible)),
+  const medicos = useMemo(
+    () => ['Todos', ...distintos(slots.map((s) => s.nombreDoctor)).sort()],
+    [slots],
   );
+
+  // Agrupar slots por (especialidad, medico, diaSemana)
+  const grupos = useMemo(() => {
+    let filtrados = slots;
+
+    if (especialidad !== 'Todas') {
+      filtrados = filtrados.filter((s) => s.especialidad === especialidad);
+    }
+    if (medico !== 'Todos') {
+      filtrados = filtrados.filter((s) => s.nombreDoctor === medico);
+    }
+
+    const gruposMap = {};
+    filtrados.forEach((s) => {
+      const key = `${s.especialidad}|${s.nombreDoctor}|${s.diaSemana}`;
+      if (!gruposMap[key]) {
+        gruposMap[key] = {
+          especialidad: s.especialidad,
+          nombreDoctor: s.nombreDoctor,
+          consultorio: s.consultorio,
+          diaSemana: s.diaSemana,
+          slots: [],
+        };
+      }
+      gruposMap[key].slots.push(s);
+    });
+
+    let gruposArr = Object.values(gruposMap);
+
+    // Ordenar por especialidad, luego doctor, luego día
+    const ordenDias = { Lunes: 1, Martes: 2, Miercoles: 3, Jueves: 4, Viernes: 5, Sabado: 6, Domingo: 7 };
+    gruposArr.sort((a, b) => {
+      if (a.especialidad !== b.especialidad) return a.especialidad.localeCompare(b.especialidad);
+      if (a.nombreDoctor !== b.nombreDoctor) return a.nombreDoctor.localeCompare(b.nombreDoctor);
+      return (ordenDias[a.diaSemana] || 0) - (ordenDias[b.diaSemana] || 0);
+    });
+
+    return gruposArr;
+  }, [slots, especialidad, medico]);
+
+  // Resetear médico cuando cambia especialidad
+  const cambiarEspecialidad = (val) => {
+    setEspecialidad(val);
+    setMedico('Todos');
+  };
+
+  const abrirAgendar = (slot) => {
+    setSlotAgendar(slot);
+    setModalAbierto(true);
+  };
 
   return (
     <div>
@@ -37,71 +85,93 @@ export default function Horarios() {
           <select
             className="toolbar__select"
             value={especialidad}
-            onChange={(e) => setEspecialidad(e.target.value)}
+            onChange={(e) => cambiarEspecialidad(e.target.value)}
           >
             {especialidades.map((esp) => <option key={esp} value={esp}>{esp}</option>)}
           </select>
         </label>
         <label className="toolbar__label">
-          Estado
+          Médico
           <select
             className="toolbar__select"
-            value={estado}
-            onChange={(e) => setEstado(e.target.value)}
+            value={medico}
+            onChange={(e) => setMedico(e.target.value)}
           >
-            {['Todos', 'Disponibles', 'Ocupados'].map((es) => (
-              <option key={es} value={es}>{es}</option>
-            ))}
+            {medicos.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         </label>
-        <button className="btn btn--primary" onClick={() => setModalAbierto(true)}>
-          + Agendar Cita
-        </button>
+        <label className="toolbar__label toggle-label">
+          <input
+            type="checkbox"
+            checked={ocultarOcupados}
+            onChange={(e) => setOcultarOcupados(e.target.checked)}
+          />
+          Ocultar ocupados
+        </label>
       </div>
 
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Especialidad</th>
-              <th>Médico</th>
-              <th>Día</th>
-              <th>Hora</th>
-              <th>Consultorio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cargando || error || filtrados.length === 0 ? (
-              <FilaTablaEstado
-                colSpan={6}
-                cargando={cargando}
-                error={error}
-                onReintentar={recargar}
-                vacio="Sin horarios"
-              />
-            ) : (
-              filtrados.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.especialidad}</td>
-                  <td>{s.nombreDoctor}</td>
-                  <td>{s.diaSemana}</td>
-                  <td>{s.horaInicio} - {s.horaFin}</td>
-                  <td>{s.consultorio}</td>
-                  <td>{s.disponible ? 'Disponible' : 'Ocupado'}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {cargando || error || grupos.length === 0 ? (
+        <div className="slot-empty">
+          {cargando ? 'Cargando horarios…' : error ? 'Error al cargar horarios' : 'No hay horarios que coincidan con los filtros.'}
+        </div>
+      ) : (
+        <div className="slot-cards">
+          {grupos.map((g, idx) => {
+            const disponibles = g.slots.filter((s) => s.disponible).length;
+
+            // Separar disponibles y ocupados
+            const disponiblesList = g.slots.filter((s) => s.disponible);
+            const ocupadosList = g.slots.filter((s) => !s.disponible);
+
+            return (
+              <div key={idx} className="slot-card">
+                <div className="slot-card__header">
+                  <div className="slot-card__header-left">
+                    <span className="slot-card__especialidad">{g.especialidad}</span>
+                    <span className="slot-card__nombre">{g.nombreDoctor}</span>
+                  </div>
+                  <div className="slot-card__header-right">
+                    <span className="slot-card__dia">{g.diaSemana}</span>
+                    <span className="slot-card__consultorio">Cons. {g.consultorio}</span>
+                    <span className="slot-card__disponibles">
+                      {disponibles} {disponibles === 1 ? 'disponible' : 'disponibles'}
+                    </span>
+                  </div>
+                </div>
+                <div className="slot-card__chips">
+                  {disponiblesList.map((s) => (
+                    <button
+                      key={s.id}
+                      className="chip chip--disponible"
+                      onClick={() => abrirAgendar(s)}
+                      title="Agendar cita"
+                    >
+                      {s.horaInicio}–{s.horaFin}
+                    </button>
+                  ))}
+                  {!ocultarOcupados && ocupadosList.map((s) => (
+                    <span
+                      key={s.id}
+                      className="chip chip--ocupado"
+                      title="Ocupado"
+                    >
+                      {s.horaInicio}–{s.horaFin}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {modalAbierto && (
         <AgendarModal
-          slots={slots.filter((s) => s.disponible)}
-          onClose={() => setModalAbierto(false)}
+          slot={slotAgendar}
+          onClose={() => { setModalAbierto(false); setSlotAgendar(null); }}
           onSaved={() => {
             setModalAbierto(false);
+            setSlotAgendar(null);
             recargar();
           }}
         />
@@ -110,42 +180,21 @@ export default function Horarios() {
   );
 }
 
-function AgendarModal({ slots, onClose, onSaved }) {
-  const [especialidad, setEspecialidad] = useState('');
-  const [medico, setMedico] = useState('');
-  const [dia, setDia] = useState('');
-  const [idSlot, setIdSlot] = useState('');
+function AgendarModal({ slot, onClose, onSaved }) {
   const [motivo, setMotivo] = useState('');
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  const especialidades = distintos(slots.map((s) => s.especialidad)).sort();
-  const medicos = distintos(
-    slots.filter((s) => s.especialidad === especialidad).map((s) => s.nombreDoctor),
-  ).sort();
-  const dias = distintos(
-    slots
-      .filter((s) => s.especialidad === especialidad && s.nombreDoctor === medico)
-      .map((s) => s.diaSemana),
-  );
-  const horas = slots.filter(
-    (s) => s.especialidad === especialidad && s.nombreDoctor === medico && s.diaSemana === dia,
-  );
-
   const guardar = async (e) => {
     e.preventDefault();
     setError('');
-    if (!idSlot) {
-      setError('Selecciona especialidad, médico, día y hora.');
-      return;
-    }
     if (!motivo.trim()) {
       setError('Ingresa el motivo de la consulta.');
       return;
     }
     setGuardando(true);
     try {
-      await agendarCita({ idSlot: Number(idSlot), motivo: motivo.trim() });
+      await agendarCita({ idSlot: slot.id, motivo: motivo.trim() });
       onSaved();
     } catch (err) {
       setError(mensajeError(err, 'No se pudo agendar la cita.'));
@@ -161,58 +210,12 @@ function AgendarModal({ slots, onClose, onSaved }) {
         <div className="modal__body">
           {error && <div className="modal__error">{error}</div>}
 
-          <label className="field">
-            <span className="field__label">Especialidad</span>
-            <select
-              className="toolbar__select"
-              value={especialidad}
-              onChange={(e) => { setEspecialidad(e.target.value); setMedico(''); setDia(''); setIdSlot(''); }}
-            >
-              <option value="">Selecciona...</option>
-              {especialidades.map((esp) => <option key={esp} value={esp}>{esp}</option>)}
-            </select>
-          </label>
-
-          <label className="field">
-            <span className="field__label">Médico</span>
-            <select
-              className="toolbar__select"
-              value={medico}
-              disabled={!especialidad}
-              onChange={(e) => { setMedico(e.target.value); setDia(''); setIdSlot(''); }}
-            >
-              <option value="">Selecciona...</option>
-              {medicos.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </label>
-
-          <label className="field">
-            <span className="field__label">Día</span>
-            <select
-              className="toolbar__select"
-              value={dia}
-              disabled={!medico}
-              onChange={(e) => { setDia(e.target.value); setIdSlot(''); }}
-            >
-              <option value="">Selecciona...</option>
-              {dias.map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </label>
-
-          <label className="field">
-            <span className="field__label">Hora</span>
-            <select
-              className="toolbar__select"
-              value={idSlot}
-              disabled={!dia}
-              onChange={(e) => setIdSlot(e.target.value)}
-            >
-              <option value="">Selecciona...</option>
-              {horas.map((s) => (
-                <option key={s.id} value={s.id}>{s.horaInicio} - {s.horaFin}</option>
-              ))}
-            </select>
-          </label>
+          <p className="perfil__linea">
+            <strong>{slot?.especialidad}</strong> — {slot?.nombreDoctor}
+          </p>
+          <p className="perfil__linea">
+            {slot?.diaSemana} {slot?.horaInicio} – {slot?.horaFin} · Cons. {slot?.consultorio}
+          </p>
 
           <label className="field">
             <span className="field__label">Motivo</span>
@@ -221,6 +224,7 @@ function AgendarModal({ slots, onClose, onSaved }) {
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               placeholder="Motivo de la consulta..."
+              autoFocus
             />
           </label>
         </div>

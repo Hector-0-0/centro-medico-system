@@ -150,6 +150,26 @@ export default function MisCitas() {
 
 function DetalleModal({ data, onClose }) {
   const { cita, atencion } = data;
+  const descargarPdf = async () => {
+    try {
+      const response = await fetch(`/api/citas/${cita.id}/receta-pdf`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!response.ok) throw new Error('Error al descargar PDF');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receta-cita-${cita.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // Silencioso — el modal de error nativo no es necesario aquí
+    }
+  };
+
   return (
     <div className="modal__overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -182,6 +202,14 @@ function DetalleModal({ data, onClose }) {
 
               <h3 className="card-section__title" style={{ marginTop: 12 }}>Comentarios</h3>
               <p className="perfil__linea">{atencion.comentarios || '(Sin comentarios)'}</p>
+
+              {atencion.idReceta && (
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn--primary" onClick={descargarPdf}>
+                    📄 Descargar Receta (PDF)
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

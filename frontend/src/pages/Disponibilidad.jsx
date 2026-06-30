@@ -4,14 +4,12 @@ import {
   guardarDisponibilidad,
 } from '../services/disponibilidadService';
 import { mensajeError } from '../services/api';
-import FilaTablaEstado from '../components/FilaTablaEstado';
 import { useDialog } from '../components/Dialog';
 
 const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'];
 
-// Opciones de hora en pasos de 30 min (08:00 – 20:00).
 const HORAS = [];
-for (let m = 8 * 60; m <= 20 * 60; m += 30) {
+for (let m = 7 * 60; m <= 20 * 60; m += 30) {
   HORAS.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
 }
 
@@ -21,7 +19,6 @@ const ESTADO_INICIAL = () =>
     {},
   );
 
-/** Disponibilidad del médico — réplica del DisponibilidadPanel del desktop. */
 export default function Disponibilidad() {
   const [actuales, setActuales] = useState([]);
   const [dias, setDias] = useState(ESTADO_INICIAL);
@@ -36,11 +33,16 @@ export default function Disponibilidad() {
     try {
       const lista = await listarDisponibilidad();
       setActuales(lista);
-      // Prellenar el formulario con lo ya guardado.
       const base = ESTADO_INICIAL();
+      const porDia = {};
       lista.forEach((d) => {
-        if (base[d.diaSemana]) {
-          base[d.diaSemana] = { activo: true, inicio: d.horaInicio, fin: d.horaFin };
+        if (!porDia[d.diaSemana]) porDia[d.diaSemana] = [];
+        porDia[d.diaSemana].push(d);
+      });
+      DIAS.forEach((dia) => {
+        if (porDia[dia]) {
+          const ultimo = porDia[dia][porDia[dia].length - 1];
+          base[dia] = { activo: true, inicio: ultimo.horaInicio, fin: ultimo.horaFin };
         }
       });
       setDias(base);
@@ -52,22 +54,18 @@ export default function Disponibilidad() {
     }
   };
 
-  useEffect(() => {
-    cargar();
-  }, []);
+  useEffect(() => { cargar(); }, []);
 
   const setDia = (dia, campo, valor) =>
     setDias((d) => ({ ...d, [dia]: { ...d[dia], [campo]: valor } }));
 
   const guardar = async () => {
-    // Validación local solo de los días activos.
     const invalido = DIAS.some((d) => dias[d].activo && dias[d].inicio >= dias[d].fin);
     if (invalido) {
       await alerta('En los días que atiendes, la hora de inicio debe ser menor que la de fin.');
       return;
     }
 
-    // Se envían los 5 días: los marcados se guardan, los desmarcados se desactivan.
     const payload = DIAS.map((d) => ({
       diaSemana: d,
       horaInicio: dias[d].inicio,
@@ -99,85 +97,58 @@ export default function Disponibilidad() {
   return (
     <div>
       <h1 className="panel__title">Mi Disponibilidad</h1>
+      <p className="panel__hint" style={{ marginBottom: 16 }}>
+        Marca los días que atiendes y configura tu rango horario.
+        Guardar regenera los turnos de 30 min. No podrás modificar un día con citas pendientes.
+      </p>
 
-      {/* Disponibilidad actual */}
-      <div className="card-section">
-        <h2 className="card-section__title">Horarios registrados</h2>
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Día</th>
-                <th>Inicio</th>
-                <th>Fin</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando || errorCarga || actuales.length === 0 ? (
-                <FilaTablaEstado
-                  colSpan={3}
-                  cargando={cargando}
-                  error={errorCarga}
-                  onReintentar={cargar}
-                  vacio="Sin horarios registrados"
-                />
-              ) : (
-                actuales.map((d) => (
-                  <tr key={d.id}>
-                    <td>{d.diaSemana}</td>
-                    <td>{d.horaInicio}</td>
-                    <td>{d.horaFin}</td>
-                  </tr>
-                ))
+      <div className="cards-container">
+        {DIAS.map((dia) => {
+          const info = dias[dia];
+          return (
+            <div key={dia} className={`card-dia ${!info.activo ? 'card-dia--collapsed' : ''}`}>
+              <div className="card-dia__header">
+                <label className="card-dia__checkbox">
+                  <input
+                    type="checkbox"
+                    checked={info.activo}
+                    onChange={(e) => setDia(dia, 'activo', e.target.checked)}
+                  />
+                  <span className="card-dia__nombre">{dia}</span>
+                </label>
+              </div>
+
+              {info.activo && (
+                <div className="card-dia__bloques">
+                  <div className="card-dia__bloque">
+                    <select
+                      className="toolbar__select"
+                      value={info.inicio}
+                      onChange={(e) => setDia(dia, 'inicio', e.target.value)}
+                    >
+                      {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                    <span className="card-dia__separador">—</span>
+                    <select
+                      className="toolbar__select"
+                      value={info.fin}
+                      onChange={(e) => setDia(dia, 'fin', e.target.value)}
+                    >
+                      {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  </div>
+                  {info.activo && info.inicio >= info.fin && (
+                    <div className="card-dia__error">⚠️ La hora de inicio debe ser menor que la de fin</div>
+                  )}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Editar disponibilidad */}
-      <div className="card-section">
-        <h2 className="card-section__title">Configurar días</h2>
-        <p className="panel__hint" style={{ marginBottom: 12 }}>
-          Marca los días que atiendes y su rango horario; desmarca un día para dejar de atenderlo.
-          Guardar regenera los turnos de 30 min. No podrás modificar un día con citas pendientes.
-        </p>
-        {DIAS.map((dia) => (
-          <div key={dia} className="row-inline" style={{ marginBottom: 10 }}>
-            <label className="toolbar__label" style={{ minWidth: 130 }}>
-              <input
-                type="checkbox"
-                checked={dias[dia].activo}
-                onChange={(e) => setDia(dia, 'activo', e.target.checked)}
-              />
-              {dia}
-            </label>
-            <select
-              className="toolbar__select"
-              value={dias[dia].inicio}
-              disabled={!dias[dia].activo}
-              onChange={(e) => setDia(dia, 'inicio', e.target.value)}
-            >
-              {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
-            </select>
-            <span style={{ alignSelf: 'center', color: '#64748b' }}>—</span>
-            <select
-              className="toolbar__select"
-              value={dias[dia].fin}
-              disabled={!dias[dia].activo}
-              onChange={(e) => setDia(dia, 'fin', e.target.value)}
-            >
-              {HORAS.map((h) => <option key={h} value={h}>{h}</option>)}
-            </select>
-          </div>
-        ))}
-
-        <button
-          className="btn btn--primary"
-          style={{ marginTop: 8 }}
-          onClick={guardar}
-          disabled={guardando}
-        >
+      <div className="form-actions" style={{ marginTop: 16 }}>
+        <button className="btn btn--primary" onClick={guardar} disabled={guardando}>
           {guardando ? 'Guardando…' : 'Guardar disponibilidad'}
         </button>
       </div>

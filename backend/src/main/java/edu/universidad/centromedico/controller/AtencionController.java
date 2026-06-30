@@ -5,6 +5,8 @@ import edu.universidad.centromedico.dto.AtenderRequest;
 import edu.universidad.centromedico.service.AtencionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -32,5 +34,17 @@ public class AtencionController {
     @PreAuthorize("hasRole('ESTUDIANTE')")
     public AtencionDetalleDTO detalle(@PathVariable int idCita, Authentication auth) {
         return atencionService.detalle(idCita, auth.getName());
+    }
+
+    /** Descargar PDF de la receta de una cita propia (estudiante). */
+    @GetMapping("/{idCita}/receta-pdf")
+    @PreAuthorize("hasRole('ESTUDIANTE')")
+    public ResponseEntity<byte[]> recetaPdf(@PathVariable int idCita, Authentication auth) {
+        byte[] pdf = atencionService.generarPdfReceta(idCita, auth.getName());
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"receta-cita-" + idCita + ".pdf\"")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
     }
 }

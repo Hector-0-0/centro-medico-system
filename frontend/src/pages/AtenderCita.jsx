@@ -8,6 +8,21 @@ import {
 import { listarMisCitas } from '../services/citaService';
 import { mensajeError } from '../services/api';
 
+const OPCIONES_DOSIS = [
+  '1 tableta', '2 tabletas', '3 tabletas', '1 cápsula', '2 cápsulas',
+  '5 ml', '10 ml', '15 ml', '20 ml', '1 cucharada', '2 cucharadas',
+  '1 ampolla', '1 aplicación', '1 inhalación', '2 inhalaciones',
+  '1 gota', '2 gotas', '3 gotas', '4 gotas', '5 gotas',
+  '1 sobre', '1 comprimido', '2 comprimidos',
+];
+
+const OPCIONES_DURACION = [
+  '1 día', '2 días', '3 días', '5 días', '7 días',
+  '10 días', '14 días', '15 días', '21 días', '30 días',
+  '45 días', '60 días', '90 días', 'Por tiempo indefinido',
+  'Solo una vez', 'Hasta terminar el tratamiento',
+];
+
 /** Atender Cita — réplica del AtenderCitaPanel del desktop (consulta médica). */
 export default function AtenderCita() {
   const { id } = useParams();
@@ -236,11 +251,29 @@ export default function AtenderCita() {
           </label>
           <label className="field">
             <span className="field__label">Dosis</span>
-            <input className="field__input" value={dosis} onChange={(e) => setDosis(e.target.value)} />
+            <input
+              className="field__input"
+              list="lista-dosis"
+              value={dosis}
+              onChange={(e) => setDosis(e.target.value)}
+              placeholder="Ej. 1 tableta, 500 mg, 2.5 ml..."
+            />
+            <datalist id="lista-dosis">
+              {OPCIONES_DOSIS.map((o) => <option key={o} value={o} />)}
+            </datalist>
           </label>
           <label className="field">
             <span className="field__label">Duración</span>
-            <input className="field__input" value={duracion} onChange={(e) => setDuracion(e.target.value)} />
+            <input
+              className="field__input"
+              list="lista-duracion"
+              value={duracion}
+              onChange={(e) => setDuracion(e.target.value)}
+              placeholder="Ej. 7 días, 30 días, Por tiempo indefinido..."
+            />
+            <datalist id="lista-duracion">
+              {OPCIONES_DURACION.map((o) => <option key={o} value={o} />)}
+            </datalist>
           </label>
           <button className="btn btn--ghost" onClick={agregarMedicamento}>Agregar</button>
         </div>

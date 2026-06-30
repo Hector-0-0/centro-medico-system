@@ -22,7 +22,6 @@ export function useCargar(loader, deps = []) {
   const [error, setError] = useState('');
   const montado = useRef(true);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const cargar = useCallback(loader, deps);
 
   const recargar = useCallback(async () => {

@@ -1,5 +1,6 @@
 package edu.universidad.centromedico.controller;
 
+import edu.universidad.centromedico.dto.RecetaDetalleDTO;
 import edu.universidad.centromedico.dto.RecetaPendienteDTO;
 import edu.universidad.centromedico.service.RecetaService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class RecetaController {
     @GetMapping("/pendientes")
     public List<RecetaPendienteDTO> pendientes() {
         return recetaService.pendientes();
+    }
+
+    @GetMapping("/{id}/detalle")
+    public RecetaDetalleDTO detalle(@PathVariable int id) {
+        return recetaService.detalle(id);
     }
 
     @PostMapping("/{id}/entregar")

@@ -33,7 +33,7 @@ public class AtencionService {
     private final N8nNotificacionService n8n;
     private final RecetaPdfService recetaPdf;
 
-    /** Detalle de la atención de una cita del estudiante (diagnósticos + comentarios). */
+    /** Detalle de la atención de una cita del estudiante (diagnósticos + comentarios + receta). */
     public AtencionDetalleDTO detalle(int idCita, String idEstudiante) {
         List<Map<String, Object>> citas = jdbc.queryForList(
             "SELECT id_estudiante FROM citas WHERE id = ? AND eliminado = 0", idCita);
@@ -44,7 +44,7 @@ public class AtencionService {
         List<Map<String, Object>> at = jdbc.queryForList(
             "SELECT id, comentarios FROM atencion_cita WHERE id_cita = ?", idCita);
         if (at.isEmpty()) {
-            return new AtencionDetalleDTO(false, null, List.of());
+            return new AtencionDetalleDTO(false, null, List.of(), null);
         }
         int idAtencion = ((Number) at.get(0).get("id")).intValue();
         String comentarios = (String) at.get(0).get("comentarios");
@@ -60,7 +60,14 @@ public class AtencionService {
                 rs.getString("codigo"), rs.getString("descripcion"), rs.getString("observacion")),
             idAtencion);
 
-        return new AtencionDetalleDTO(true, comentarios, diagnosticos);
+        Integer idReceta = null;
+        List<Map<String, Object>> rec = jdbc.queryForList(
+            "SELECT id FROM recetas WHERE id_atencion = ?", idAtencion);
+        if (!rec.isEmpty()) {
+            idReceta = ((Number) rec.get(0).get("id")).intValue();
+        }
+
+        return new AtencionDetalleDTO(true, comentarios, diagnosticos, idReceta);
     }
 
     @Transactional
@@ -145,6 +152,89 @@ public class AtencionService {
                 n8n.notificarReceta(payload);
             }
         }
+    }
+
+    /** Genera el PDF de la receta de una cita, verificando que pertenezca al estudiante. */
+    public byte[] generarPdfReceta(int idCita, String idUsuario) {
+        List<Map<String, Object>> citas = jdbc.queryForList(
+            "SELECT id_estudiante FROM citas WHERE id = ? AND eliminado = 0", idCita);
+        if (citas.isEmpty() || !idUsuario.equals(citas.get(0).get("id_estudiante"))) {
+            throw new RuntimeException("Cita no encontrada");
+        }
+
+        List<Map<String, Object>> recs = jdbc.queryForList(
+            "SELECT r.id FROM recetas r JOIN atencion_cita a ON r.id_atencion = a.id WHERE a.id_cita = ?",
+            idCita);
+        if (recs.isEmpty()) {
+            throw new RuntimeException("Esta cita no tiene receta");
+        }
+        int idReceta = ((Number) recs.get(0).get("id")).intValue();
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("idReceta", idReceta);
+        payload.put("idCita", idCita);
+
+        List<Map<String, Object>> at = jdbc.queryForList(
+            "SELECT id, comentarios FROM atencion_cita WHERE id_cita = ?", idCita);
+        if (at.isEmpty()) {
+            throw new RuntimeException("La cita no ha sido atendida aún");
+        }
+        int idAtencion = ((Number) at.get(0).get("id")).intValue();
+        payload.put("comentarios", at.get(0).get("comentarios"));
+
+        String fecha = jdbc.queryForObject(
+            "SELECT fecha_atencion FROM atencion_cita WHERE id = ?", String.class, idAtencion);
+        payload.put("fecha", fecha != null ? fecha : LocalDateTime.now().toString());
+
+        Map<String, Object> estudiante = jdbc.queryForMap("""
+            SELECT e.id_usuario AS id, e.nombre, e.email, e.edad
+            FROM citas c JOIN estudiantes e ON c.id_estudiante = e.id_usuario
+            WHERE c.id = ?
+            """, idCita);
+        payload.put("estudiante", estudiante);
+
+        Map<String, Object> citaData = jdbc.queryForMap(
+            "SELECT id_doctor FROM citas WHERE id = ?", idCita);
+        Map<String, Object> doctor = jdbc.queryForMap(
+            "SELECT id_usuario AS id, nombre, especialidad FROM doctores WHERE id_usuario = ?",
+            citaData.get("id_doctor"));
+        payload.put("doctor", doctor);
+
+        List<Map<String, Object>> diagnosticos = jdbc.query("""
+            SELECT cc.codigo, cc.descripcion, ad.observacion
+            FROM atencion_diagnostico ad
+            JOIN codigos_cie cc ON ad.id_cie = cc.id
+            WHERE ad.id_atencion = ?
+            ORDER BY cc.codigo
+            """,
+            (rs, n) -> {
+                Map<String, Object> d = new LinkedHashMap<>();
+                d.put("codigo", rs.getString("codigo"));
+                d.put("descripcion", rs.getString("descripcion"));
+                d.put("observacion", rs.getString("observacion"));
+                return d;
+            }, idAtencion);
+        payload.put("diagnosticos", diagnosticos);
+
+        List<Map<String, Object>> medicamentos = jdbc.query("""
+            SELECT m.id, m.nombre, m.tipo, m.dosis_mg, rd.dosis, rd.duracion
+            FROM receta_detalle rd
+            JOIN medicamentos m ON rd.id_medicamento = m.id
+            WHERE rd.id_receta = ?
+            """,
+            (rs, n) -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", rs.getString("id"));
+                m.put("nombre", rs.getString("nombre"));
+                m.put("tipo", rs.getString("tipo"));
+                m.put("dosisMg", rs.getObject("dosis_mg"));
+                m.put("dosis", rs.getString("dosis"));
+                m.put("duracion", rs.getString("duracion"));
+                return m;
+            }, idReceta);
+        payload.put("medicamentos", medicamentos);
+
+        return recetaPdf.generar(payload);
     }
 
     /** Construye el payload JSON que recibirá n8n para enviar la receta por correo. */

@@ -4,5 +4,8 @@ import api from './api';
 export const listarRecetasPendientes = () =>
   api.get('/recetas/pendientes').then((r) => r.data);
 
+export const obtenerDetalleReceta = (id) =>
+  api.get(`/recetas/${id}/detalle`).then((r) => r.data);
+
 export const entregarReceta = (id) =>
   api.post(`/recetas/${id}/entregar`).then((r) => r.data);
