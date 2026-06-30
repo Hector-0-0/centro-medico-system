@@ -25,7 +25,7 @@ All three apps connect to the **same SQL Server** database so the web behaves id
 
 Four roles, identical to the desktop: **ESTUDIANTE, DOCTOR, ADMIN, FARMACIA** (`model/Rol.java`). The web maps "Pacientes" → `estudiantes` table, "Médicos" → `doctores`. There is no FARMACIA UI in desktop terms — pharmacy work lives under the FARMACIA role.
 
-Seed credentials (plain text, from `init_db.sql`): `ADM001/adm123`, `D001/pass123`, `U001/1234`, `FAR001/far123` (and U002–U005, D002–D005).
+Seed credentials (plain text, from `init_db.sql`): `ADM001/adm123`, `70123456/pass123`, `202000154A/1234`, `FAR001/far123`. Student codes are UNI codes (202000154A, 201900233B, 202100487C, 201800712D, 201700598E) and carry a separate `dni` column; **doctor codes are the doctor's DNI** — 8 digits (70123456, 71234567, 72345678, 73456789, 74567890).
 
 Authorization is enforced with `@PreAuthorize("hasRole('…')")` on controllers; `SecurityConfig` only permits `/api/auth/login` and Swagger, everything else requires a valid JWT (subject = user id).
 

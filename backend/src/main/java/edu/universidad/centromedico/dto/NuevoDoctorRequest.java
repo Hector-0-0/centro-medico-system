@@ -8,9 +8,10 @@ import lombok.Data;
 @Data
 public class NuevoDoctorRequest {
 
-    @NotBlank(message = "El código es obligatorio")
-    @Pattern(regexp = "^[A-Za-z0-9]{3,10}$",
-        message = "El código debe tener entre 3 y 10 caracteres, solo letras y números")
+    // El código del médico es su DNI: 8 dígitos numéricos.
+    @NotBlank(message = "El código (DNI) es obligatorio")
+    @Pattern(regexp = "^\\d{8}$",
+        message = "El código del médico debe ser un DNI de 8 dígitos")
     private String id;
 
     @NotBlank(message = "El nombre es obligatorio")

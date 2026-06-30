@@ -5,12 +5,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/** Campos editables de "Mi Perfil" del médico (consultorio, contacto, foto y credenciales). */
+/** Campos editables de "Mi Perfil" de los empleados (ADMIN y FARMACIA): contacto, foto y credenciales. */
 @Data
-public class ActualizarPerfilDoctorRequest {
-
-    @NotBlank(message = "El consultorio es obligatorio")
-    private String consultorio;
+public class ActualizarPerfilEmpleadoRequest {
 
     @Pattern(regexp = "^$|^\\d{6,15}$", message = "El teléfono debe tener entre 6 y 15 dígitos")
     private String telefono;

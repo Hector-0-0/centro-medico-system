@@ -89,8 +89,8 @@ export default function Login() {
           <div className="login__help">
             <strong>Credenciales de prueba:</strong><br />
             Admin: ADM001 / adm123<br />
-            Doctor: D001 / pass123<br />
-            Estudiante: U001 / 1234<br />
+            Doctor: 70123456 / pass123<br />
+            Estudiante: 202000154A / 1234<br />
             Farmacia: FAR001 / far123
           </div>
         </form>

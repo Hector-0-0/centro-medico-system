@@ -256,6 +256,53 @@ IF COL_LENGTH('estudiantes', 'foto') IS NULL
     ALTER TABLE estudiantes ADD foto VARCHAR(MAX) NULL;
 GO
 
+-- DNI del paciente (8 dígitos). El código UNI (PK) NO es el DNI, por eso se guarda aparte.
+IF COL_LENGTH('estudiantes', 'dni') IS NULL
+    ALTER TABLE estudiantes ADD dni VARCHAR(8) NULL;
+GO
+
+-- Campos de "Mi Perfil" del paciente (datos editables por el propio estudiante).
+IF COL_LENGTH('estudiantes', 'telefono') IS NULL
+    ALTER TABLE estudiantes ADD telefono VARCHAR(20) NULL;
+GO
+IF COL_LENGTH('estudiantes', 'alergias') IS NULL
+    ALTER TABLE estudiantes ADD alergias VARCHAR(255) NULL;
+GO
+IF COL_LENGTH('estudiantes', 'tipo_sangre') IS NULL
+    ALTER TABLE estudiantes ADD tipo_sangre VARCHAR(5) NULL;
+GO
+IF COL_LENGTH('estudiantes', 'contacto_emergencia') IS NULL
+    ALTER TABLE estudiantes ADD contacto_emergencia VARCHAR(150) NULL;
+GO
+
+-- Datos de contacto editables por el médico.
+IF COL_LENGTH('doctores', 'telefono') IS NULL
+    ALTER TABLE doctores ADD telefono VARCHAR(20) NULL;
+GO
+IF COL_LENGTH('doctores', 'email') IS NULL
+    ALTER TABLE doctores ADD email VARCHAR(100) NULL;
+GO
+
+-- "Mi Perfil" de los empleados (admin y farmacia): foto y datos de contacto.
+IF COL_LENGTH('administradores', 'foto') IS NULL
+    ALTER TABLE administradores ADD foto VARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('administradores', 'telefono') IS NULL
+    ALTER TABLE administradores ADD telefono VARCHAR(20) NULL;
+GO
+IF COL_LENGTH('administradores', 'email') IS NULL
+    ALTER TABLE administradores ADD email VARCHAR(100) NULL;
+GO
+IF COL_LENGTH('farmacia_usuarios', 'foto') IS NULL
+    ALTER TABLE farmacia_usuarios ADD foto VARCHAR(MAX) NULL;
+GO
+IF COL_LENGTH('farmacia_usuarios', 'telefono') IS NULL
+    ALTER TABLE farmacia_usuarios ADD telefono VARCHAR(20) NULL;
+GO
+IF COL_LENGTH('farmacia_usuarios', 'email') IS NULL
+    ALTER TABLE farmacia_usuarios ADD email VARCHAR(100) NULL;
+GO
+
 -- (26) Concentración del medicamento en miligramos.
 IF COL_LENGTH('medicamentos', 'dosis_mg') IS NULL
     ALTER TABLE medicamentos ADD dosis_mg INT NULL;
@@ -286,43 +333,43 @@ GO
 INSERT INTO usuarios (id, password, rol, eliminado)
 SELECT v.id, v.password, v.rol, v.eliminado
 FROM (VALUES
-    ('U001', '1234',      'ESTUDIANTE', 0),
-    ('U002', 'abcd',      'ESTUDIANTE', 0),
-    ('U003', 'pass2024',  'ESTUDIANTE', 0),
-    ('U004', 'qwerty',    'ESTUDIANTE', 0),
-    ('U005', 'admin123',  'ESTUDIANTE', 0),
-    ('D001', 'pass123',   'DOCTOR',     0),
-    ('D002', 'laura2024', 'DOCTOR',     0),
-    ('D003', 'ruizpass',  'DOCTOR',     0),
-    ('D004', 'sofiaRX',   'DOCTOR',     0),
-    ('D005', 'cardio99',  'DOCTOR',     0),
+    ('202000154A', '1234',      'ESTUDIANTE', 0),
+    ('201900233B', 'abcd',      'ESTUDIANTE', 0),
+    ('202100487C', 'pass2024',  'ESTUDIANTE', 0),
+    ('201800712D', 'qwerty',    'ESTUDIANTE', 0),
+    ('201700598E', 'admin123',  'ESTUDIANTE', 0),
+    ('70123456', 'pass123',   'DOCTOR',     0),
+    ('71234567', 'laura2024', 'DOCTOR',     0),
+    ('72345678', 'ruizpass',  'DOCTOR',     0),
+    ('73456789', 'sofiaRX',   'DOCTOR',     0),
+    ('74567890', 'cardio99',  'DOCTOR',     0),
     ('ADM001', 'adm123',  'ADMIN',      0),
     ('FAR001', 'far123',  'FARMACIA',   0)
 ) AS v(id, password, rol, eliminado)
 WHERE NOT EXISTS (SELECT 1 FROM usuarios u WHERE u.id = v.id);
 GO
 
-INSERT INTO estudiantes (id_usuario, nombre, edad, carrera, email, fecha_nacimiento)
-SELECT v.id_usuario, v.nombre, v.edad, v.carrera, v.email,
+INSERT INTO estudiantes (id_usuario, nombre, dni, edad, carrera, email, fecha_nacimiento)
+SELECT v.id_usuario, v.nombre, v.dni, v.edad, v.carrera, v.email,
        DATEADD(YEAR, -v.edad, CAST(GETDATE() AS DATE))
 FROM (VALUES
-    ('U001', 'Juan Perez',     21, 'Ingenieria de Sistemas', 'hola@uni.pe'),
-    ('U002', 'Maria Lopez',    22, 'Ingenieria Industrial',  'correo@uni.pe'),
-    ('U003', 'Carlos Ramirez', 20, 'Ingenieria Civil',       'prueba@uni.pe'),
-    ('U004', 'Ana Torres',     23, 'Ingenieria Electronica', 'yafueya@uni.pe'),
-    ('U005', 'Luis Gomez',     24, 'Ingenieria Mecanica',    'arianasapa@uni.pe')
-) AS v(id_usuario, nombre, edad, carrera, email)
+    ('202000154A', 'Juan Perez',     '75111222', 21, 'Ingenieria de Sistemas', 'hola@uni.pe'),
+    ('201900233B', 'Maria Lopez',    '75222333', 22, 'Ingenieria Industrial',  'correo@uni.pe'),
+    ('202100487C', 'Carlos Ramirez', '75333444', 20, 'Ingenieria Civil',       'prueba@uni.pe'),
+    ('201800712D', 'Ana Torres',     '75444555', 23, 'Ingenieria Electronica', 'yafueya@uni.pe'),
+    ('201700598E', 'Luis Gomez',     '75555666', 24, 'Ingenieria Mecanica',    'arianasapa@uni.pe')
+) AS v(id_usuario, nombre, dni, edad, carrera, email)
 WHERE NOT EXISTS (SELECT 1 FROM estudiantes e WHERE e.id_usuario = v.id_usuario);
 GO
 
 INSERT INTO doctores (id_usuario, nombre, especialidad, consultorio, activo)
 SELECT v.id_usuario, v.nombre, v.especialidad, v.consultorio, v.activo
 FROM (VALUES
-    ('D001', 'Dr. Carlos Medina', 'Endocrinologia', 'Consultorio 101', 1),
-    ('D002', 'Dra. Laura Pena',   'Endocrinologia', 'Consultorio 102', 0),
-    ('D003', 'Dr. Javier Ruiz',   'Odontologia',    'Consultorio 201', 1),
-    ('D004', 'Dra. Sofia Torres', 'Radiologia',     'Sala RX-01',      1),
-    ('D005', 'Dr. Luis Ramos',    'Cardiologia',    'Consultorio 305', 1)
+    ('70123456', 'Dr. Carlos Medina', 'Endocrinologia', 'Consultorio 101', 1),
+    ('71234567', 'Dra. Laura Pena',   'Endocrinologia', 'Consultorio 102', 0),
+    ('72345678', 'Dr. Javier Ruiz',   'Odontologia',    'Consultorio 201', 1),
+    ('73456789', 'Dra. Sofia Torres', 'Radiologia',     'Sala RX-01',      1),
+    ('74567890', 'Dr. Luis Ramos',    'Cardiologia',    'Consultorio 305', 1)
 ) AS v(id_usuario, nombre, especialidad, consultorio, activo)
 WHERE NOT EXISTS (SELECT 1 FROM doctores d WHERE d.id_usuario = v.id_usuario);
 GO
@@ -342,12 +389,12 @@ IF NOT EXISTS (SELECT 1 FROM disponibilidad_doctor WHERE id = 1)
 BEGIN
     SET IDENTITY_INSERT disponibilidad_doctor ON;
     INSERT INTO disponibilidad_doctor (id, id_doctor, dia_semana, hora_inicio, hora_fin, eliminado) VALUES
-    (1, 'D001', 'Lunes',     '08:00', '10:00', 0),
-    (2, 'D001', 'Lunes',     '14:00', '16:00', 0),
-    (3, 'D002', 'Martes',    '09:00', '11:00', 0),
-    (4, 'D003', 'Miercoles', '11:00', '13:00', 0),
-    (5, 'D004', 'Jueves',    '14:00', '16:00', 0),
-    (6, 'D005', 'Viernes',   '15:00', '17:00', 0);
+    (1, '70123456', 'Lunes',     '08:00', '10:00', 0),
+    (2, '70123456', 'Lunes',     '14:00', '16:00', 0),
+    (3, '71234567', 'Martes',    '09:00', '11:00', 0),
+    (4, '72345678', 'Miercoles', '11:00', '13:00', 0),
+    (5, '73456789', 'Jueves',    '14:00', '16:00', 0),
+    (6, '74567890', 'Viernes',   '15:00', '17:00', 0);
     SET IDENTITY_INSERT disponibilidad_doctor OFF;
 END;
 GO
@@ -357,30 +404,30 @@ BEGIN
     SET IDENTITY_INSERT slots_disponibilidad ON;
     INSERT INTO slots_disponibilidad
     (id, id_disponibilidad, id_doctor, dia_semana, hora_inicio, hora_fin, disponible, eliminado) VALUES
-    (1,  1, 'D001', 'Lunes',     '08:00', '08:30', 0, 0),
-    (2,  1, 'D001', 'Lunes',     '08:30', '09:00', 1, 0),
-    (3,  1, 'D001', 'Lunes',     '09:00', '09:30', 1, 0),
-    (4,  1, 'D001', 'Lunes',     '09:30', '10:00', 1, 0),
-    (5,  2, 'D001', 'Lunes',     '14:00', '14:30', 1, 0),
-    (6,  2, 'D001', 'Lunes',     '14:30', '15:00', 1, 0),
-    (7,  2, 'D001', 'Lunes',     '15:00', '15:30', 1, 0),
-    (8,  2, 'D001', 'Lunes',     '15:30', '16:00', 1, 0),
-    (9,  3, 'D002', 'Martes',    '09:00', '09:30', 1, 0),
-    (10, 3, 'D002', 'Martes',    '09:30', '10:00', 1, 0),
-    (11, 3, 'D002', 'Martes',    '10:00', '10:30', 1, 0),
-    (12, 3, 'D002', 'Martes',    '10:30', '11:00', 1, 0),
-    (13, 4, 'D003', 'Miercoles', '11:00', '11:30', 1, 0),
-    (14, 4, 'D003', 'Miercoles', '11:30', '12:00', 1, 0),
-    (15, 4, 'D003', 'Miercoles', '12:00', '12:30', 1, 0),
-    (16, 4, 'D003', 'Miercoles', '12:30', '13:00', 1, 0),
-    (17, 5, 'D004', 'Jueves',    '14:00', '14:30', 1, 0),
-    (18, 5, 'D004', 'Jueves',    '14:30', '15:00', 1, 0),
-    (19, 5, 'D004', 'Jueves',    '15:00', '15:30', 1, 0),
-    (20, 5, 'D004', 'Jueves',    '15:30', '16:00', 1, 0),
-    (21, 6, 'D005', 'Viernes',   '15:00', '15:30', 1, 0),
-    (22, 6, 'D005', 'Viernes',   '15:30', '16:00', 1, 0),
-    (23, 6, 'D005', 'Viernes',   '16:00', '16:30', 1, 0),
-    (24, 6, 'D005', 'Viernes',   '16:30', '17:00', 1, 0);
+    (1,  1, '70123456', 'Lunes',     '08:00', '08:30', 0, 0),
+    (2,  1, '70123456', 'Lunes',     '08:30', '09:00', 1, 0),
+    (3,  1, '70123456', 'Lunes',     '09:00', '09:30', 1, 0),
+    (4,  1, '70123456', 'Lunes',     '09:30', '10:00', 1, 0),
+    (5,  2, '70123456', 'Lunes',     '14:00', '14:30', 1, 0),
+    (6,  2, '70123456', 'Lunes',     '14:30', '15:00', 1, 0),
+    (7,  2, '70123456', 'Lunes',     '15:00', '15:30', 1, 0),
+    (8,  2, '70123456', 'Lunes',     '15:30', '16:00', 1, 0),
+    (9,  3, '71234567', 'Martes',    '09:00', '09:30', 1, 0),
+    (10, 3, '71234567', 'Martes',    '09:30', '10:00', 1, 0),
+    (11, 3, '71234567', 'Martes',    '10:00', '10:30', 1, 0),
+    (12, 3, '71234567', 'Martes',    '10:30', '11:00', 1, 0),
+    (13, 4, '72345678', 'Miercoles', '11:00', '11:30', 1, 0),
+    (14, 4, '72345678', 'Miercoles', '11:30', '12:00', 1, 0),
+    (15, 4, '72345678', 'Miercoles', '12:00', '12:30', 1, 0),
+    (16, 4, '72345678', 'Miercoles', '12:30', '13:00', 1, 0),
+    (17, 5, '73456789', 'Jueves',    '14:00', '14:30', 1, 0),
+    (18, 5, '73456789', 'Jueves',    '14:30', '15:00', 1, 0),
+    (19, 5, '73456789', 'Jueves',    '15:00', '15:30', 1, 0),
+    (20, 5, '73456789', 'Jueves',    '15:30', '16:00', 1, 0),
+    (21, 6, '74567890', 'Viernes',   '15:00', '15:30', 1, 0),
+    (22, 6, '74567890', 'Viernes',   '15:30', '16:00', 1, 0),
+    (23, 6, '74567890', 'Viernes',   '16:00', '16:30', 1, 0),
+    (24, 6, '74567890', 'Viernes',   '16:30', '17:00', 1, 0);
     SET IDENTITY_INSERT slots_disponibilidad OFF;
 END;
 GO
@@ -402,8 +449,8 @@ IF NOT EXISTS (SELECT 1 FROM citas WHERE id = 1)
 BEGIN
     SET IDENTITY_INSERT citas ON;
     INSERT INTO citas (id, id_estudiante, id_doctor, id_slot, motivo, estado, eliminado) VALUES
-    (1, 'U001', 'D001', 1, 'Control de glucosa', 'ATENDIDA',  0),
-    (2, 'U002', 'D001', 2, 'Consulta general',   'PENDIENTE', 0);
+    (1, '202000154A', '70123456', 1, 'Control de glucosa', 'ATENDIDA',  0),
+    (2, '201900233B', '70123456', 2, 'Consulta general',   'PENDIENTE', 0);
     SET IDENTITY_INSERT citas OFF;
 END;
 GO

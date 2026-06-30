@@ -49,7 +49,7 @@ export function DialogProvider({ children }) {
                 </button>
               )}
               <button
-                className={`btn ${dlg.peligro ? 'btn--danger' : 'btn--primary'}`}
+                className="btn btn--primary"
                 onClick={() => cerrar(dlg.tipo === 'confirmar' ? true : undefined)}
                 autoFocus
               >

@@ -18,4 +18,7 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, String> 
             ORDER BY e.nombre
             """, nativeQuery = true)
     List<Estudiante> findAllActivos();
+
+    /** Para impedir DNIs duplicados entre pacientes (un DNI identifica a una sola persona). */
+    boolean existsByDni(String dni);
 }

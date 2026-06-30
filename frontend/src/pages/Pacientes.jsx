@@ -16,6 +16,7 @@ export default function Pacientes() {
   const { datos, cargando, error, recargar } = useCargar(listarEstudiantes);
   const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
+  const [carrera, setCarrera] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const { alerta, confirmar } = useDialog();
@@ -23,12 +24,14 @@ export default function Pacientes() {
   const cargar = () => recargar().then(() => setSeleccion(null));
 
   const q = busqueda.trim().toLowerCase();
-  const filtrados = q
-    ? lista.filter(
-        (e) =>
-          e.nombre.toLowerCase().includes(q) || e.id.toLowerCase().includes(q),
-      )
-    : lista;
+  const filtrados = lista.filter(
+    (e) =>
+      (!q ||
+        e.nombre.toLowerCase().includes(q) ||
+        e.id.toLowerCase().includes(q) ||
+        (e.dni || '').includes(q)) &&
+      (!carrera || e.carrera === carrera),
+  );
 
   const eliminar = async () => {
     if (!seleccion) {
@@ -52,10 +55,19 @@ export default function Pacientes() {
       <div className="toolbar">
         <input
           className="toolbar__search"
-          placeholder="Buscar por nombre..."
+          placeholder="Buscar por código o nombre..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
+        <select
+          className="toolbar__select"
+          value={carrera}
+          onChange={(e) => setCarrera(e.target.value)}
+          aria-label="Filtrar por carrera"
+        >
+          <option value="">Todas las carreras</option>
+          {CARRERAS.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
         <button className="btn btn--danger" onClick={eliminar}>Eliminar</button>
         <button className="btn btn--primary" onClick={() => setModalAbierto(true)}>
           + Nuevo Paciente
@@ -66,7 +78,8 @@ export default function Pacientes() {
         <table className="table">
           <thead>
             <tr>
-              <th>Código</th>
+              <th>Código UNI</th>
+              <th>DNI</th>
               <th>Nombre</th>
               <th>Edad</th>
               <th>Carrera</th>
@@ -76,7 +89,7 @@ export default function Pacientes() {
           <tbody>
             {cargando || error || filtrados.length === 0 ? (
               <FilaTablaEstado
-                colSpan={5}
+                colSpan={6}
                 cargando={cargando}
                 error={error}
                 onReintentar={recargar}
@@ -98,6 +111,7 @@ export default function Pacientes() {
                   }}
                 >
                   <td>{e.id}</td>
+                  <td>{e.dni}</td>
                   <td>{e.nombre}</td>
                   <td>{e.edad}</td>
                   <td>{e.carrera}</td>
@@ -122,7 +136,7 @@ export default function Pacientes() {
   );
 }
 
-const VACIO = { id: '', nombre: '', fechaNacimiento: '', carrera: '', email: '', password: '' };
+const VACIO = { id: '', nombre: '', dni: '', fechaNacimiento: '', carrera: '', email: '', password: '' };
 
 function NuevoPacienteModal({ onClose, onSaved }) {
   const [form, setForm] = useState(VACIO);
@@ -136,18 +150,22 @@ function NuevoPacienteModal({ onClose, onSaved }) {
     e.preventDefault();
     setError('');
 
-    const { id, nombre, fechaNacimiento, carrera, email, password } = form;
-    if (!id.trim() || !nombre.trim() || !fechaNacimiento || !carrera.trim() || !email.trim() || !password.trim()) {
+    const { id, nombre, dni, fechaNacimiento, carrera, email, password } = form;
+    if (!id.trim() || !nombre.trim() || !dni.trim() || !fechaNacimiento || !carrera.trim() || !email.trim() || !password.trim()) {
       setError('Todos los campos son obligatorios.');
       return;
     }
-    if (!/^[A-Za-z0-9]{3,10}$/.test(id.trim())) {
-      setError('El código debe tener 3-10 caracteres, solo letras y números.');
+    if (!/^\d{4}\d{3,}[A-Za-z]$/.test(id.trim())) {
+      setError('El código debe ser un código UNI: año (4 dígitos) + serie de números + 1 letra. Ej: 202500154C');
+      return;
+    }
+    if (!/^\d{8}$/.test(dni.trim())) {
+      setError('El DNI debe tener 8 dígitos.');
       return;
     }
     const edadNum = edadDesde(fechaNacimiento);
-    if (!Number.isInteger(edadNum) || edadNum < 18 || edadNum > 100) {
-      setError('El paciente debe tener entre 18 y 100 años según su fecha de nacimiento.');
+    if (!Number.isInteger(edadNum) || edadNum < 14 || edadNum > 100) {
+      setError('El paciente debe tener entre 14 y 100 años según su fecha de nacimiento.');
       return;
     }
     if (!/^[A-Za-z0-9._%+-]+@(uni\.pe|uni\.edu\.pe)$/.test(email.trim())) {
@@ -160,6 +178,7 @@ function NuevoPacienteModal({ onClose, onSaved }) {
       await crearEstudiante({
         id: id.trim(),
         nombre: nombre.trim(),
+        dni: dni.trim(),
         fechaNacimiento,
         carrera: carrera.trim(),
         email: email.trim(),
@@ -180,8 +199,11 @@ function NuevoPacienteModal({ onClose, onSaved }) {
 
         <div className="modal__body">
           {error && <div className="modal__error">{error}</div>}
-          <Campo label="Código" value={form.id} onChange={set('id')} autoFocus />
+          <Campo label="Código UNI" placeholder="202500154C" value={form.id} onChange={set('id')} autoFocus />
           <Campo label="Nombre" value={form.nombre} onChange={set('nombre')} />
+          <Campo label="DNI" placeholder="8 dígitos" inputMode="numeric" maxLength={8}
+            value={form.dni}
+            onChange={(e) => setForm((f) => ({ ...f, dni: e.target.value.replace(/\D/g, '') }))} />
           <Campo
             label="Fecha de nacimiento"
             type="date"

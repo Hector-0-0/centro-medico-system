@@ -15,6 +15,7 @@ import java.time.Period;
 public class EstudianteDTO {
     private String id;
     private String nombre;
+    private String dni;
     private Integer edad;
     private LocalDate fechaNacimiento;
     private String carrera;
@@ -22,7 +23,7 @@ public class EstudianteDTO {
 
     public static EstudianteDTO de(Estudiante e) {
         return new EstudianteDTO(
-            e.getId(), e.getNombre(), edadDe(e), e.getFechaNacimiento(), e.getCarrera(), e.getEmail());
+            e.getId(), e.getNombre(), e.getDni(), edadDe(e), e.getFechaNacimiento(), e.getCarrera(), e.getEmail());
     }
 
     /** La edad se deriva de la fecha de nacimiento; cae a la columna `edad` si no hay fecha (filas del desktop). */

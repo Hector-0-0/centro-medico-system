@@ -9,15 +9,21 @@ import java.time.LocalDate;
 @Data
 public class NuevoEstudianteRequest {
 
+    // Código universitario UNI: 4 dígitos del año de ingreso + serie de dígitos + 1 letra. Ej: 202500154C
     @NotBlank(message = "El código es obligatorio")
-    @Pattern(regexp = "^[A-Za-z0-9]{3,10}$",
-        message = "El código debe tener entre 3 y 10 caracteres, solo letras y números")
+    @Pattern(regexp = "^\\d{4}\\d{3,}[A-Za-z]$",
+        message = "El código debe ser un código UNI: año (4 dígitos) + serie de números + 1 letra. Ej: 202500154C")
     private String id;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
         message = "El nombre solo puede contener letras y espacios")
     private String nombre;
+
+    // DNI del paciente (8 dígitos), independiente del código UNI.
+    @NotBlank(message = "El DNI es obligatorio")
+    @Pattern(regexp = "^\\d{8}$", message = "El DNI debe tener 8 dígitos")
+    private String dni;
 
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Past(message = "La fecha de nacimiento debe ser anterior a hoy")

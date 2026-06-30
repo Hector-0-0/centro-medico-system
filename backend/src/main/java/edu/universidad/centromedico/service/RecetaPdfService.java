@@ -138,9 +138,9 @@ public class RecetaPdfService {
           table.rx td.num { text-align: center; width: 22px; }
           table.rx td.ctr { text-align: center; }
           table.rx .empty { color: #94A3B8; font-style: italic; text-align: center; }
-          .firma { text-align: center; margin-top: 70px; }
+          .firma { position: absolute; bottom: 24px; right: 0; text-align: center; }
           .firma .line { display: inline-block; border-top: 1px solid #555; padding-top: 5px;
-                         min-width: 240px; }
+                         min-width: 240px; text-align: center; }
           .firma .name { font-weight: bold; color: #1a1a1a; font-size: 10pt; }
           .firma .esp { color: #444; font-size: 9pt; margin-top: 2px; }
           .firma .cmp { color: #444; font-size: 9pt; }

@@ -15,6 +15,7 @@ export default function Medicos() {
   const { datos, cargando, error, recargar } = useCargar(listarDoctores);
   const lista = datos || [];
   const [busqueda, setBusqueda] = useState('');
+  const [especialidad, setEspecialidad] = useState('');
   const [seleccion, setSeleccion] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const { alerta, confirmar } = useDialog();
@@ -22,20 +23,23 @@ export default function Medicos() {
   const cargar = () => recargar().then(() => setSeleccion(null));
 
   const q = busqueda.trim().toLowerCase();
-  const filtrados = q
-    ? lista.filter(
-        (d) =>
-          d.nombre.toLowerCase().includes(q) ||
-          d.especialidad.toLowerCase().includes(q) ||
-          d.id.toLowerCase().includes(q),
-      )
-    : lista;
+  const filtrados = lista.filter(
+    (d) =>
+      (!q ||
+        d.nombre.toLowerCase().includes(q) ||
+        d.id.toLowerCase().includes(q)) &&
+      (!especialidad || d.especialidad === especialidad),
+  );
 
-  // Borrado con doble clic, igual que el MedicoController del desktop.
-  const eliminar = async (d) => {
-    if (!(await confirmar(`¿Eliminar al médico ${d.nombre}?`, { peligro: true, textoOk: 'Eliminar' }))) return;
+  const eliminar = async () => {
+    if (!seleccion) {
+      alerta('Selecciona un médico para eliminar.');
+      return;
+    }
+    const d = lista.find((x) => x.id === seleccion);
+    if (!(await confirmar(`¿Eliminar al médico ${d?.nombre}?`, { peligro: true, textoOk: 'Eliminar' }))) return;
     try {
-      await eliminarDoctor(d.id);
+      await eliminarDoctor(seleccion);
       cargar();
     } catch (err) {
       alerta(mensajeError(err, 'No se pudo eliminar el médico.'));
@@ -49,18 +53,24 @@ export default function Medicos() {
       <div className="toolbar">
         <input
           className="toolbar__search"
-          placeholder="Buscar por nombre o especialidad..."
+          placeholder="Buscar por código o nombre..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
+        <select
+          className="toolbar__select"
+          value={especialidad}
+          onChange={(e) => setEspecialidad(e.target.value)}
+          aria-label="Filtrar por especialidad"
+        >
+          <option value="">Todas las especialidades</option>
+          {ESPECIALIDADES.map((e) => <option key={e} value={e}>{e}</option>)}
+        </select>
+        <button className="btn btn--danger" onClick={eliminar}>Eliminar</button>
         <button className="btn btn--primary" onClick={() => setModalAbierto(true)}>
           + Nuevo Médico
         </button>
       </div>
-
-      <p className="panel__hint" style={{ marginBottom: 12 }}>
-        Doble clic en un médico (o Enter con la fila enfocada) para eliminarlo.
-      </p>
 
       <div className="table-wrap">
         <table className="table">
@@ -87,13 +97,12 @@ export default function Medicos() {
                   key={d.id}
                   className={seleccion === d.id ? 'is-selected' : ''}
                   onClick={() => setSeleccion(d.id)}
-                  onDoubleClick={() => eliminar(d)}
                   tabIndex={0}
                   aria-selected={seleccion === d.id}
                   onKeyDown={(ev) => {
-                    if (ev.key === 'Enter') {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
                       ev.preventDefault();
-                      eliminar(d);
+                      setSeleccion(d.id);
                     }
                   }}
                 >
@@ -140,8 +149,8 @@ function NuevoMedicoModal({ onClose, onSaved }) {
       setError('Todos los campos son obligatorios.');
       return;
     }
-    if (!/^[A-Za-z0-9]{3,10}$/.test(id.trim())) {
-      setError('El código debe tener 3-10 caracteres, solo letras y números.');
+    if (!/^\d{8}$/.test(id.trim())) {
+      setError('El código del médico debe ser un DNI de 8 dígitos.');
       return;
     }
 
@@ -169,7 +178,9 @@ function NuevoMedicoModal({ onClose, onSaved }) {
 
         <div className="modal__body">
           {error && <div className="modal__error">{error}</div>}
-          <Campo label="Código" value={form.id} onChange={set('id')} autoFocus />
+          <Campo label="Código (DNI)" placeholder="8 dígitos" inputMode="numeric" maxLength={8} autoFocus
+            value={form.id}
+            onChange={(e) => setForm((f) => ({ ...f, id: e.target.value.replace(/\D/g, '') }))} />
           <Campo label="Nombre" value={form.nombre} onChange={set('nombre')} />
           <label className="field">
             <span className="field__label">Especialidad</span>

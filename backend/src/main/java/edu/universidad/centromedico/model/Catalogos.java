@@ -23,6 +23,17 @@ public final class Catalogos {
         "Psicologia", "Radiologia", "Traumatologia"
     );
 
+    public static final Set<String> TIPOS_SANGRE = Set.of(
+        "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"
+    );
+
+    /** El tipo de sangre es opcional; si viene, debe ser uno de la lista. */
+    public static void validarTipoSangre(String tipoSangre) {
+        if (tipoSangre != null && !tipoSangre.isBlank() && !TIPOS_SANGRE.contains(tipoSangre.trim())) {
+            throw new RuntimeException("El tipo de sangre no es válido");
+        }
+    }
+
     public static void validarCarrera(String carrera) {
         if (carrera == null || !CARRERAS.contains(carrera.trim())) {
             throw new RuntimeException("La carrera no es válida; selecciona una de la lista");

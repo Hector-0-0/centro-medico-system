@@ -8,6 +8,10 @@ export const obtenerPerfil = () =>
 export const actualizarPerfil = (data) =>
   api.put('/perfil', data).then((r) => r.data);
 
-/** Editar el perfil del médico (consultorio, foto). */
+/** Editar el perfil del médico (consultorio, contacto, foto, credenciales). */
 export const actualizarPerfilDoctor = (data) =>
   api.put('/perfil/doctor', data).then((r) => r.data);
+
+/** Editar el perfil de un empleado ADMIN/FARMACIA (contacto, foto, credenciales). */
+export const actualizarPerfilEmpleado = (data) =>
+  api.put('/perfil/empleado', data).then((r) => r.data);

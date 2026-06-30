@@ -17,3 +17,6 @@ export const ESPECIALIDADES = [
   'Ginecologia', 'Neurologia', 'Odontologia', 'Oftalmologia', 'Pediatria',
   'Psicologia', 'Radiologia', 'Traumatologia',
 ];
+
+// Grupos sanguíneos (debe coincidir con Catalogos.TIPOS_SANGRE en el backend).
+export const TIPOS_SANGRE = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];

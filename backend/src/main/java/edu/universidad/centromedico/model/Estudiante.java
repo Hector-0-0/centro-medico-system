@@ -25,6 +25,10 @@ public class Estudiante {
     @Column(nullable = false, length = 100)
     private String nombre;
 
+    /** DNI del paciente (8 dígitos). Distinto del código UNI, que es la PK. */
+    @Column(length = 8)
+    private String dni;
+
     private Integer edad;
 
     /** Fecha de nacimiento; la edad se calcula a partir de ella (la columna `edad` se conserva por compatibilidad con el desktop). */

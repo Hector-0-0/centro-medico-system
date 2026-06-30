@@ -38,11 +38,14 @@ public class EstudianteService {
         if (usuarioRepository.existsById(req.getId())) {
             throw new RuntimeException("El código ya existe");
         }
+        if (estudianteRepository.existsByDni(req.getDni())) {
+            throw new RuntimeException("El DNI ya está registrado para otro paciente");
+        }
         edu.universidad.centromedico.model.Catalogos.validarCarrera(req.getCarrera());
 
         int edad = Period.between(req.getFechaNacimiento(), LocalDate.now()).getYears();
-        if (edad < 18 || edad > 100) {
-            throw new RuntimeException("El paciente debe tener entre 18 y 100 años");
+        if (edad < 14 || edad > 100) {
+            throw new RuntimeException("El paciente debe tener entre 14 y 100 años");
         }
 
         Usuario usuario = new Usuario();
@@ -55,6 +58,7 @@ public class EstudianteService {
         Estudiante estudiante = new Estudiante();
         estudiante.setId(req.getId());
         estudiante.setNombre(req.getNombre());
+        estudiante.setDni(req.getDni());
         estudiante.setFechaNacimiento(req.getFechaNacimiento());
         estudiante.setEdad(edad); // se guarda calculada por compatibilidad con el desktop
         estudiante.setCarrera(req.getCarrera());
